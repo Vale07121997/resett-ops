@@ -98,9 +98,24 @@ dialog h2{color:var(--navy)}
 dialog label{display:block;font-size:12px;color:var(--muted);margin:10px 0 4px}
 dialog input,dialog select,dialog textarea{width:100%;background:#fff;color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:8px;font-size:13px;font-family:inherit}
 .foot{text-align:center;color:var(--muted);font-size:11px;padding:20px}
+#gate{display:none;position:fixed;inset:0;z-index:1000;background:linear-gradient(135deg,#0E2032,#1A3651);align-items:center;justify-content:center;padding:20px}
+.gate-card{background:rgba(255,255,255,.06);border:1px solid rgba(201,169,92,.4);border-radius:16px;padding:30px 26px;max-width:340px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.45)}
+.gate-sub{font-size:11px;letter-spacing:3px;color:var(--gold);font-weight:600;margin-bottom:18px}
+.gate-t{color:#F2ECDD;font-size:15px;margin-bottom:14px}
+#gate input{width:100%;background:#12283f;color:#fff;border:1px solid rgba(201,169,92,.5);border-radius:8px;padding:11px;font-size:15px;text-align:center;letter-spacing:2px;font-family:inherit}
 </style>
 </head>
 <body>
+<div id="gate">
+  <div class="gate-card">
+    <img src="logo_resett.png" alt="RESETT" style="height:52px;margin-bottom:6px">
+    <div class="gate-sub">GESTIÓN OPERATIVA</div>
+    <div class="gate-t">Ingresa el código de acceso</div>
+    <input type="password" id="gateInput" placeholder="Código de acceso" autocomplete="off">
+    <button class="btn" id="gateBtn" style="width:100%;margin-top:10px">Entrar</button>
+    <div id="gateErr" style="color:#ffb3ab;font-size:12.5px;margin-top:8px;min-height:16px"></div>
+  </div>
+</div>
 <header>
   <div class="logo"><img src="logo_resett.png" data-x="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" alt="RESETT" style="height:46px;display:block"><small style="margin-top:5px">GESTIÓN OPERATIVA</small></div>
   <div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.08);padding:6px 12px;border-radius:10px;border:1px solid rgba(201,169,92,.4)">
@@ -174,6 +189,14 @@ dialog input,dialog select,dialog textarea{width:100%;background:#fff;color:var(
   <div class="view" id="v-datos">
     <h2>Datos y respaldo</h2>
     <div class="sub">Los datos se guardan en la nube (Supabase) y se comparten con todo el equipo en vivo. Puedes descargar un respaldo cuando quieras.</div>
+    <div class="card">
+      <div class="section-h" style="margin-top:0">🔒 Código de acceso a la app</div>
+      <p class="sub" style="margin-bottom:12px">Quien no tenga este código no puede entrar. Cámbialo cuando quieras y compártelo solo con tu equipo.</p>
+      <div class="row">
+        <input type="text" id="acCode" placeholder="Nuevo código de acceso" style="flex:1;min-width:180px">
+        <button class="btn" onclick="changeAccessCode()">Guardar código</button>
+      </div>
+    </div>
     <div class="card">
       <p style="margin-bottom:12px">Respaldo: descarga un archivo <b>.json</b> con todo tu avance. Para restaurar en otro equipo, impórtalo.</p>
       <div class="row">
@@ -617,7 +640,40 @@ async function init(){
     .on('postgres_changes',{event:'*',schema:'public',table:'team'},refreshFromCloud)
     .subscribe();
 }
-init();
+
+/* ============ PUERTA DE ACCESO (código) ============ */
+async function getAccessCode(){
+  try{
+    const {data}=await sb.from('config').select('value').eq('key','access_code').maybeSingle();
+    if(data&&data.value)return data.value;
+    await sb.from('config').upsert({key:'access_code',value:'RESETT2026'});
+  }catch(e){console.error(e);}
+  return 'RESETT2026';
+}
+async function changeAccessCode(){
+  const inp=document.getElementById('acCode');const v=(inp.value||'').trim();
+  if(!v){alert('Escribe el nuevo código.');return;}
+  const {error}=await sb.from('config').upsert({key:'access_code',value:v});
+  if(error){console.error(error);alert('No se pudo guardar.');return;}
+  localStorage.setItem('resett_gate',v);inp.value='';
+  alert('Código de acceso actualizado ✓');
+}
+function enterApp(){document.getElementById('gate').style.display='none';init();}
+async function startGate(){
+  const code=await getAccessCode();
+  const saved=localStorage.getItem('resett_gate');
+  if(saved&&saved===code){enterApp();return;}
+  const g=document.getElementById('gate');g.style.display='flex';
+  const inp=document.getElementById('gateInput'),btn=document.getElementById('gateBtn'),err=document.getElementById('gateErr');
+  inp.focus();
+  btn.onclick=()=>{
+    const v=(inp.value||'').trim();
+    if(v===code){localStorage.setItem('resett_gate',code);enterApp();}
+    else{err.textContent='Código incorrecto.';inp.value='';inp.focus();}
+  };
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter')btn.click();});
+}
+startGate();
 </script>
 </body>
 </html>
