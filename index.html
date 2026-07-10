@@ -202,6 +202,7 @@ dialog input,dialog select,dialog textarea{width:100%;background:#fff;color:var(
       <div class="row">
         <button class="btn" onclick="exportData()">⬇️ Exportar respaldo</button>
         <label class="btn ghost" style="cursor:pointer">⬆️ Importar respaldo<input type="file" id="importFile" accept=".json" style="display:none"></label>
+        <button class="btn" onclick="reprogramarDesdeHoy()">📅 Reprogramar fechas desde hoy</button>
         <button class="btn ghost" onclick="resetData()" style="color:var(--crit);border-color:var(--crit)">↺ Reiniciar a tareas iniciales</button>
       </div>
       <p class="sub" id="saveInfo" style="margin-top:14px"></p>
@@ -290,8 +291,43 @@ const SEED=[
 {id:"S8",t:"Definir plantillas de mensajes (confirmación, recorte, recordatorios)",d:"Variables por sede/servicio.",cat:"Software F1",resp:"Paulina",area:"Comercial",pri:"Media",due:"2026-07-08",deps:["O7"]},
 {id:"S9",t:"Activar confirmación + recordatorios 24h/2h automáticos",d:"Liberación de cupo y oferta a lista de espera.",cat:"Software F1",resp:"Valentina",area:"Producto",pri:"Alta",due:"2026-07-12",deps:["S8","O11"]},
 {id:"S10",t:"Seleccionar sede piloto (La 33) e iniciar el producto mínimo",d:"Medir no-show, ocupación y ventas 2–4 semanas antes de replicar.",cat:"Software F1",resp:"Nat",area:"Dirección",pri:"Alta",due:"2026-07-10",deps:["S2","S3","S5"]},
+{id:"M1",t:"Revisar horarios propuestos con Valentina y dar feedback de distribución de especialistas",d:"360 Resett · 10 jul",cat:"Reunión 360",resp:"Marlon",area:"360 Resett",pri:"Alta",due:"2026-07-12",deps:[]},
+{id:"M2",t:"Enviar cronograma final y preparar capacitación (sistema funcionando el jueves 16 jul)",d:"360 Resett · 10 jul",cat:"Reunión 360",resp:"Valentina",area:"360 Resett",pri:"Alta",due:"2026-07-12",deps:[]},
+{id:"M3",t:"Cambiar días de descanso del personal (trasladar descansos a miércoles según demanda)",d:"360 Resett · 10 jul",cat:"Reunión 360",resp:"Valentina",area:"360 Resett",pri:"Media",due:"2026-07-12",deps:[]},
+{id:"M4",t:"Revisar operación por servicios en San Lucas y confirmar soporte nocturno reportado",d:"360 Resett · 10 jul",cat:"Reunión 360",resp:"Valentina",area:"360 Resett",pri:"Media",due:"2026-07-12",deps:[]},
+{id:"M5",t:"Revisar con André y Pipe los horarios de las asesoras comerciales para optimizarlos",d:"360 Resett · 10 jul",cat:"Reunión 360",resp:"Valentina",area:"360 Resett",pri:"Media",due:"2026-07-12",deps:[]},
+{id:"M6",t:"Programar reunión operacional con Marlon, André y equipo para la próxima semana",d:"360 Resett · 10 jul",cat:"Reunión 360",resp:"Felipe",area:"360 Resett",pri:"Media",due:"2026-07-12",deps:[]},
+{id:"M7",t:"Finalizar horarios por sede y confirmar cronograma operativo global (salida jueves 16)",d:"360 Resett · 10 jul",cat:"Reunión 360",resp:"Valentina",area:"360 Resett",pri:"Alta",due:"2026-07-12",deps:[]},
+{id:"M8",t:"Enviar propuesta de cronograma de capacitaciones para gerentes, administrativos y asesores",d:"360 Resett · 10 jul",cat:"Reunión 360",resp:"Valentina",area:"360 Resett",pri:"Media",due:"2026-07-12",deps:[]},
+{id:"M9",t:"Confirmar capacidad y reglas de sauna, turco, crioterapia y jacuzzi por sede",d:"360 Resett · 10 jul",cat:"Reunión 360",resp:"Valentina",area:"360 Resett",pri:"Media",due:"2026-07-12",deps:[]},
+{id:"M10",t:"Presentar propuesta de comunicación para el espacio tipo piscina antes de la próxima reunión",d:"360 Resett · 10 jul",cat:"Reunión 360",resp:"Paulina",area:"360 Resett",pri:"Media",due:"2026-07-12",deps:[]},
+{id:"M11",t:"Enviar lista de tareas mal asignadas para reasignarlas en la app",d:"360 Resett · 10 jul",cat:"Reunión 360",resp:"Paulina",area:"360 Resett",pri:"Alta",due:"2026-07-12",deps:[]},
+{id:"M12",t:"Desplegar la app de gestión y dar credenciales a todo el equipo",d:"360 Resett · 10 jul",cat:"Reunión 360",resp:"Valentina",area:"360 Resett",pri:"Alta",due:"2026-07-12",deps:[]},
+{id:"M13",t:"Coordinar con Leo y Gauchó reparación de cajas sin conector o compra de cajas/piedras nuevas",d:"360 Resett · 10 jul",cat:"Reunión 360",resp:"Marlon",area:"360 Resett",pri:"Alta",due:"2026-07-12",deps:[]},
+{id:"M14",t:"Analizar opciones de compra de piedras calientes y reunir 2-3 cotizaciones comparativas",d:"360 Resett · 10 jul",cat:"Reunión 360",resp:"Sin asignar",area:"360 Resett",pri:"Media",due:"2026-07-12",deps:[]},
+{id:"M15",t:"Consolidar inventario documental y definir faltantes de catálogo y consentimiento digital (miércoles)",d:"360 Resett · 10 jul",cat:"Reunión 360",resp:"Sin asignar",area:"360 Resett",pri:"Alta",due:"2026-07-12",deps:[]},
+{id:"M16",t:"Documentar evidencias de la conducta de la colaboradora para evaluar proceso disciplinario",d:"360 Resett · 10 jul",cat:"Reunión 360",resp:"Marlon",area:"360 Resett",pri:"Alta",due:"2026-07-12",deps:[]},
+{id:"M17",t:"Apoyar contratación de candidata para vacante operativa y coordinar selección",d:"360 Resett · 10 jul",cat:"Reunión 360",resp:"Nat",area:"360 Resett",pri:"Media",due:"2026-07-12",deps:[]},
+{id:"M18",t:"Repetir prueba de conocimientos al finalizar capacitación y ajustar contenidos según objeciones",d:"360 Resett · 10 jul",cat:"Reunión 360",resp:"Marlon",area:"360 Resett",pri:"Media",due:"2026-07-12",deps:[]},
+{id:"M19",t:"Compartir el documento de objeciones en el grupo del equipo",d:"360 Resett · 10 jul",cat:"Reunión 360",resp:"Marlon",area:"360 Resett",pri:"Baja",due:"2026-07-12",deps:[]},
+{id:"M20",t:"Liderar sesión del miércoles con metodólogas para construir protocolos de cosmetología y masajes",d:"360 Resett · 10 jul",cat:"Reunión 360",resp:"Valentina",area:"360 Resett",pri:"Alta",due:"2026-07-12",deps:[]},
+{id:"M21",t:"Visitar sedes para revisar necesidades y preparar entrada de nueva cosmetóloga en Escobedo",d:"360 Resett · 10 jul",cat:"Reunión 360",resp:"Marlon",area:"360 Resett",pri:"Media",due:"2026-07-12",deps:[]},
+{id:"M22",t:"Enviar lista de fichas pendientes por ciudad para seguimiento",d:"360 Resett · 10 jul",cat:"Reunión 360",resp:"Nat",area:"360 Resett",pri:"Media",due:"2026-07-12",deps:[]},
+{id:"M23",t:"Coordinar formación comercial y esquema de comisiones para cosmetólogas y fichas",d:"360 Resett · 10 jul",cat:"Reunión 360",resp:"Nat",area:"360 Resett",pri:"Media",due:"2026-07-12",deps:[]},
+{id:"M24",t:"Reunión para revisar operaciones en Sport Club y acciones para aumentar facturación",d:"360 Resett · 10 jul",cat:"Reunión 360",resp:"Sin asignar",area:"360 Resett",pri:"Media",due:"2026-07-12",deps:[]},
+{id:"M25",t:"Contratar personal de fin de semana (vie-sáb-dom y lunes festivos) en Escobero",d:"360 Resett · 3 jul",cat:"Reunión 360",resp:"Sin asignar",area:"360 Resett",pri:"Alta",due:"2026-07-12",deps:[]},
+{id:"M26",t:"Publicar la vacante de fin de semana e iniciar entrevistas la próxima semana",d:"360 Resett · 3 jul",cat:"Reunión 360",resp:"Nat",area:"360 Resett",pri:"Media",due:"2026-07-12",deps:[]},
+{id:"M27",t:"Implementar respuesta más rápida ante fallas de estaciones (incl. jacuzzi) en San Lucas",d:"360 Resett · 3 jul",cat:"Reunión 360",resp:"Marlon",area:"360 Resett",pri:"Alta",due:"2026-07-12",deps:[]},
+{id:"M28",t:"Dar capacitación comercial a asesores para aumentar prospección en horas de alto flujo",d:"360 Resett · 3 jul",cat:"Reunión 360",resp:"Paulina",area:"360 Resett",pri:"Media",due:"2026-07-12",deps:[]},
+{id:"M29",t:"Definir meta financiera para EZ Norte (deuda pendiente y potencial de ventas)",d:"360 Resett · 3 jul",cat:"Reunión 360",resp:"Sin asignar",area:"360 Resett",pri:"Media",due:"2026-07-12",deps:[]},
+{id:"M30",t:"Continuar liderando capacitación y estandarización de protocolos junto con Naty",d:"360 Resett · 3 jul",cat:"Reunión 360",resp:"Valentina",area:"360 Resett",pri:"Alta",due:"2026-07-12",deps:[]},
+{id:"M31",t:"Dar seguimiento a la cotización del gimnasio y la propuesta de publicidad por equipos",d:"360 Resett · 3 jul",cat:"Reunión 360",resp:"Sin asignar",area:"360 Resett",pri:"Baja",due:"2026-07-12",deps:[]},
+{id:"M32",t:"Analizar el REU y la propuesta de largo plazo de Nacional",d:"360 Resett · 3 jul",cat:"Reunión 360",resp:"Sin asignar",area:"360 Resett",pri:"Baja",due:"2026-07-12",deps:[]},
+{id:"M33",t:"Coordinar quiénes se suman al proceso de alineación comercial la próxima semana",d:"360 Resett · 3 jul",cat:"Reunión 360",resp:"Sin asignar",area:"360 Resett",pri:"Baja",due:"2026-07-12",deps:[]},
+{id:"M34",t:"Continuar visitas a sedes, agregar observaciones al documento compartido y compartirlo",d:"360 Resett · 3 jul",cat:"Reunión 360",resp:"Marlon",area:"360 Resett",pri:"Media",due:"2026-07-12",deps:[]},
+{id:"M35",t:"Desarrollar herramientas y planes de acción para los casos de cosmetólogas presentados",d:"360 Resett · 3 jul",cat:"Reunión 360",resp:"Paulina",area:"360 Resett",pri:"Media",due:"2026-07-12",deps:[]},
 ];
-const CATS=["Cumplimiento","Operativo","Software F1"];
+const CATS=["Cumplimiento","Operativo","Software F1","Reunión 360"];
 const PRI_ORDER={"Crítica":3,"Alta":2,"Media":1,"Baja":0};
 const PRI_CLASS={"Crítica":"crit","Alta":"alta","Media":"media","Baja":"baja"};
 
@@ -300,7 +336,7 @@ let state={tasks:[],team:[]};
 const COLS="id,t,d,cat,resp,area,pri,due,deps,estado,completed_at";
 function toRow(t){return {id:t.id,t:t.t,d:t.d||"",cat:t.cat,resp:t.resp,area:t.area||"",pri:t.pri,due:t.due,deps:t.deps||[],estado:t.estado||"pendiente",completed_at:t.completedAt||null,updated_at:new Date().toISOString()};}
 function fromRow(r){return {id:r.id,t:r.t,d:r.d||"",cat:r.cat,resp:r.resp,area:r.area||"",pri:r.pri,due:r.due,deps:Array.isArray(r.deps)?r.deps:[],estado:r.estado||"pendiente",completedAt:r.completed_at||null};}
-function seedTasks(){return SEED.map(t=>({...t,estado:"pendiente",completedAt:null}));}
+function seedTasks(){const off={"Crítica":1,"Alta":3,"Media":6,"Baja":9};return SEED.map(t=>({...t,estado:"pendiente",completedAt:null,due:addDays(todayStr(),off[t.pri]||5)}));}
 async function loadFromCloud(){
   const {data,error}=await sb.from('tasks').select(COLS);
   if(error){console.error(error);alert("No pude conectar con la base de datos. Revisa tu conexión a internet y recarga.");return;}
@@ -352,12 +388,17 @@ async function renameMember(id){
 }
 async function deleteMember(id){
   const m=state.team.find(x=>x.id===id);if(!m)return;
-  const tieneTareas=state.tasks.some(t=>t.resp===m.name);
-  const msg=tieneTareas?('"'+m.name+'" tiene tareas asignadas. Se quitará del equipo pero sus tareas seguirán con su nombre. ¿Continuar?'):('¿Eliminar a "'+m.name+'" del equipo?');
+  const afectadas=state.tasks.filter(t=>t.resp===m.name);
+  const msg=afectadas.length?('"'+m.name+'" tiene '+afectadas.length+' tarea(s). Se eliminará del equipo y esas tareas quedarán como "Sin asignar". ¿Continuar?'):('¿Eliminar a "'+m.name+'" del equipo?');
   if(!confirm(msg))return;
+  if(afectadas.length){
+    afectadas.forEach(t=>t.resp='Sin asignar');
+    const {error:e1}=await sb.from('tasks').upsert(afectadas.map(toRow));if(e1)console.error(e1);
+  }
   state.team=state.team.filter(x=>x.id!==id);
-  const {error}=await sb.from('team').delete().eq('id',id);if(error)console.error(error);
-  fillSelects();fillMe();renderEquipo();
+  const {error:e2}=await sb.from('team').delete().eq('id',id);if(e2)console.error(e2);
+  if(ME===m.name){ME='';localStorage.setItem('resett_me','');}
+  fillSelects();fillMe();renderAll();
 }
 async function resetPin(id){
   const m=state.team.find(x=>x.id===id);if(!m)return;
@@ -383,6 +424,7 @@ function updateSaveInfo(){const el=document.getElementById('saveInfo');if(el)el.
 /* ============ HELPERS ============ */
 function todayStr(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,'0')+"-"+String(d.getDate()).padStart(2,'0');}
 function daysBetween(a,b){return Math.round((new Date(b)-new Date(a))/86400000);}
+function addDays(dateStr,n){const d=new Date(dateStr+'T00:00:00');d.setDate(d.getDate()+n);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 function fmtDue(due){
   const t=todayStr();const diff=daysBetween(t,due);
   if(diff<0)return {txt:"Venció hace "+(-diff)+"d ("+due+")",cls:"over"};
@@ -540,7 +582,7 @@ function renderProgreso(){
     kpi(done+"/"+total,"tareas hechas")+
     kpi(pendingTasks().filter(x=>x.due<t).length,"vencidas",'var(--crit)')+
     kpi(pendingTasks().filter(x=>x.pri==="Crítica").length,"críticas pendientes",'var(--alta)');
-  const colors={Cumplimiento:'#D8493B',Operativo:'#16958A','Software F1':'#9A7B2A'};
+  const colors={Cumplimiento:'#D8493B',Operativo:'#16958A','Software F1':'#9A7B2A','Reunión 360':'#5B3F86'};
   document.getElementById('progCat').innerHTML=CATS.map(c=>{
     const tot=state.tasks.filter(x=>x.cat===c).length,dn=state.tasks.filter(x=>x.cat===c&&x.estado==="hecho").length;
     const p=tot?Math.round(dn/tot*100):0;
@@ -577,6 +619,17 @@ function saveTask(){
 /* ============ DATA ============ */
 function exportData(){const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download="resett_tracker_respaldo_"+todayStr()+".json";a.click();}
 document.getElementById('importFile').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=async()=>{try{const s=JSON.parse(r.result);if(s.tasks){state=s;await saveAll();fillSelects();fillMe();renderAll();alert("Respaldo importado y subido a la nube ✓");}}catch(err){alert("Archivo inválido");}};r.readAsText(f);});
+async function reprogramarDesdeHoy(){
+  const pend=state.tasks.filter(t=>t.estado!=='hecho'&&t.due);
+  if(!pend.length){alert('No hay tareas pendientes con fecha.');return;}
+  const min=pend.map(t=>t.due).sort()[0];
+  const shift=daysBetween(min,todayStr());
+  if(shift<=0){alert('Las tareas pendientes ya empiezan hoy o más adelante. No hay retrasos.');return;}
+  if(!confirm('Se moverán TODAS las tareas pendientes '+shift+' día(s) hacia adelante para que empiecen desde hoy, sin retrasos. ¿Continuar?'))return;
+  pend.forEach(t=>t.due=addDays(t.due,shift));
+  await saveAll();renderAll();
+  alert('Fechas reprogramadas desde hoy ✓');
+}
 async function resetData(){if(confirm("¿Reiniciar a las tareas iniciales? Esto reemplaza las tareas de TODO el equipo en la nube.")){await sb.from('tasks').delete().neq('id','');state.tasks=seedTasks();await saveAll();fillSelects();fillMe();renderAll();}}
 
 /* ============ NAV ============ */
