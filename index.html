@@ -208,6 +208,14 @@ dialog input,dialog select,dialog textarea{width:100%;background:#fff;color:var(
       <p class="sub" id="saveInfo" style="margin-top:14px"></p>
     </div>
     <div class="card">
+      <div class="section-h" style="margin-top:0">📥 Importar del 360 Resett</div>
+      <p class="sub" style="margin-bottom:10px">Pega los action items (uno por línea, formato "Nombre: tarea"). Se crean como tareas de la categoría "Reunión 360", asignadas a cada persona.</p>
+      <textarea id="imp360" rows="6" style="width:100%;background:#fff;color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:8px;font-size:13px;font-family:inherit" placeholder="Marlon: Revisar horarios propuestos con Valentina&#10;Valentina: Enviar el cronograma final..."></textarea>
+      <div class="row" style="margin-top:10px">
+        <button class="btn" onclick="importFrom360()">Crear tareas</button>
+      </div>
+    </div>
+    <div class="card">
       <div class="section-h" style="margin-top:0">Cómo usarla cada día</div>
       <ol style="padding-left:20px;color:var(--muted);font-size:13.5px;line-height:1.7">
         <li>Abre <b>Hoy</b> y resuelve primero las <b>vencidas</b>, luego las de hoy.</li>
@@ -629,6 +637,31 @@ async function reprogramarDesdeHoy(){
   pend.forEach(t=>t.due=addDays(t.due,shift));
   await saveAll();renderAll();
   alert('Fechas reprogramadas desde hoy ✓');
+}
+async function importFrom360(){
+  const ta=document.getElementById('imp360');
+  const lines=(ta.value||'').split('\n').map(s=>s.trim()).filter(Boolean);
+  if(!lines.length){alert('Pega primero los action items.');return;}
+  const known={valentina:'Valentina',marlon:'Marlon',natasha:'Nat',nati:'Nat',naty:'Nat',nat:'Nat',laura:'Laura',felipe:'Felipe',pipe:'Felipe',paulina:'Paulina',ana:'Ana',sara:'Sara'};
+  const nuevas=[];let dup=0;
+  lines.forEach((line,i)=>{
+    let resp='Sin asignar',t=line;
+    const idx=line.indexOf(':');
+    if(idx>0&&idx<40){
+      const namePart=line.slice(0,idx).trim();
+      t=line.slice(idx+1).trim();
+      const first=namePart.split(/[\s/]+/)[0].toLowerCase();
+      resp=known[first]||(namePart.length<=18?namePart:'Sin asignar');
+    }
+    if(!t)return;
+    if(state.tasks.some(x=>x.t===t)){dup++;return;}
+    nuevas.push({id:'R'+Date.now()+i,t,d:'360 Resett',cat:'Reunión 360',resp,area:'360 Resett',pri:'Media',due:addDays(todayStr(),3),deps:[],estado:'pendiente',completedAt:null});
+  });
+  if(!nuevas.length){alert('No se crearon tareas nuevas'+(dup?' ('+dup+' ya existían).':'.'));return;}
+  state.tasks.push(...nuevas);
+  await saveAll();fillSelects();fillMe();renderAll();
+  ta.value='';
+  alert(nuevas.length+' tarea(s) creada(s) del 360 Resett ✓'+(dup?' ('+dup+' repetidas omitidas)':''));
 }
 async function resetData(){if(confirm("¿Reiniciar a las tareas iniciales? Esto reemplaza las tareas de TODO el equipo en la nube.")){await sb.from('tasks').delete().neq('id','');state.tasks=seedTasks();await saveAll();fillSelects();fillMe();renderAll();}}
 
