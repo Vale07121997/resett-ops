@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RESETT · Ops Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0E2032; --bg:#F0E9DA; --cream:#FBF6EC; --card:#FFFFFF; --line:#E5DBC7;
+  --fg:#26313B; --muted:#7C756A; --gold:#C9A95C; --gold-ink:#9A7B2A;
+  --crit:#D8493B; --alta:#D9772A; --media:#E3B519; --baja:#9AA0A4;
+  --ok:#2E9E5B; --teal:#16958A;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Calibri,Carlito,'Segoe UI',Candara,Optima,system-ui,sans-serif;background:var(--bg);color:var(--fg);line-height:1.45}
+a{color:var(--gold-ink)}
+header{background:linear-gradient(135deg,#0E2032,#1A3651);color:#F2ECDD;padding:18px 26px;border-bottom:3px solid var(--gold);display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+.logo{font-family:'Playfair Display',Georgia,'Times New Roman',serif;font-size:38px;font-weight:800;letter-spacing:6px;color:#fff;line-height:1}
+.logo small{display:block;font-family:'Segoe UI',system-ui,sans-serif;font-size:10px;letter-spacing:3px;color:var(--gold);font-weight:600;margin-top:3px}
+.hd-stats{display:flex;gap:26px;margin-left:auto;flex-wrap:wrap;align-items:center}
+.hd-stat{text-align:center}
+.hd-stat b{display:block;font-size:22px;color:var(--gold)}
+.hd-stat span{font-size:11px;color:#B9C4CE}
+.ring{position:relative;width:64px;height:64px}
+.ring svg{transform:rotate(-90deg)}
+.ring .pct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:#fff}
+nav{display:flex;gap:4px;background:var(--cream);padding:0 18px;border-bottom:1px solid var(--line);flex-wrap:wrap;position:sticky;top:0;z-index:10;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+nav button{background:none;border:none;color:var(--muted);padding:13px 18px;cursor:pointer;font-size:14px;font-weight:600;border-bottom:3px solid transparent}
+nav button.active{color:var(--navy);border-bottom-color:var(--gold)}
+nav button:hover{color:var(--navy)}
+main{padding:22px;max-width:1180px;margin:0 auto}
+.view{display:none}.view.active{display:block}
+h2{font-size:19px;margin-bottom:4px;color:var(--navy)}
+.sub{color:var(--muted);font-size:13px;margin-bottom:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px;box-shadow:0 1px 3px rgba(40,30,10,.04)}
+.next{background:linear-gradient(135deg,#FFFFFF,#FBF1D9);border:1px solid var(--gold)}
+.next .label{font-size:11px;letter-spacing:1px;color:var(--gold-ink);text-transform:uppercase;font-weight:700}
+.next .t{font-size:17px;font-weight:700;margin:4px 0;color:var(--navy)}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.col{flex:1;min-width:240px}
+.task{display:flex;gap:12px;align-items:flex-start;background:var(--card);border:1px solid var(--line);border-left-width:4px;border-radius:10px;padding:12px 14px;margin-bottom:9px;transition:.15s;box-shadow:0 1px 3px rgba(40,30,10,.04)}
+.task:hover{border-color:var(--gold);box-shadow:0 2px 10px rgba(40,30,10,.08)}
+.task.done{opacity:.55;background:var(--cream)}
+.task.done .tt{text-decoration:line-through}
+.chk{width:22px;height:22px;border-radius:6px;border:2px solid var(--baja);flex:0 0 auto;cursor:pointer;margin-top:2px;display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff}
+.task.done .chk{background:var(--ok);border-color:var(--ok)}
+.tbody{flex:1;min-width:0}
+.tt{font-weight:600;font-size:14.5px}
+.tmeta{display:flex;gap:7px;flex-wrap:wrap;margin-top:6px;align-items:center}
+.tag{font-size:10.5px;padding:2px 8px;border-radius:20px;font-weight:700;letter-spacing:.3px}
+.tag.cat{background:#EEE6D4;color:#5C5340}
+.tag.resp{background:#ECE6F4;color:#5B3F86}
+.pri-crit{border-left-color:var(--crit)} .pri-alta{border-left-color:var(--alta)} .pri-media{border-left-color:var(--media)} .pri-baja{border-left-color:var(--baja)}
+.tag.p-crit{background:var(--crit);color:#fff}.tag.p-alta{background:var(--alta);color:#fff}.tag.p-media{background:var(--media);color:#3a2e00}.tag.p-baja{background:var(--baja);color:#fff}
+.due{font-size:11.5px;color:var(--muted)}
+.due.over{color:var(--crit);font-weight:700}.due.today{color:var(--gold-ink);font-weight:700}
+.tdesc{font-size:12.5px;color:var(--muted);margin-top:5px}
+.tbtns{display:flex;gap:6px;margin-top:8px}
+.mini{font-size:11px;padding:3px 9px;border-radius:6px;border:1px solid var(--line);background:none;color:var(--muted);cursor:pointer}
+.mini:hover{color:var(--navy);border-color:var(--gold)}
+.mini.act{background:var(--teal);color:#fff;border-color:var(--teal)}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
+select,input[type=text],input[type=date]{background:#fff;color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:13px;font-family:inherit}
+.btn{background:var(--gold);color:#3A2C08;border:none;border-radius:8px;padding:8px 14px;font-weight:700;cursor:pointer;font-size:13px}
+.btn:hover{filter:brightness(1.05)}
+.btn.ghost{background:none;border:1px solid var(--line);color:var(--muted)}
+.btn.ghost:hover{color:var(--navy);border-color:var(--gold)}
+.score-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.person{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;box-shadow:0 1px 3px rgba(40,30,10,.04)}
+.person .nm{font-weight:700;font-size:15px;display:flex;justify-content:space-between;align-items:center;color:var(--navy)}
+.medal{font-size:18px}
+.bar{height:8px;background:#ECE3D1;border-radius:6px;overflow:hidden;margin:8px 0}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--teal),var(--ok))}
+.pstats{display:flex;gap:14px;font-size:12px;color:var(--muted);margin-top:6px;flex-wrap:wrap}
+.pstats b{color:var(--fg)}
+.pts{font-size:20px;color:var(--gold-ink);font-weight:800}
+.pbar-row{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.pbar-row .lab{width:170px;font-size:13px}
+.pbar-row .track{flex:1;height:14px;background:#ECE3D1;border-radius:8px;overflow:hidden}
+.pbar-row .track i{display:block;height:100%}
+.pbar-row .num{width:96px;text-align:right;font-size:12px;color:var(--muted)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;text-align:center;box-shadow:0 1px 3px rgba(40,30,10,.04)}
+.kpi b{display:block;font-size:28px;color:var(--gold-ink)}
+.kpi span{font-size:12px;color:var(--muted)}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(120px);background:var(--card);border:1px solid var(--gold);border-radius:12px;padding:14px 20px;max-width:440px;box-shadow:0 10px 40px rgba(40,30,10,.25);transition:.35s;z-index:50;color:var(--fg)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast .tl{color:var(--ok);font-weight:700}
+.toast .nx{color:var(--gold-ink);font-weight:700}
+.empty{text-align:center;color:var(--muted);padding:40px 10px}
+.section-h{font-size:13px;letter-spacing:1px;text-transform:uppercase;color:var(--gold-ink);font-weight:700;margin:18px 0 10px}
+dialog{background:var(--card);color:var(--fg);border:1px solid var(--gold);border-radius:14px;padding:22px;max-width:520px;width:92%}
+dialog::backdrop{background:rgba(20,12,0,.45)}
+dialog h2{color:var(--navy)}
+dialog label{display:block;font-size:12px;color:var(--muted);margin:10px 0 4px}
+dialog input,dialog select,dialog textarea{width:100%;background:#fff;color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:8px;font-size:13px;font-family:inherit}
+.foot{text-align:center;color:var(--muted);font-size:11px;padding:20px}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo"><img src="logo_resett.png" data-x="iVBORw0KGgoAAAANSUhEUgAAAMUAAAAwCAYAAAChZ75aAAARG0lEQVR42u2de7DdVXXHP+ucc/O6N+9ESFRiFBQo4ozjSGGwFYiAUFCUR30RMWmobVOhVSMVBtEi6jiKYRpSSZmBTnlUmiJNEwsRBiwFkxJGg5S3QEgxiSYhAZJ77znn2z/22j07P86995x7f+fmnuTumd/87v2d32Pt795rr7XXXmttk/Rd4BWgDBi10gmMA5Rci78L6Aa2AluATcBLwFYz25Pcj6QSUDGz9D0DFklmZpK0CDgM2A0Uk1tKwCSaLwZUgV5gj9fDknfL/7/FzJ6PdDRIc9HMKv53ATgJOAV4D/AWYLIfnUDBadgBPAn8AtgAPAr8ysyqEQegEN8b321mVUnzgXcCu4YRmwJwq5k953WUt9Ms4KIEv6of44DxQIdfr4dlxftgLB3AxCboLjsGAz1vyf3dXseK109+3ljyP67MgIo3zs+B14FX/YWdQBcwA3gz8FZgdvLMS5J+CawH7gUeMrPebIdphjH8+xf6t9KyBVjujdRIpxUwBpgKHAoc6Udf5Rngecel3ACdmFlF0kxgMXAW8JpjcRvwIrDd39eV0HAccCLwQX/dHuB/JN0D/IuZrQcqWeZMsPkk8LYMSb8B/r5JbDocm1nOaEf3c/8m4Lnk/RXgCODqOvdWgY3AUz6IvuJMZwnzzAS+nDyzGbgh6az9MXEFmAMsSa6/CNxY5/kur+Nc4CjgkDrv/EkE+BRJvZJ6JO2RVJb02UY6raQ5ks6VdKOkndq3PC7pi5ImRcZokikKfp4maZPTuNfpW80Qi6TZki6StM7pLSf1X5xIugFp9L8vlbRL0n2STm6Cjk5J50j6qd5Y1ko6LWW+9G9JXZKezdC+KgdsDpU0X9KDTkclef8XIzaxTSWdkdAgSU9KWuCDxEDfmubt2uPvWNkkrYf7c7Fv3NpI35J0gqRbnd747XuR1OE3PeI/7vXzJV7pcX5Oj2LaGZIPTffnXs407DOSzhgkY4z183cy9N3ntIypQ99ARzHTwYrOvGU/JOmagZgiYdqpklb5c3+WGTT+H6/kKPpRyuIh6ZOSNvu7ehMMr8jil2BzVQabn+aIjUn6QtJpJOn7CVOU/O8/llT13++UNKUODtkj0nek17Xiz6/x62MHoDX+fnwGrx8P8HwW84v82aqkDbFiJmmZvzBy+l820CksbeTk+mGS7sk0lCQtaJYxEvo+5u/o9vO92ZF6EKNhbKw46p7t9FYl3dhf/f1Zc4b4udN0XnYEbYKOYsJkcySt93e+5vT8ax2mKPqzZySjnSStzRGbSNOpCS23JN+PTLEwtksiPTpSButnUDkiwxSrG+knyXfen2GKOwd6PsE80j8/SriC68Jy/bm5WZmZzKxqZhXXp01SycxeBM5w/Wys65BVYIWkD/q9jXYaOX2b/P8CORWnv+ygjDGzu4BFrqsemujb9Uqk4x+B9wNLzezH/p5yM/Onp6Pik+eSmb0AnOoT7wl+W7EfbDa3ChunaYyZ3Q18zrE5pA42M72dL4zta2a9zRpYhqskmJcldZjZTcBKYE4K4u/yAjICAnzKrVIlnxABLHWVTf2NIplJID5Bq+TZ8Bm6exycm4G1PnGkXudOjAafA8507L7pI195iLRE/HYAHwFe9p/G9sOku4GeVmDjNEVsbgdWJdhUE4vOO4AbzOwlZ+wK7VMq3nZLgO4UxFdzBLHiwGwHvu7AFVxavBs4yQFtphG7E6tFK8Ext4RMkdTVxwS3KmkCcJl30rVmtiVUPZhSc8LvJWCB17keU8S/X0/Mp63G5kvAhGTOEDv/d4HL/Z52Yghc26ma2TPASYVhAPF2YJuL/4o35KkZu/GIAcfPjwJfczPlG9QmVwlO9tHRgJ95XS1HWsrOGGuANW4Cpw91pNqg6TUPbJ4ArnDz9j7XzWyHS13RhsXN3hsKLQRRPnLuAh5OGs+i+G11Qw6Wbgfn71yFyXbE2PFPS+h/we/Juz5VZ7avAD3JpND2MzbXm9nWOiZOo42L169QaPF3IlCPZa5PHqlMkYDTlyEgqke/lzDInhaKdZnZL4ELIl77cyTuC5tIK21ezKxaGiYQt9WZH4w49Smr1/enRgDTk8vTh0GsPzbSsTlQSmGYvlPJSIbfjHSmaKCko+V7W1mfKNYZLQcUU0zJ/P9ouwKW6M27k8vnuL5fbZVenYdVa7SMDKaIkuEoP5dcJ787o5+3I2a/9vr1EBzoFnrHLY12q1Gm6G9Erbp/zgnegUoEm/7j0f15JEmABkf5eM8D7Ovp+W1Jx5hZb/QnO1BKE9iMMsVAOrdbI84kxEPEld4rRuJ8ogn7epwf/Ziw4BndkycBqyQd7YxROlA6UjuvPYwYpvBJYdVHzKu8I3UAXzOzdYOJrWj1KOgu2BManPQWzexlYCm1lfoqwa//fklnud+Q2pk5Emw6JXWOMsXgQSzFZXPgeuAYH01vNLOrRhJDxHmOj4IrXKo14sVbdca/muC015EwxgzgLknLJc3KMEe7WZA6HJvlwPkNYnNAM0XUIy0ZMbJHIY0LSBwCuyTdTPDbAfhbM1sQJUjOEqmQiVVo5Ig0l1zVmQt8jAYX4aIqYWavA+cQovRKCWNUgYuBRyUtkTQt8TgtDkfHygmbHklvBs6jRQuU7cYUZe/kvVGnrHNEt/GyO7F1ekz1s8BngIeAeWZ2RRrPmxPt0YmrnDh0NXpEmsuSjgPu8tG+uwk9u+rGghcJoaQ/c8aIIZplgov1t4CNkr4uaW50s/eO2yrVKi9s3kfwih0L7D1YmKI/8+FkSW/ijTHKSiabEwlxB+8j+AKdQojjvgdYBtwVR8cWqExdko6gsTjk+Pt4p28mwUz8hwTnxDhyNzWCJ4yxWdIphFj3LyfqVMRtthsYLvVgoRVm9kASy1GKHTlnbIoNSOYsNjMy2JSoBfUftEwRK38p8NmMNJGPGl1ubYn3PuGMcD7wX2a2MxHjeTNEzAhxJCE4vdBAoxeoZSeZAUzL3NODe30OwjITGaOX4Dq9kuAuf2bCsL2xs7oE/Yykh5z+OyJerlZpiMwhQtKBwWAznTe6rOz13ziYmSJaiq4lZFToyEiKsYQV6rmETBQf8pHwCEKqlmeB2MilOBrmqS47Y2wws5MbWe9wFaXoz01w+g8H5hEyhcxmCM6JzhgxFc0G4I8kzQP+CvgwNRf0so/cHcDxflzp868VZvbrhDkG62BnwH+b2bxBYDM+weZkallUdDAxBYk78gWZGO0/b8Li9FHPKBHjhG+T9M48rBWZuOU9SXD8vUmjDuX9M5OkA/OGSnOcsCb//76kFZK2J7HqVY81TxMT7JJ0naS3p1K2gQ6NpDdJeiXNAJITNtMk3eHv/Gje1qf9GaM92Il2TBjQ0Z/VyUfKO12diZLlAmCdpPNiFFkL+dqaYN4s/R1mts3p3U1zCbj6lBqJlalgZg+b2UI3TX8BWOc0j3FJ3esSZCLwF26x+oakziZj2VuBzXZCSPFOBpdc7YCzPkVL0UBWJ3mnL5vZIkIgPw7iP0v6RIw73p8V7YP+XlfxXiMkDyvn+L2YiKDg86r/NbOlZnacqya3uL7e4cxR9mMScLkPKh/IgTGGik03Yb2pZ1R9aiDFTT21wfNE/cpFYUxedmwqLnNWnwo5YGB5qBsNjMalzLV3ucr0aqJWlRM1oCzp832pAg2oTyMam3ZUn5pWG8LJ9gKfT6xEY4EfjuSV0GQxTq38RmKCLbr0eNLMFhPiMW6mlrc1OhkasEzSJcMhMfYXNu2kPg1KZfDGfgC4k9qC2HHAuVHX5iAvSZ6sgqsoT5nZfDfjPk/NydBcpfq+pFP3F2McbKVVDoEGXOOjXWzgv2l1IE4bMkfV51tx3rHaB5C11BbeIlbL3GFxFL92YwpfqDPPln1/Mok8luDyIYYv4q+dmCPmetrqEmMNtcXRCiGdzvmO36i0aDdJkbx3WRQefr74ADFOFFvEHDE7YA/BO+AJxzLmy7rAbx0NTW1DpoiJ0P4deIFgk68Cp0maE/Xpdp4TtPLdLjFeBWIG8zj5PkbS+GQFfbS0C1NEEe+7Gv2TX+4huBGc32KGbLWUmCDprBYzXZQY9xHCXuO8bBph05HR0oaSIhXxNzlDRP+fT7v6UWkzZogjcwdwg9vWrYUSL8az3JGooB3UnPNGJUW7MUXiPfoUwYO2SHBpOJbgCNeuUVy7HLeLWmw0iB4FG5O22kstEbZGu2/7SYp0NMtOuBe2w2JQmsUis4j1W2CRxy23Sr+P+KT5pV4m7Js3orA5mJhiyBWOG7kQ8jw9nky4z5F0yEifcGezWCSdYCsh7uBiX8kvtnBAmZAwySPJfEMjCZuDhSkm5vSNors33OD/9xKc3uaP1Al34jE6S9K1dTrqHmoLkrOobfrRijnF0cm3bx9AqgwnNtMl/eBATOdZ6Ecy5CUa44T6VlcFOrwR/1TSOGrm20ZHzuEocSReSAhEivOfSEPcQnk6cH2cW+SsTijJmwVhn+3Vnmw5a6QoDePgErFZAJwe545DfOc49t3ed0KTzF7Is6+kL8v6y+eS5yfJk7SFsKdYgWCNmgt8qokV2vEE58KWjopJzqpJwF8TFtCyYO90NbAb+IikJS4Nc0lEEEN43bt4nl/+koe81hvIOocZm05CLPrTOQ1Y4zPvGN8kU3Rm7u8cigRNAc7udzyzBROpZdSC4AV8RdIY+t//Ll6fSs17tCWSI6aF8XnCdYR9NDbX+V7cey/GX39L0sLYaYe4K2khwWOpj5rfNLN7+ol3n+wSuNJihojYfM+l5OYhtkV8LsbMx7adGudNA/TB7PNK/x9srHshmUC+I/OhuT6K57WHW8HM1gH3UYs4OxxY7A1d6ke3LgBvy6hjlbziBWIUYeKgdw0hPlkEE2ws0dL0D4SNaMZ5Z+whrF0sSXc5bYa+OonkVhAyaiw3s6/GuO1s+/k35mQ6lXKSWPWwuZKwg6wIm3MOdd5UAN6euT4LmNFIHfz5bN99i6RJg7aQJYEaTyaBLZK0Q9LkvBaoku+cmOyHXZa0O4nnHlNnc/Mxfv5hZh/tDRGUZLP2Zo5CHRrfKumWzP7fl/hv+2ytJWm8pMskbdG+ZaWkd2XeW+pnk/lSZm/sGZJW+7suS+podeiN2FyXweaxlNFywma2pJsy31mSYjOIPtHh5x8lQUKx/52e3tPH87FNfpL03RiodMJAzw9E3KKEqGoSwfTtnEVwMdOIPV6JX0ia2ccogKT3SNrplS4n0WmfyIGmqZL+QNK1kn6b4NDjWHw62/CZxASzJF0u6elMYoLlkt7bBB0znMl2SHpM0gcGYIiIzTGeFKGcOS7MAZspjs33EubvdaaoSlo4WKZI6D9R0utJh44ReA94xnoGqP9p3lbZ59ck91iz4utuQpqavsr9wMfxRaOh2KaTHUSNEPf7J8nPW12P3w78B/CcX/8qyW6cdco6wqJWI0nRUl10CiEH1GEDGBXOMrNVWX0+SWkTs/2NIySDO9vPUaS/QMgeuN7rtM2tV2MJqXWOImxV8G5gC3Cdmd2WTrj7mne4IeDqfrB5xPV+axKbyQk2Xf3c+3EzW9lsKqOYekfSN7x9++q0z7np/sEM1ubzjaXA4n4+9YQ/vz59vhGmuNCtKX3ZvycRMv3tjsQMVU9NrFIfBs51nbITeM119e+Y2Sa//0PeSHv7MDtOYnCLZ1Wfn3T7nKBCzRs17SD/aWa/66vuMW9S2ikkjSdk7zjeO/yxhBSaY/0b3c4YuwibvzwI/JuZbcxaoPrC0PE7ySe8fWEzkcFtItMINgXgQTPb1my/SOg/3du9pw5jVLzd15vZ0/VyWEk6m1oGy3rPTwEeNrNnm9kP5f8AIajpcZt2sZMAAAAASUVORK5CYII=" alt="RESETT" style="height:46px;display:block"><small style="margin-top:5px">GESTIÓN OPERATIVA</small></div>
+  <div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.08);padding:6px 12px;border-radius:10px;border:1px solid rgba(201,169,92,.4)">
+    <span style="font-size:12px;color:#C9A95C;font-weight:600">👤 Yo soy</span>
+    <select id="meSel" style="background:#12283f;color:#F2ECDD;border:1px solid rgba(201,169,92,.5);border-radius:6px;padding:5px 8px;font-size:13px"><option value="">— elige tu nombre —</option></select>
+  </div>
+  <div class="hd-stats">
+    <div class="hd-stat"><b id="hdToday">0</b><span>vencen hoy</span></div>
+    <div class="hd-stat"><b id="hdOver" style="color:var(--crit)">0</b><span>vencidas</span></div>
+    <div class="hd-stat"><b id="hdStreak">0</b><span>días de racha</span></div>
+    <div class="ring">
+      <svg width="64" height="64"><circle cx="32" cy="32" r="27" stroke="#2C4660" stroke-width="7" fill="none"/>
+      <circle id="ringFg" cx="32" cy="32" r="27" stroke="var(--gold)" stroke-width="7" fill="none" stroke-linecap="round" stroke-dasharray="170" stroke-dashoffset="170"/></svg>
+      <div class="pct" id="ringPct">0%</div>
+    </div>
+  </div>
+</header>
+<nav>
+  <button data-v="hoy" class="active">📅 Hoy</button>
+  <button data-v="tareas">✓ Tareas</button>
+  <button data-v="equipo">🏆 Equipo</button>
+  <button data-v="progreso">📊 Progreso</button>
+  <button data-v="datos">⚙️ Datos</button>
+</nav>
+<main>
+  <div class="view active" id="v-hoy">
+    <h2>Tu día</h2>
+    <div class="sub" id="todayDate"></div>
+    <div class="card next" id="nextCard"></div>
+    <div class="kpis" id="hoyKpis"></div>
+    <div class="section-h">🔴 Vencidas (resolver ya)</div>
+    <div id="listOver"></div>
+    <div class="section-h">📅 Para hoy</div>
+    <div id="listToday"></div>
+    <div class="section-h">⏭️ Próximas accionables</div>
+    <div id="listSoon"></div>
+  </div>
+  <div class="view" id="v-tareas">
+    <h2>Todas las tareas</h2>
+    <div class="sub">Filtra, edita y agrega tareas. Marca el círculo para completar.</div>
+    <div class="filters">
+      <select id="fCat"><option value="">Todas las categorías</option></select>
+      <select id="fResp"><option value="">Todos los responsables</option></select>
+      <select id="fEstado"><option value="">Cualquier estado</option><option value="pendiente">Pendientes</option><option value="progreso">En progreso</option><option value="hecho">Hechas</option></select>
+      <input type="text" id="fText" placeholder="Buscar...">
+      <button class="btn" onclick="openAdd()">+ Nueva tarea</button>
+    </div>
+    <div id="listAll"></div>
+  </div>
+  <div class="view" id="v-equipo">
+    <h2>Equipo</h2>
+    <div class="sub">Gestiona las personas y revisa su rendimiento.</div>
+    <div class="card">
+      <div class="section-h" style="margin-top:0">👥 Gestionar equipo</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+        <input type="text" id="newMember" placeholder="Nombre de la persona" style="flex:1;min-width:180px" onkeydown="if(event.key==='Enter')addMember()">
+        <button class="btn" onclick="addMember()">+ Agregar persona</button>
+      </div>
+      <div id="teamMgr"></div>
+    </div>
+    <div class="section-h">🏆 Calificación · a tiempo = +10 · tarde = +5 · vencida pendiente = −3</div>
+    <div class="score-grid" id="scoreGrid"></div>
+  </div>
+  <div class="view" id="v-progreso">
+    <h2>Progreso general</h2>
+    <div class="sub">Avance global y por frente de trabajo.</div>
+    <div class="kpis" id="progKpis"></div>
+    <div class="card"><div class="section-h" style="margin-top:0">Por categoría</div><div id="progCat"></div></div>
+    <div class="card"><div class="section-h" style="margin-top:0">Por responsable</div><div id="progResp"></div></div>
+  </div>
+  <div class="view" id="v-datos">
+    <h2>Datos y respaldo</h2>
+    <div class="sub">Los datos se guardan en la nube (Supabase) y se comparten con todo el equipo en vivo. Puedes descargar un respaldo cuando quieras.</div>
+    <div class="card">
+      <p style="margin-bottom:12px">Respaldo: descarga un archivo <b>.json</b> con todo tu avance. Para restaurar en otro equipo, impórtalo.</p>
+      <div class="row">
+        <button class="btn" onclick="exportData()">⬇️ Exportar respaldo</button>
+        <label class="btn ghost" style="cursor:pointer">⬆️ Importar respaldo<input type="file" id="importFile" accept=".json" style="display:none"></label>
+        <button class="btn ghost" onclick="resetData()" style="color:var(--crit);border-color:var(--crit)">↺ Reiniciar a tareas iniciales</button>
+      </div>
+      <p class="sub" id="saveInfo" style="margin-top:14px"></p>
+    </div>
+    <div class="card">
+      <div class="section-h" style="margin-top:0">Cómo usarla cada día</div>
+      <ol style="padding-left:20px;color:var(--muted);font-size:13.5px;line-height:1.7">
+        <li>Abre <b>Hoy</b> y resuelve primero las <b>vencidas</b>, luego las de hoy.</li>
+        <li>Marca el círculo al terminar: el sistema te dice el <b>siguiente paso</b>.</li>
+        <li>Revisa <b>Equipo</b> para ver quién va al día y quién está atrasado.</li>
+        <li>Exporta el respaldo al final del día.</li>
+      </ol>
+    </div>
+  </div>
+</main>
+<div class="toast" id="toast"></div>
+
+<dialog id="dlg">
+  <h2 id="dlgTitle">Nueva tarea</h2>
+  <input type="hidden" id="dId">
+  <label>Título</label><input type="text" id="dTitle">
+  <label>Descripción</label><textarea id="dDesc" rows="2"></textarea>
+  <div class="row">
+    <div class="col"><label>Categoría</label><select id="dCat"></select></div>
+    <div class="col"><label>Responsable</label><input type="text" id="dResp" list="respList"><datalist id="respList"></datalist></div>
+  </div>
+  <div class="row">
+    <div class="col"><label>Prioridad</label><select id="dPri"><option>Crítica</option><option>Alta</option><option>Media</option><option>Baja</option></select></div>
+    <div class="col"><label>Sede / área</label><input type="text" id="dArea"></div>
+    <div class="col"><label>Fecha límite</label><input type="date" id="dDue"></div>
+  </div>
+  <div class="row" style="margin-top:18px;justify-content:flex-end">
+    <button class="btn ghost" onclick="document.getElementById('dlg').close()">Cancelar</button>
+    <button class="btn" onclick="saveTask()">Guardar</button>
+  </div>
+</dialog>
+
+<div class="foot">RESETT Ops Tracker · datos compartidos en la nube · sincronización en vivo para todo el equipo</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* ============ SUPABASE CONFIG ============ */
+const SUPABASE_URL="https://xmityeuypjhpxgdasaii.supabase.co";
+const SUPABASE_KEY="sb_publishable_EerBuzFBP7FU4-MRMifCEg_wPOIT_3i";
+const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+/* ============ SEED DATA ============ */
+const SEED=[
+{id:"U1",t:"Reparar o retirar las piedras calientes (2 cortocircuitos en un mes)",d:"Riesgo eléctrico grave. Revisar set completo; reemplazar si es necesario.",cat:"Cumplimiento",resp:"Marlon",area:"Todas las sedes",pri:"Crítica",due:"2026-06-28",deps:[]},
+{id:"U2",t:"Revisar todos los cables eléctricos (polo a tierra cortado)",d:"Revisar y adecuar cables en todas las sedes; no cortar la tercera clavija.",cat:"Cumplimiento",resp:"Marlon",area:"Todas las sedes",pri:"Crítica",due:"2026-06-29",deps:["U1"]},
+{id:"U3",t:"Ponerse al día con bitácoras de zona húmeda (pH, cloro, alcalinidad)",d:"Registros incompletos/inventados. Completar y asegurar llenado diario.",cat:"Cumplimiento",resp:"Felipe",area:"Sedes con piscina",pri:"Crítica",due:"2026-06-30",deps:[]},
+{id:"U4",t:"Estandarizar el cálculo de alcalinidad y registro diario",d:"Método actual subjetivo. Definir procedimiento y rangos válidos.",cat:"Cumplimiento",resp:"Laura",area:"Calidad",pri:"Alta",due:"2026-06-30",deps:["U3"]},
+{id:"U5",t:"Crear carpeta de documentación por sede",d:"Habilitación, fichas técnicas INVIMA, plan de emergencia, bitácoras, guías de aseo.",cat:"Cumplimiento",resp:"Valentina",area:"Todas las sedes",pri:"Crítica",due:"2026-06-30",deps:[]},
+{id:"U6",t:"Crear grupo de auditoría de cumplimiento",d:"Centralizar recomendaciones y coordinar correcciones antes de la visita.",cat:"Cumplimiento",resp:"Nat",area:"Dirección",pri:"Alta",due:"2026-06-27",deps:[]},
+{id:"U7",t:"Confirmar fecha exacta de la auditoría (semana del 1 jul)",d:"Definir alcance y responsable de atención de la visita.",cat:"Cumplimiento",resp:"Nat",area:"Dirección",pri:"Alta",due:"2026-06-26",deps:["U6"]},
+{id:"U8",t:"Actualizar botiquines según norma y retirar vencidos",d:"Bajar botiquín sala 3, verificar todas las sedes.",cat:"Cumplimiento",resp:"María Ximena",area:"Todas las sedes",pri:"Alta",due:"2026-06-30",deps:[]},
+{id:"U9",t:"Reubicar residuos peligrosos de sala 3 y etiquetar canecas",d:"Definir ubicación segura; etiquetar con número de sala.",cat:"Cumplimiento",resp:"Marlon",area:"La 33",pri:"Alta",due:"2026-06-29",deps:[]},
+{id:"U10",t:"Solicitar fichas técnicas e inventario de químicos (aseo y médicos)",d:"Con registro INVIMA; crear plantilla de etiquetas base + fecha.",cat:"Cumplimiento",resp:"Felipe",area:"Operaciones",pri:"Alta",due:"2026-06-30",deps:[]},
+{id:"U11",t:"Instalar señalización de seguridad",d:"Antideslizante, piso resbaloso, rutas de evacuación, traje de baño obligatorio.",cat:"Cumplimiento",resp:"Felipe",area:"Todas las sedes",pri:"Media",due:"2026-07-01",deps:[]},
+{id:"O1",t:"Inventario de procesos: qué existe vs qué falta documentar",d:"Masajes, agendamiento, equipos, atención al cliente.",cat:"Operativo",resp:"Marlon",area:"Operaciones",pri:"Alta",due:"2026-06-25",deps:[]},
+{id:"O2",t:"Priorizar Top 5 procesos críticos",d:"Validar inventario y priorizar lo más urgente.",cat:"Operativo",resp:"Nat",area:"Dirección",pri:"Alta",due:"2026-06-26",deps:["O1"]},
+{id:"O3",t:"Contratar a Sara (externa) para manuales de cosmetología",d:"Definir alcance, entregables y fechas.",cat:"Operativo",resp:"Nat",area:"Dirección",pri:"Alta",due:"2026-06-26",deps:[]},
+{id:"O4",t:"Diseñar protocolo de estandarización de atención (tipo PAIS/ADA)",d:"Esquema de evaluación y auditoría para cosmetólogas y fisioterapeutas.",cat:"Operativo",resp:"Laura",area:"Área técnica",pri:"Alta",due:"2026-06-27",deps:["O1"]},
+{id:"O5",t:"Propuesta del plan comisional (cosmetólogas y fisioterapeutas)",d:"Estructura de comisiones por venta de paquetes.",cat:"Operativo",resp:"Valentina",area:"Comercial/Financiero",pri:"Alta",due:"2026-06-27",deps:[]},
+{id:"O6",t:"Definir y publicar protocolo de llegadas tarde",d:"Tiempo máx de espera, recorte de servicio, reincidencias.",cat:"Operativo",resp:"Valentina",area:"Operaciones",pri:"Alta",due:"2026-06-30",deps:[]},
+{id:"O7",t:"Actualizar mensaje de confirmación + consentimiento informado",d:"Explícito sobre el recorte por retraso; trazabilidad.",cat:"Operativo",resp:"Valentina",area:"Operaciones",pri:"Alta",due:"2026-07-02",deps:["O6"]},
+{id:"O8",t:"Reestructurar reparto de propinas (equitativo)",d:"Proporcional a días trabajados, cortes quincenales.",cat:"Operativo",resp:"Ana",area:"Financiero",pri:"Alta",due:"2026-07-03",deps:[]},
+{id:"O9",t:"Definir % de comisiones y protocolo de ventas",d:"Aprobación de Nat. Meta de implementación: julio.",cat:"Operativo",resp:"Ana",area:"Financiero",pri:"Alta",due:"2026-07-03",deps:["O5"]},
+{id:"O10",t:"Definir tiempos de limpieza entre servicios por protocolo",d:"5 min ropa, 10–15 agua/aceite; ajustar el sistema.",cat:"Operativo",resp:"Felipe",area:"Operaciones",pri:"Alta",due:"2026-06-29",deps:[]},
+{id:"O11",t:"Política de confirmación con cutoff (15:00) y liberación de cupos",d:"Liberar espacios no confirmados; evitar citas 'en azul'.",cat:"Operativo",resp:"Valentina",area:"Operaciones",pri:"Alta",due:"2026-06-30",deps:[]},
+{id:"O12",t:"Regla de secuenciación de masajes",d:"Evitar consecutivos de alta carga; intercalar drenaje/aparatología.",cat:"Operativo",resp:"Felipe",area:"Operaciones",pri:"Media",due:"2026-07-02",deps:[]},
+{id:"O13",t:"Protocolo de valoración previa (medidas, fotos, metas, consentimiento)",d:"Formatos de registro estandarizados.",cat:"Operativo",resp:"Laura",area:"Área técnica",pri:"Alta",due:"2026-07-02",deps:["O4"]},
+{id:"O14",t:"Estandarizar paquetes moldeo vs reducción",d:"Mín 10 sesiones, metas, puntos de control (sesión 4, 8, final).",cat:"Operativo",resp:"Laura",area:"Área técnica",pri:"Media",due:"2026-07-04",deps:["O13"]},
+{id:"O15",t:"Política clara de membresías 'ilimitado'",d:"Tiempo por estación, repetición, comunicación contractual.",cat:"Operativo",resp:"Paulina",area:"Comercial",pri:"Alta",due:"2026-07-03",deps:[]},
+{id:"O16",t:"Protocolo de cobro por usos cruzados (sauna/jacuzzi)",d:"Guion de comunicación y evidencia de soporte.",cat:"Operativo",resp:"Felipe",area:"Operaciones",pri:"Media",due:"2026-07-04",deps:["O15"]},
+{id:"O17",t:"Hojas de vida de equipos (vida útil, mantenimiento)",d:"Registro de activos por sede.",cat:"Operativo",resp:"Marlon",area:"Operaciones",pri:"Alta",due:"2026-07-05",deps:[]},
+{id:"O18",t:"Evaluar cierre los lunes para limpieza profunda",d:"Desmontar domingo, mantenimiento lunes, reabrir lunes tarde/martes.",cat:"Operativo",resp:"Nat",area:"Dirección",pri:"Media",due:"2026-07-01",deps:[]},
+{id:"O19",t:"Capacitación: masajes embarazadas + protocolos unificados",d:"Hoy solo 1 persona formada. Incluir manejo de objeciones.",cat:"Operativo",resp:"Sara",area:"Área técnica",pri:"Media",due:"2026-07-08",deps:["O3"]},
+{id:"O20",t:"Reuniones periódicas con equipos de sede (San Lucas, Escobero)",d:"Mejorar comunicación; canal directo de escalamiento.",cat:"Operativo",resp:"Nat",area:"Dirección",pri:"Media",due:"2026-07-03",deps:[]},
+{id:"S1",t:"Definir catálogo de servicios (duración, buffer, equipo requerido)",d:"Base del motor de agenda. Cada servicio con su carga física.",cat:"Software F1",resp:"Valentina",area:"Producto",pri:"Crítica",due:"2026-07-05",deps:["O10"]},
+{id:"S2",t:"Cargar capacidad por sede (espacios, personal, equipo)",d:"Disponibilidad = mín(espacios, personal, equipo).",cat:"Software F1",resp:"Marlon",area:"Producto",pri:"Crítica",due:"2026-07-07",deps:["S1","O17"]},
+{id:"S3",t:"Definir roles y permisos (asesor / cosmetóloga / fisio)",d:"Dinero y agenda = asesor; ejecución = cosmetóloga; valoración = fisio.",cat:"Software F1",resp:"Nat",area:"Producto",pri:"Alta",due:"2026-07-05",deps:[]},
+{id:"S4",t:"Especificar reglas de agenda (buffers, recorte, ventanas)",d:"Incluye secuenciación y bloqueos de descanso.",cat:"Software F1",resp:"Felipe",area:"Producto",pri:"Alta",due:"2026-07-08",deps:["S1","O12"]},
+{id:"S5",t:"Configurar consentimiento digital + cuestionario de contraindicaciones",d:"Hard-stop: no atender sin firmar / con contraindicación sin aval.",cat:"Software F1",resp:"Laura",area:"Producto",pri:"Crítica",due:"2026-07-08",deps:["O7","O13"]},
+{id:"S6",t:"Definir control de paquetes/bonos (saldo, vigencia, redención)",d:"Bloqueo si agotado o vencido.",cat:"Software F1",resp:"Ana",area:"Producto",pri:"Alta",due:"2026-07-09",deps:[]},
+{id:"S7",t:"Definir flujo POS venta→factura→comisión",d:"Toda venta registrada y comisión vinculada al vendedor.",cat:"Software F1",resp:"Ana",area:"Producto",pri:"Alta",due:"2026-07-09",deps:["O9"]},
+{id:"S8",t:"Definir plantillas de mensajes (confirmación, recorte, recordatorios)",d:"Variables por sede/servicio.",cat:"Software F1",resp:"Paulina",area:"Comercial",pri:"Media",due:"2026-07-08",deps:["O7"]},
+{id:"S9",t:"Activar confirmación + recordatorios 24h/2h automáticos",d:"Liberación de cupo y oferta a lista de espera.",cat:"Software F1",resp:"Valentina",area:"Producto",pri:"Alta",due:"2026-07-12",deps:["S8","O11"]},
+{id:"S10",t:"Seleccionar sede piloto (La 33) e iniciar el producto mínimo",d:"Medir no-show, ocupación y ventas 2–4 semanas antes de replicar.",cat:"Software F1",resp:"Nat",area:"Dirección",pri:"Alta",due:"2026-07-10",deps:["S2","S3","S5"]},
+];
+const CATS=["Cumplimiento","Operativo","Software F1"];
+const PRI_ORDER={"Crítica":3,"Alta":2,"Media":1,"Baja":0};
+const PRI_CLASS={"Crítica":"crit","Alta":"alta","Media":"media","Baja":"baja"};
+
+/* ============ STATE (Supabase / nube) ============ */
+let state={tasks:[],team:[]};
+const COLS="id,t,d,cat,resp,area,pri,due,deps,estado,completed_at";
+function toRow(t){return {id:t.id,t:t.t,d:t.d||"",cat:t.cat,resp:t.resp,area:t.area||"",pri:t.pri,due:t.due,deps:t.deps||[],estado:t.estado||"pendiente",completed_at:t.completedAt||null,updated_at:new Date().toISOString()};}
+function fromRow(r){return {id:r.id,t:r.t,d:r.d||"",cat:r.cat,resp:r.resp,area:r.area||"",pri:r.pri,due:r.due,deps:Array.isArray(r.deps)?r.deps:[],estado:r.estado||"pendiente",completedAt:r.completed_at||null};}
+function seedTasks(){return SEED.map(t=>({...t,estado:"pendiente",completedAt:null}));}
+async function loadFromCloud(){
+  const {data,error}=await sb.from('tasks').select(COLS);
+  if(error){console.error(error);alert("No pude conectar con la base de datos. Revisa tu conexión a internet y recarga.");return;}
+  if(!data||data.length===0){
+    state.tasks=seedTasks();
+    const {error:e2}=await sb.from('tasks').upsert(state.tasks.map(toRow));
+    if(e2)console.error(e2);
+  }else{
+    state.tasks=data.map(fromRow);
+  }
+}
+async function saveOne(t){updateSaveInfo();const {error}=await sb.from('tasks').upsert(toRow(t));if(error)console.error(error);}
+async function saveAll(){updateSaveInfo();const {error}=await sb.from('tasks').upsert(state.tasks.map(toRow));if(error)console.error(error);}
+
+/* ============ EQUIPO (personas) ============ */
+async function loadTeam(){
+  const {data,error}=await sb.from('team').select('id,name,pin');
+  if(error){console.error(error);return;}
+  if(!data||data.length===0){
+    const names=[...new Set(state.tasks.map(t=>t.resp).filter(Boolean))].sort();
+    state.team=names.map((n,i)=>({id:'P'+(Date.now()+i),name:n}));
+    if(state.team.length){const {error:e3}=await sb.from('team').upsert(state.team);if(e3)console.error(e3);}
+  }else{state.team=data;}
+}
+function roster(){const names=new Set(state.team.map(m=>m.name));state.tasks.forEach(t=>{if(t.resp)names.add(t.resp);});return [...names].sort((a,b)=>a.localeCompare(b));}
+async function addMember(){
+  const inp=document.getElementById('newMember');const name=(inp.value||'').trim();if(!name)return;
+  if(state.team.some(m=>m.name.toLowerCase()===name.toLowerCase())){alert('Esa persona ya está en el equipo.');return;}
+  const m={id:'P'+Date.now(),name};state.team.push(m);inp.value='';
+  const {error}=await sb.from('team').upsert(m);if(error)console.error(error);
+  fillSelects();fillMe();renderEquipo();
+}
+async function addExisting(name){
+  if(state.team.some(m=>m.name===name))return;
+  const m={id:'P'+Date.now(),name};state.team.push(m);
+  const {error}=await sb.from('team').upsert(m);if(error)console.error(error);
+  fillSelects();fillMe();renderEquipo();
+}
+async function renameMember(id){
+  const m=state.team.find(x=>x.id===id);if(!m)return;
+  const nn=prompt('Nuevo nombre para "'+m.name+'":',m.name);if(nn===null)return;
+  const nuevo=nn.trim();if(!nuevo||nuevo===m.name)return;
+  if(state.team.some(x=>x.id!==id&&x.name.toLowerCase()===nuevo.toLowerCase())){alert('Ya existe otra persona con ese nombre.');return;}
+  const old=m.name;m.name=nuevo;await sb.from('team').upsert(m);
+  const afectadas=state.tasks.filter(t=>t.resp===old);afectadas.forEach(t=>t.resp=nuevo);
+  if(afectadas.length){const {error}=await sb.from('tasks').upsert(afectadas.map(toRow));if(error)console.error(error);}
+  if(ME===old){ME=nuevo;localStorage.setItem('resett_me',ME);}
+  fillSelects();fillMe();renderAll();
+}
+async function deleteMember(id){
+  const m=state.team.find(x=>x.id===id);if(!m)return;
+  const tieneTareas=state.tasks.some(t=>t.resp===m.name);
+  const msg=tieneTareas?('"'+m.name+'" tiene tareas asignadas. Se quitará del equipo pero sus tareas seguirán con su nombre. ¿Continuar?'):('¿Eliminar a "'+m.name+'" del equipo?');
+  if(!confirm(msg))return;
+  state.team=state.team.filter(x=>x.id!==id);
+  const {error}=await sb.from('team').delete().eq('id',id);if(error)console.error(error);
+  fillSelects();fillMe();renderEquipo();
+}
+async function resetPin(id){
+  const m=state.team.find(x=>x.id===id);if(!m)return;
+  if(!confirm('¿Borrar el PIN de "'+m.name+'"? Tendrá que crear uno nuevo la próxima vez que entre.'))return;
+  m.pin=null;
+  const {error}=await sb.from('team').upsert({id:m.id,name:m.name,pin:null});if(error)console.error(error);
+  renderTeamMgr();
+}
+function renderTeamMgr(){
+  const el=document.getElementById('teamMgr');if(!el)return;
+  const names=roster();
+  el.innerHTML=names.length?names.map(n=>{
+    const m=state.team.find(x=>x.name===n);
+    const nTasks=state.tasks.filter(t=>t.resp===n).length;
+    return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 12px;border:1px solid var(--line);border-radius:9px;margin-bottom:7px;background:#fff">
+      <span style="font-weight:600">${esc(n)} ${m?(m.pin?'🔒':'🔓'):''} <span style="color:var(--muted);font-weight:400;font-size:12px">· ${nTasks} tarea(s)</span></span>
+      <span style="display:flex;gap:6px;flex-wrap:wrap">${m?`<button class="mini" onclick="renameMember('${m.id}')">✏️ Renombrar</button><button class="mini" onclick="resetPin('${m.id}')">🔑 PIN</button><button class="mini" onclick="deleteMember('${m.id}')" style="color:var(--crit);border-color:var(--crit)">✕ Quitar</button>`:`<button class="mini" onclick="addExisting('${esc(n)}')">+ Añadir al equipo</button>`}</span>
+    </div>`;
+  }).join(''):empty('Aún no hay personas. Agrega la primera arriba.');
+}
+function updateSaveInfo(){const el=document.getElementById('saveInfo');if(el)el.textContent="Sincronizado en la nube · "+new Date().toLocaleString('es-CO');}
+
+/* ============ HELPERS ============ */
+function todayStr(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,'0')+"-"+String(d.getDate()).padStart(2,'0');}
+function daysBetween(a,b){return Math.round((new Date(b)-new Date(a))/86400000);}
+function fmtDue(due){
+  const t=todayStr();const diff=daysBetween(t,due);
+  if(diff<0)return {txt:"Venció hace "+(-diff)+"d ("+due+")",cls:"over"};
+  if(diff===0)return {txt:"Vence HOY",cls:"today"};
+  if(diff===1)return {txt:"Vence mañana",cls:""};
+  return {txt:"Vence en "+diff+"d ("+due+")",cls:""};
+}
+function depsResolved(task){return (task.deps||[]).every(id=>{const d=state.tasks.find(x=>x.id===id);return !d||d.estado==="hecho";});}
+function pendingTasks(){return state.tasks.filter(t=>t.estado!=="hecho");}
+function inScope(t){return !ME||t.resp===ME;}
+function scopedTasks(){return state.tasks.filter(inScope);}
+function scopedPending(){return scopedTasks().filter(t=>t.estado!=="hecho");}
+
+/* ============ RENDER TASK ITEM ============ */
+function taskHTML(t,opts={}){
+  const due=fmtDue(t.due);
+  const done=t.estado==="hecho";
+  const blocked=!done&&!depsResolved(t);
+  const depNames=(t.deps||[]).filter(id=>{const d=state.tasks.find(x=>x.id===id);return d&&d.estado!=="hecho";}).map(id=>id).join(", ");
+  return `<div class="task pri-${PRI_CLASS[t.pri]} ${done?'done':''}" data-id="${t.id}">
+    <div class="chk" onclick="toggle('${t.id}')">${done?'✓':''}</div>
+    <div class="tbody">
+      <div class="tt">${esc(t.t)}</div>
+      ${t.d?`<div class="tdesc">${esc(t.d)}</div>`:''}
+      <div class="tmeta">
+        <span class="tag p-${PRI_CLASS[t.pri]}">${t.pri}</span>
+        <span class="tag cat">${t.cat}</span>
+        <span class="tag resp">${esc(t.resp)}</span>
+        <span class="due ${due.cls}">${due.txt}</span>
+        ${blocked?`<span class="due over">⛔ espera: ${depNames}</span>`:''}
+      </div>
+      <div class="tbtns">
+        <button class="mini ${t.estado==='progreso'?'act':''}" onclick="setProg('${t.id}')">En progreso</button>
+        <button class="mini" onclick="openEdit('${t.id}')">Editar</button>
+      </div>
+    </div>
+  </div>`;
+}
+function esc(s){return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+/* ============ ACTIONS ============ */
+function toggle(id){
+  const t=state.tasks.find(x=>x.id===id);if(!t)return;
+  if(t.estado==="hecho"){t.estado="pendiente";t.completedAt=null;saveOne(t);renderAll();return;}
+  t.estado="hecho";t.completedAt=todayStr();saveOne(t);renderAll();suggestNext(t);
+}
+function setProg(id){const t=state.tasks.find(x=>x.id===id);if(!t)return;t.estado=t.estado==="progreso"?"pendiente":"progreso";saveOne(t);renderAll();}
+function suggestNext(justDone){
+  const cand=pendingTasks().filter(depsResolved);
+  cand.sort((a,b)=>{
+    const sameA=a.resp===justDone.resp?1:0, sameB=b.resp===justDone.resp?1:0;
+    if(sameA!==sameB)return sameB-sameA;
+    if(PRI_ORDER[b.pri]!==PRI_ORDER[a.pri])return PRI_ORDER[b.pri]-PRI_ORDER[a.pri];
+    return a.due.localeCompare(b.due);
+  });
+  const nx=cand[0];
+  showToast(`<span class="tl">✓ ¡Hecho!</span> ${esc(justDone.t)}<br>`+
+    (nx?`<span class="nx">⏭️ Siguiente paso${nx.resp===justDone.resp?' ('+esc(nx.resp)+')':''}:</span> ${esc(nx.t)}`:`<span class="nx">🎉 ¡No quedan tareas accionables pendientes!</span>`));
+}
+let toastTimer;
+function showToast(html){const el=document.getElementById('toast');el.innerHTML=html;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),6000);}
+
+/* ============ STREAK ============ */
+function computeStreak(){
+  const days=new Set(scopedTasks().filter(t=>t.completedAt).map(t=>t.completedAt));
+  let streak=0;let cur=new Date();
+  if(!days.has(todayStr()))cur.setDate(cur.getDate()-1);
+  while(true){const s=cur.getFullYear()+"-"+String(cur.getMonth()+1).padStart(2,'0')+"-"+String(cur.getDate()).padStart(2,'0');if(days.has(s)){streak++;cur.setDate(cur.getDate()-1);}else break;}
+  return streak;
+}
+
+/* ============ RENDER VIEWS ============ */
+function renderAll(){renderHeader();renderHoy();renderTareas();renderEquipo();renderProgreso();}
+function renderHeader(){
+  const t=todayStr();
+  const over=scopedPending().filter(x=>x.due<t).length;
+  const today=scopedPending().filter(x=>x.due===t).length;
+  const total=scopedTasks().length, done=scopedTasks().filter(x=>x.estado==="hecho").length;
+  const pct=total?Math.round(done/total*100):0;
+  document.getElementById('hdToday').textContent=today;
+  document.getElementById('hdOver').textContent=over;
+  document.getElementById('hdStreak').textContent=computeStreak();
+  document.getElementById('ringPct').textContent=pct+"%";
+  const circ=2*Math.PI*27;
+  const fg=document.getElementById('ringFg');fg.setAttribute('stroke-dasharray',circ);fg.setAttribute('stroke-dashoffset',circ*(1-pct/100));
+}
+function renderHoy(){
+  const t=todayStr();
+  document.getElementById('todayDate').textContent=new Date().toLocaleDateString('es-CO',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  const hoyH2=document.querySelector('#v-hoy h2');if(hoyH2)hoyH2.textContent=ME?('Tu día · '+ME):'Tu día (todo el equipo)';
+  const over=scopedPending().filter(x=>x.due<t).sort(byPriDue);
+  const today=scopedPending().filter(x=>x.due===t).sort(byPriDue);
+  const soon=scopedPending().filter(x=>x.due>t&&depsResolved(x)).sort(byPriDue).slice(0,6);
+  const nextCand=[...over,...today,...soon].filter(depsResolved);
+  const nx=nextCand[0];
+  document.getElementById('nextCard').innerHTML=nx
+    ?`<div class="label">⏭️ Tu siguiente paso ahora</div><div class="t">${esc(nx.t)}</div><div class="tmeta"><span class="tag p-${PRI_CLASS[nx.pri]}">${nx.pri}</span><span class="tag resp">${esc(nx.resp)}</span><span class="due ${fmtDue(nx.due).cls}">${fmtDue(nx.due).txt}</span></div>`
+    :`<div class="label">🎉</div><div class="t">No hay tareas accionables pendientes. ¡Vas al día!</div>`;
+  const doneToday=scopedTasks().filter(x=>x.completedAt===t).length;
+  document.getElementById('hoyKpis').innerHTML=
+    kpi(doneToday,"completadas hoy")+kpi(today.length,"pendientes hoy")+kpi(over.length,"vencidas",over.length?'var(--crit)':null)+kpi(soon.length,"próximas listas");
+  document.getElementById('listOver').innerHTML=over.length?over.map(x=>taskHTML(x)).join(''):empty("Sin tareas vencidas. 👌");
+  document.getElementById('listToday').innerHTML=today.length?today.map(x=>taskHTML(x)).join(''):empty("Nada vence hoy.");
+  document.getElementById('listSoon').innerHTML=soon.length?soon.map(x=>taskHTML(x)).join(''):empty("—");
+}
+function kpi(n,l,color){return `<div class="kpi"><b ${color?`style="color:${color}"`:''}>${n}</b><span>${l}</span></div>`;}
+function empty(m){return `<div class="empty">${m}</div>`;}
+function byPriDue(a,b){if(PRI_ORDER[b.pri]!==PRI_ORDER[a.pri])return PRI_ORDER[b.pri]-PRI_ORDER[a.pri];return a.due.localeCompare(b.due);}
+
+function renderTareas(){
+  const cat=document.getElementById('fCat').value, resp=document.getElementById('fResp').value,
+        est=document.getElementById('fEstado').value, txt=document.getElementById('fText').value.toLowerCase();
+  let list=state.tasks.filter(t=>
+    (!cat||t.cat===cat)&&(!resp||t.resp===resp)&&
+    (!est||(est==="hecho"&&t.estado==="hecho")||(est==="progreso"&&t.estado==="progreso")||(est==="pendiente"&&t.estado==="pendiente"))&&
+    (!txt||(t.t+t.d+t.resp+t.area).toLowerCase().includes(txt)));
+  list.sort((a,b)=>{const o={hecho:2,progreso:0,pendiente:1};if(o[a.estado]!==o[b.estado])return o[a.estado]-o[b.estado];return byPriDue(a,b);});
+  document.getElementById('listAll').innerHTML=list.length?list.map(x=>taskHTML(x)).join(''):empty("Sin resultados.");
+}
+
+function renderEquipo(){
+  renderTeamMgr();
+  const people={};
+  roster().forEach(n=>{people[n]={resp:n,total:0,done:0,onTime:0,late:0,overduePending:0,pts:0};});
+  state.tasks.forEach(t=>{
+    const p=people[t.resp]||(people[t.resp]={resp:t.resp,total:0,done:0,onTime:0,late:0,overduePending:0,pts:0});
+    p.total++;
+    if(t.estado==="hecho"){p.done++;if(t.completedAt&&t.completedAt<=t.due){p.onTime++;p.pts+=10;}else{p.late++;p.pts+=5;}}
+    else if(t.due<todayStr()){p.overduePending++;p.pts-=3;}
+  });
+  const arr=Object.values(people).sort((a,b)=>b.pts-a.pts);
+  const medals=["🥇","🥈","🥉"];
+  document.getElementById('scoreGrid').innerHTML=arr.map((p,i)=>{
+    const rate=p.done?Math.round(p.onTime/p.done*100):0;
+    const prog=Math.round(p.done/p.total*100);
+    return `<div class="person">
+      <div class="nm">${esc(p.resp)} <span class="medal">${i<3?medals[i]:''}</span></div>
+      <div class="pts">${p.pts} pts</div>
+      <div class="bar"><i style="width:${prog}%"></i></div>
+      <div class="pstats">
+        <span><b>${p.done}/${p.total}</b> hechas</span>
+        <span><b>${rate}%</b> a tiempo</span>
+        ${p.late?`<span style="color:var(--media)">${p.late} tarde</span>`:''}
+        ${p.overduePending?`<span style="color:var(--crit)">${p.overduePending} vencidas</span>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderProgreso(){
+  const total=state.tasks.length,done=state.tasks.filter(t=>t.estado==="hecho").length;
+  const t=todayStr();
+  document.getElementById('progKpis').innerHTML=
+    kpi(Math.round(done/total*100)+"%","avance global")+
+    kpi(done+"/"+total,"tareas hechas")+
+    kpi(pendingTasks().filter(x=>x.due<t).length,"vencidas",'var(--crit)')+
+    kpi(pendingTasks().filter(x=>x.pri==="Crítica").length,"críticas pendientes",'var(--alta)');
+  const colors={Cumplimiento:'#D8493B',Operativo:'#16958A','Software F1':'#9A7B2A'};
+  document.getElementById('progCat').innerHTML=CATS.map(c=>{
+    const tot=state.tasks.filter(x=>x.cat===c).length,dn=state.tasks.filter(x=>x.cat===c&&x.estado==="hecho").length;
+    const p=tot?Math.round(dn/tot*100):0;
+    return pbar(c,p,dn+"/"+tot,colors[c]);
+  }).join('');
+  const people={};state.tasks.forEach(x=>{const p=people[x.resp]||(people[x.resp]={t:0,d:0});p.t++;if(x.estado==="hecho")p.d++;});
+  document.getElementById('progResp').innerHTML=Object.entries(people).sort((a,b)=>b[1].t-a[1].t).map(([r,v])=>{
+    const p=Math.round(v.d/v.t*100);return pbar(r,p,v.d+"/"+v.t,'#16958A');
+  }).join('');
+}
+function pbar(lab,pct,num,color){return `<div class="pbar-row"><div class="lab">${esc(lab)}</div><div class="track"><i style="width:${pct}%;background:${color}"></i></div><div class="num">${num} · ${pct}%</div></div>`;}
+
+/* ============ DIALOG ============ */
+function fillSelects(){
+  const cats=[...new Set(state.tasks.map(t=>t.cat))];
+  const resps=roster();
+  document.getElementById('fCat').innerHTML='<option value="">Todas las categorías</option>'+cats.map(c=>`<option>${c}</option>`).join('');
+  document.getElementById('fResp').innerHTML='<option value="">Todos los responsables</option>'+resps.map(c=>`<option>${esc(c)}</option>`).join('');
+  document.getElementById('dCat').innerHTML=cats.map(c=>`<option>${c}</option>`).join('');
+  document.getElementById('respList').innerHTML=resps.map(c=>`<option value="${esc(c)}">`).join('');
+}
+function openAdd(){document.getElementById('dlgTitle').textContent="Nueva tarea";['dId','dTitle','dDesc','dArea'].forEach(i=>document.getElementById(i).value='');document.getElementById('dPri').value="Media";document.getElementById('dDue').value=todayStr();document.getElementById('dlg').showModal();}
+function openEdit(id){const t=state.tasks.find(x=>x.id===id);if(!t)return;document.getElementById('dlgTitle').textContent="Editar tarea";document.getElementById('dId').value=t.id;document.getElementById('dTitle').value=t.t;document.getElementById('dDesc').value=t.d;document.getElementById('dCat').value=t.cat;document.getElementById('dResp').value=t.resp;document.getElementById('dPri').value=t.pri;document.getElementById('dArea').value=t.area;document.getElementById('dDue').value=t.due;document.getElementById('dlg').showModal();}
+function saveTask(){
+  const id=document.getElementById('dId').value;
+  const data={t:document.getElementById('dTitle').value.trim(),d:document.getElementById('dDesc').value.trim(),cat:document.getElementById('dCat').value,resp:document.getElementById('dResp').value.trim()||"Sin asignar",pri:document.getElementById('dPri').value,area:document.getElementById('dArea').value.trim(),due:document.getElementById('dDue').value||todayStr()};
+  if(!data.t){alert("Pon un título");return;}
+  let saved;
+  if(id){saved=state.tasks.find(x=>x.id===id);Object.assign(saved,data);}
+  else{saved={id:"X"+Date.now(),...data,deps:[],estado:"pendiente",completedAt:null};state.tasks.push(saved);}
+  saveOne(saved);fillSelects();fillMe();renderAll();document.getElementById('dlg').close();
+}
+
+/* ============ DATA ============ */
+function exportData(){const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download="resett_tracker_respaldo_"+todayStr()+".json";a.click();}
+document.getElementById('importFile').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=async()=>{try{const s=JSON.parse(r.result);if(s.tasks){state=s;await saveAll();fillSelects();fillMe();renderAll();alert("Respaldo importado y subido a la nube ✓");}}catch(err){alert("Archivo inválido");}};r.readAsText(f);});
+async function resetData(){if(confirm("¿Reiniciar a las tareas iniciales? Esto reemplaza las tareas de TODO el equipo en la nube.")){await sb.from('tasks').delete().neq('id','');state.tasks=seedTasks();await saveAll();fillSelects();fillMe();renderAll();}}
+
+/* ============ NAV ============ */
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('v-'+b.dataset.v).classList.add('active');
+});
+['fCat','fResp','fEstado'].forEach(i=>document.getElementById(i).addEventListener('change',renderTareas));
+document.getElementById('fText').addEventListener('input',renderTareas);
+
+/* ============ IDENTIDAD (Yo soy) ============ */
+let ME=localStorage.getItem('resett_me')||"";
+function fillMe(){
+  const resps=roster();
+  const sel=document.getElementById('meSel');if(!sel)return;
+  sel.innerHTML='<option value="">— elige tu nombre —</option>'+resps.map(r=>`<option ${r===ME?'selected':''}>${esc(r)}</option>`).join('');
+  if(ME){const f=document.getElementById('fResp');if(f)f.value=ME;}
+}
+function goHoyAndRender(){
+  const f=document.getElementById('fResp');if(f)f.value=ME;
+  document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));
+  const hb=document.querySelector('nav button[data-v="hoy"]');if(hb)hb.classList.add('active');
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('v-hoy').classList.add('active');
+  renderAll();
+}
+document.getElementById('meSel').addEventListener('change',async e=>{
+  const name=e.target.value;
+  if(!name){ME="";localStorage.setItem('resett_me','');goHoyAndRender();return;}
+  let m=state.team.find(x=>x.name===name);
+  if(!m){m={id:'P'+Date.now(),name,pin:null};state.team.push(m);await sb.from('team').upsert(m);}
+  if(!m.pin){
+    const np=prompt('Primera vez, '+name+'. Crea tu PIN personal (4 a 6 dígitos):');
+    if(np===null){e.target.value=ME;return;}
+    if(!/^[0-9]{4,6}$/.test(np.trim())){alert('El PIN debe ser de 4 a 6 dígitos.');e.target.value=ME;return;}
+    m.pin=np.trim();
+    const {error}=await sb.from('team').upsert({id:m.id,name:m.name,pin:m.pin});if(error)console.error(error);
+  }else{
+    const ip=prompt('Hola '+name+', ingresa tu PIN:');
+    if(ip===null){e.target.value=ME;return;}
+    if(ip.trim()!==m.pin){alert('PIN incorrecto.');e.target.value=ME;return;}
+  }
+  ME=name;localStorage.setItem('resett_me',ME);
+  goHoyAndRender();
+});
+
+/* ============ INIT (nube + tiempo real) ============ */
+async function refreshFromCloud(){
+  const fc=document.getElementById('fCat').value,fr=document.getElementById('fResp').value,fe=document.getElementById('fEstado').value,ft=document.getElementById('fText').value;
+  await loadFromCloud();await loadTeam();
+  fillSelects();fillMe();
+  document.getElementById('fCat').value=fc;document.getElementById('fResp').value=fr;document.getElementById('fEstado').value=fe;document.getElementById('fText').value=ft;
+  renderAll();
+}
+async function init(){
+  await loadFromCloud();await loadTeam();
+  fillSelects();fillMe();renderAll();updateSaveInfo();
+  sb.channel('resett-rt')
+    .on('postgres_changes',{event:'*',schema:'public',table:'tasks'},refreshFromCloud)
+    .on('postgres_changes',{event:'*',schema:'public',table:'team'},refreshFromCloud)
+    .subscribe();
+}
+init();
+</script>
+</body>
+</html>
