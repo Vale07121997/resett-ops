@@ -221,7 +221,7 @@ dialog input,dialog select,dialog textarea{width:100%;background:#fff;color:var(
         <li>Abre <b>Hoy</b> y resuelve primero las <b>vencidas</b>, luego las de hoy.</li>
         <li>Marca el círculo al terminar: el sistema te dice el <b>siguiente paso</b>.</li>
         <li>Revisa <b>Equipo</b> para ver quién va al día y quién está atrasado.</li>
-        <li>Exporta el respaldo al final del día.</li>
+        <li>No tienes que guardar ni exportar nada: todo se guarda solo en la nube y el equipo lo ve al instante.</li>
       </ol>
     </div>
   </div>
@@ -415,6 +415,25 @@ async function resetPin(id){
   const {error}=await sb.from('team').upsert({id:m.id,name:m.name,pin:null});if(error)console.error(error);
   renderTeamMgr();
 }
+async function mergeByName(src){
+  const otros=roster().filter(n=>n!==src&&n!=='Sin asignar');
+  if(!otros.length){alert('No hay otra persona con quien fusionar.');return;}
+  const target=prompt('Fusionar "'+src+'" en otra persona. Escribe el nombre exacto de quien se queda ('+otros.join(', ')+'):');
+  if(target===null)return;
+  const dest=otros.find(n=>n.toLowerCase()===(target||'').trim().toLowerCase());
+  if(!dest){alert('No encontré esa persona. Escríbelo tal cual aparece en la lista.');return;}
+  const afectadas=state.tasks.filter(t=>t.resp===src);
+  if(!confirm('Se pasarán '+afectadas.length+' tarea(s) de "'+src+'" a "'+dest+'" y el perfil "'+src+'" se eliminará. ¿Continuar?'))return;
+  if(afectadas.length){
+    afectadas.forEach(t=>t.resp=dest);
+    const {error:e1}=await sb.from('tasks').upsert(afectadas.map(toRow));if(e1)console.error(e1);
+  }
+  const m=state.team.find(x=>x.name===src);
+  if(m){state.team=state.team.filter(x=>x.id!==m.id);const {error:e2}=await sb.from('team').delete().eq('id',m.id);if(e2)console.error(e2);}
+  if(ME===src){ME=dest;localStorage.setItem('resett_me',ME);}
+  fillSelects();fillMe();renderAll();
+  alert('Perfiles fusionados en "'+dest+'" ✓');
+}
 function renderTeamMgr(){
   const el=document.getElementById('teamMgr');if(!el)return;
   const names=roster();
@@ -423,7 +442,7 @@ function renderTeamMgr(){
     const nTasks=state.tasks.filter(t=>t.resp===n).length;
     return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 12px;border:1px solid var(--line);border-radius:9px;margin-bottom:7px;background:#fff">
       <span style="font-weight:600">${esc(n)} ${m?(m.pin?'🔒':'🔓'):''} <span style="color:var(--muted);font-weight:400;font-size:12px">· ${nTasks} tarea(s)</span></span>
-      <span style="display:flex;gap:6px;flex-wrap:wrap">${m?`<button class="mini" onclick="renameMember('${m.id}')">✏️ Renombrar</button><button class="mini" onclick="resetPin('${m.id}')">🔑 PIN</button><button class="mini" onclick="deleteMember('${m.id}')" style="color:var(--crit);border-color:var(--crit)">✕ Quitar</button>`:`<button class="mini" onclick="addExisting('${esc(n)}')">+ Añadir al equipo</button>`}</span>
+      <span style="display:flex;gap:6px;flex-wrap:wrap">${m?`<button class="mini" onclick="renameMember('${m.id}')">✏️ Renombrar</button><button class="mini" onclick="resetPin('${m.id}')">🔑 PIN</button>`:`<button class="mini" onclick="addExisting('${esc(n)}')">+ Añadir al equipo</button>`}${n!=='Sin asignar'?`<button class="mini" onclick="mergeByName('${esc(n)}')">🔗 Fusionar</button>`:''}${m?`<button class="mini" onclick="deleteMember('${m.id}')" style="color:var(--crit);border-color:var(--crit)">✕ Quitar</button>`:''}</span>
     </div>`;
   }).join(''):empty('Aún no hay personas. Agrega la primera arriba.');
 }
@@ -651,7 +670,12 @@ async function importFrom360(){
       const namePart=line.slice(0,idx).trim();
       t=line.slice(idx+1).trim();
       const first=namePart.split(/[\s/]+/)[0].toLowerCase();
-      resp=known[first]||(namePart.length<=18?namePart:'Sin asignar');
+      let match=known[first];
+      if(!match){
+        const r=roster().find(x=>{const rl=x.toLowerCase();return rl!=='sin asignar'&&(rl===first||first.startsWith(rl)||rl.startsWith(first));});
+        if(r)match=r;
+      }
+      resp=match||(namePart.length<=18?namePart:'Sin asignar');
     }
     if(!t)return;
     if(state.tasks.some(x=>x.t===t)){dup++;return;}
