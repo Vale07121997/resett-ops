@@ -109,6 +109,16 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;font-family:var
 .hbtn{min-height:32px;padding:4px 10px;font-size:13px;border-radius:99px}
 .howto{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px}
 .howto li{line-height:1.45}
+.helpsec{display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:18px;align-items:start}
+.helptxt{min-width:0;display:flex;flex-direction:column;gap:8px}
+@media (max-width:600px){.helpsec{grid-template-columns:minmax(0,1fr)}.shot{justify-self:center}}
+.shot{margin:0;display:flex;flex-direction:column;align-items:center;gap:6px}
+.shot figcaption{font-size:12px;color:var(--muted);text-align:center;max-width:220px}
+.phone{width:220px;height:420px;border:6px solid var(--ink);border-radius:24px;overflow:hidden;background:var(--bg);position:relative;box-shadow:0 4px 18px rgba(0,0,0,.12)}
+.phone::after{content:"";position:absolute;left:0;right:0;bottom:0;height:46px;background:linear-gradient(transparent,var(--bg))}
+.phone .scr{width:356px;transform:scale(.5843);transform-origin:top left;padding:12px;display:flex;flex-direction:column;gap:14px;pointer-events:none;user-select:none}
+.cam.demo{aspect-ratio:4/3}
+.camfake{position:absolute;inset:0;background:repeating-linear-gradient(45deg,#2a2f36 0 10px,#232830 10px 20px)}
 </style>
 </head><body>
 
@@ -269,7 +279,7 @@ function render(){
   else if(v==="summary") app.innerHTML=vSummary();
   else if(v==="boxview") app.innerHTML=vBoxView();
   else if(v==="batchdone") app.innerHTML=vBatchDone();
-  else if(v==="help") app.innerHTML=vHelp();
+  else if(v==="help"){ app.innerHTML=vHelp(); requestAnimationFrame(()=>document.querySelectorAll(".phone").forEach(ph=>{ const sc=ph.querySelector(".scr"); if(sc) ph.style.height=Math.min(420,Math.ceil(sc.scrollHeight*0.5843)+14)+"px"; })); }
   bind();
 }
 function go(v){ if(v!=="scan") stopCam(); if(v==="help"&&S.view!=="help") S.prevView=S.view; S.view=v;render();window.scrollTo(0,0)}
@@ -342,18 +352,18 @@ ${stepper(1)}
 <div id="restartzone"><button class="danger block" data-a="restartask">${L("Restart this batch","Reiniciar esta tanda")}</button></div>
 <button class="ghost" data-a="go" data-v="home">${L("Back to all boxes (box stays open)","Volver a las cajas (la caja queda abierta)")}</button>`}
 
-function renderScanParts(){
-  const b=cur(); if(!b||!$("#counter")) return; const bt=batch(b);
+function scanPartsHTML(b){ const H={}; const bt=batch(b);
   const n=bScanned(b), d=bt.declared||0, left=d-n;
   const pct=d?Math.min(100,n/d*100):0;
-  $("#counter").innerHTML=`<div class="counter"><div><div class="n">${d}</div><div class="l">${L("Counted","Contadas")}</div></div><div><div class="n">${n}</div><div class="l">${L("Scanned","Escaneadas")}</div></div><div><div class="n" style="color:${left<0?"var(--bad)":left===0?"var(--ok)":"inherit"}">${left<0?"+"+(-left):left}</div><div class="l">${left<0?L("Over count","De más"):L("On table","En la mesa")}</div></div></div><div class="bar ${left<0?"over":left===0?"full":""}"><i style="width:${pct}%"></i></div>`;
-  $("#scanmsg").innerHTML= left===0&&n>0?`<div class="note ok"><b>${L("Batch count reached.","Tanda completa.")}</b><span>${L("The table should now be empty. If it is, tap “Verify this batch”.","La mesa debería estar vacía. Si es así, toca “Verificar esta tanda”.")}</span></div>`
+  H.counter=`<div class="counter"><div><div class="n">${d}</div><div class="l">${L("Counted","Contadas")}</div></div><div><div class="n">${n}</div><div class="l">${L("Scanned","Escaneadas")}</div></div><div><div class="n" style="color:${left<0?"var(--bad)":left===0?"var(--ok)":"inherit"}">${left<0?"+"+(-left):left}</div><div class="l">${left<0?L("Over count","De más"):L("On table","En la mesa")}</div></div></div><div class="bar ${left<0?"over":left===0?"full":""}"><i style="width:${pct}%"></i></div>`;
+  H.msg= left===0&&n>0?`<div class="note ok"><b>${L("Batch count reached.","Tanda completa.")}</b><span>${L("The table should now be empty. If it is, tap “Verify this batch”.","La mesa debería estar vacía. Si es así, toca “Verificar esta tanda”.")}</span></div>`
     : left<0?`<div class="note bad"><b>${L(`You scanned ${-left} more than you counted.`,`Escaneaste ${-left} más de las que contaste.`)}</b><span>${L("A garment may have been scanned twice. Check the list and tap − on the repeated one, or change the counted number if your count was wrong.","Puede que una prenda se escaneara dos veces. Revisa la lista y toca − en la repetida, o cambia el número contado si el conteo estaba mal.")}</span></div>`:"";
   const keys=Object.keys(bt.items).sort((x,y)=>((b.items[y]||{}).t||0)-((b.items[x]||{}).t||0));
-  $("#items").innerHTML=keys.length?keys.map(k=>{const i=b.items[k]||{name:"?",color:"",size:"",sku:k};return `<div class="item ${S.lastKey===k?"flash":""}"><div class="t"><b>${esc(i.name)}</b> · ${esc(i.color)} · ${esc(szL(i.size))} ${i.manual?`<span class="chip man">${L("By hand","A mano")}</span>`:""} ${i.unknown?`<span class="chip unk">${L("Not in guide","No está en la guía")}</span>`:""}<div class="sku">${esc(i.sku)}</div></div><span class="qty">${bt.items[k]}</span><button data-a="minus" data-k="${esc(k)}" aria-label="${L("Remove one","Quitar una")}">−</button></div>`}).join(""):`<p class="muted">${L("Nothing scanned in this batch yet.","Aún no hay nada escaneado en esta tanda.")}</p>`;
-  const prev=countedOf(b); $("#prevbatches").textContent=prev?L(`Already in the box from earlier batches: ${prev} garments (verified, locked).`,`Ya en la caja de tandas anteriores: ${prev} prendas (verificadas, bloqueadas).`):"";
-  bindDyn();
+  H.items=keys.length?keys.map(k=>{const i=b.items[k]||{name:"?",color:"",size:"",sku:k};return `<div class="item ${S.lastKey===k?"flash":""}"><div class="t"><b>${esc(i.name)}</b> · ${esc(i.color)} · ${esc(szL(i.size))} ${i.manual?`<span class="chip man">${L("By hand","A mano")}</span>`:""} ${i.unknown?`<span class="chip unk">${L("Not in guide","No está en la guía")}</span>`:""}<div class="sku">${esc(i.sku)}</div></div><span class="qty">${bt.items[k]}</span><button data-a="minus" data-k="${esc(k)}" aria-label="${L("Remove one","Quitar una")}">−</button></div>`}).join(""):`<p class="muted">${L("Nothing scanned in this batch yet.","Aún no hay nada escaneado en esta tanda.")}</p>`;
+  const prev=countedOf(b); H.prev=prev?L(`Already in the box from earlier batches: ${prev} garments (verified, locked).`,`Ya en la caja de tandas anteriores: ${prev} prendas (verificadas, bloqueadas).`):"";
+  return H;
 }
+function renderScanParts(){ const b=cur(); if(!b||!$("#counter")) return; const H=scanPartsHTML(b); $("#counter").innerHTML=H.counter; $("#scanmsg").innerHTML=H.msg; $("#items").innerHTML=H.items; $("#prevbatches").textContent=H.prev; bindDyn(); }
 
 function vClose(){const b=cur();const bt=batch(b);const n=bScanned(b),d=bt.declared,left=d-n;
   let body="";
@@ -451,8 +461,46 @@ function vBoxView(){const b=S.boxes.get(S.viewBox);if(!b)return `<p>${L("Box not
   ${b.status==="closed"?`<div id="reopenzone"><button class="danger" data-a="reopenask">${L("Reopen this box","Reabrir esta caja")}</button></div>`:""}
   </div><button class="ghost" data-a="back">${L("Back","Volver")}</button>`}
 
+
+/* ---------- Help screenshots: real app screens rendered with example data ---------- */
+function demoItems(spec){ const o={}; let t=1; spec.forEach(([sku,q])=>{ const p=parseCode(sku)||{}; o[sku]={sku,name:p.name||sku,color:p.colorName||"",size:p.sizeName||"",manual:false,unknown:false,qty:q,t:t++}; }); return o; }
+function demoBox(inBatch,declared){ // batch 1 verified (20), batch 2 in progress
+  const bi={"1018039MM":0,"1031035SS":0,"10115039MM":0}; const ks=Object.keys(bi); for(let i=0;i<inBatch;i++) bi[ks[i%3]]++;
+  Object.keys(bi).forEach(k=>{ if(!bi[k]) delete bi[k]; });
+  const items=demoItems([["1018039MM",10+(bi["1018039MM"]||0)],["1031035SS",6+(bi["1031035SS"]||0)],["10115039MM",4+(bi["10115039MM"]||0)]]);
+  return {id:"demo",number:3,packer:"Laura",status:"open",batches:[{no:1,declared:20,scanned:20}],batch:{no:2,declared,items:bi},items,restarts:0,createdAt:Date.now()-3600e3,notes:[]};
+}
+function shot(setup,fn,cap,scan){
+  const keep={cur:S.cur,boxes:S.boxes,issues:S.issues,name:S.name,leftover:S.leftover,undo:S.undo,issueDraft:S.issueDraft,kbd:S.kbd,lastKey:S.lastKey}; const camOn=CAM.on; CAM.on=false;
+  let html="";
+  try{ setup(); html=fn(); if(scan){ const H=scanPartsHTML(cur()); html=html.replace('<div id="counter"></div>',`<div>${H.counter}</div>`).replace('<div id="scanmsg"></div>',`<div>${H.msg}</div>`).replace('<div id="items" class="list"></div>',`<div class="list">${H.items}</div>`).replace('<p id="prevbatches" class="small muted"></p>',`<p class="small muted">${esc(H.prev)}</p>`).replace('class="cam" hidden','class="cam demo"'); } }
+  catch(e){ html=`<p class="muted">—</p>`; }
+  finally{ Object.assign(S,keep); CAM.on=camOn; }
+  html=html.replace(/ data-a="/g,' data-x="').replace(/ id="/g,' data-sid="').replace(/<video[^>]*><\/video>/g,'<div class="camfake"></div>');
+  return `<figure class="shot"><div class="phone" aria-hidden="true"><div class="scr" inert>${html}</div></div><figcaption>${cap}</figcaption></figure>`;
+}
+function helpShots(){
+  const demoMap=list=>new Map(list.map(b=>[b.id,b]));
+  const closedBox=(id,n,who,q)=>({id,number:n,packer:who,status:"closed",batches:[{no:1,declared:q,scanned:q}],items:demoItems([["1084021MM",q]]),dims:{l:20,w:16,h:12,unit:"in"},weight:{v:18,unit:"lb"},closedAt:Date.now()-n*600e3,createdAt:Date.now()-n*900e3});
+  const base=()=>{ S.name="Laura"; S.undo=[]; S.kbd=false; S.lastKey=null; S.leftover=0; };
+  const withBox=b=>()=>{ base(); S.boxes=new Map([[b.id,b]]); S.cur=b.id; };
+  return [
+    shot(()=>{ base(); S.name=""; }, vWelcome, L("Start screen","Pantalla de inicio")),
+    shot(()=>{ const b=demoBox(0,25); b.batches.push({no:2,declared:25,scanned:25}); b.batch=null; b.items=demoItems([["1018039MM",19],["1031035SS",15],["10115039MM",11]]); withBox(b)(); }, vBatchDone, L("After each batch: add another or close the box","Después de cada tanda: agregar otra o cerrar la caja")),
+    shot(withBox(demoBox(0,null)), vCount, L("Step 1: write how many garments the batch has","Paso 1: escribe cuántas prendas tiene la tanda")),
+    shot(withBox(demoBox(12,25)), vScan, L("Step 2: the counter shows what is left on the table","Paso 2: el contador muestra lo que queda en la mesa"), true),
+    shot(withBox(demoBox(23,25)), vClose, L("Step 3: the app compares your count with the scans","Paso 3: la app compara tu conteo con lo escaneado")),
+    shot(()=>{ const b=demoBox(0,25); b.batches.push({no:2,declared:25,scanned:25}); b.batch=null; withBox(b)(); }, vDims, L("Step 4: size and weight of the full box","Paso 4: medidas y peso de la caja llena")),
+    shot(withBox(demoBox(26,25)), vScan, L("Over the count: tap − on the repeated garment","Por encima del conteo: toca − en la prenda repetida"), true),
+    shot(()=>{ base(); S.boxes=demoMap([closedBox("b1",1,"Laura",48)]); S.cur=null; S.issueDraft={type:"damaged",item:"Strappy bra Merlot M (1018039MM)",qty:1,box:1,notes:L("Seam open on the left strap","Costura abierta en la tira izquierda")}; S.issues=new Map([["i1",{id:"i1",type:"notag",item:"Performance tee Macadamia S",qty:1,box:1,notes:L("Added by hand: No tag","Agregada a mano: Sin etiqueta"),reporter:"Laura",createdAt:Date.now()-900e3,auto:true}]]); }, vIssues, L("Report an issue","Reportar una novedad")),
+    shot(()=>{ base(); S.name="Ana"; S.boxes=demoMap([closedBox("b1",1,"Laura",48),closedBox("b2",2,"Ana",51),demoBox(10,25)]); S.issues=new Map(); S.cur=null; }, vHome, L("Everyone's boxes, live","Las cajas de todos, en vivo")),
+    shot(()=>{ base(); S.boxes=demoMap([closedBox("b1",1,"Laura",48),closedBox("b2",2,"Laura",51)]); S.issues=new Map(); S.cur=null; }, vSummary, L("Your summary at the end","Tu resumen al terminar")),
+    null
+  ];
+}
 function vHelp(){
-  const sec=(t,body)=>`<section class="panel"><h2>${t}</h2>${body}</section>`;
+  const SH=helpShots(); let si=0;
+  const sec=(t,body)=>{ const sh=SH[si++]; return `<section class="panel"><h2>${t}</h2><div class="${sh?"helpsec":""}"><div class="helptxt">${body}</div>${sh||""}</div></section>`; };
   const ol=a=>`<ol class="howto">${a.map(x=>`<li>${x}</li>`).join("")}</ol>`;
   const ul=a=>`<ul class="howto">${a.map(x=>`<li>${x}</li>`).join("")}</ul>`;
   return `<div class="panel"><h1>${L("How to use NY Pack-Out","Cómo usar NY Pack-Out")}</h1>
