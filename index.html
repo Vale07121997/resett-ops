@@ -1,789 +1,610 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RESETT · Ops Tracker</title>
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>NY Pack-Out</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.js"></script>
 <style>
+/* Layout: single mobile-first column, one task per screen, sticky header with sync state. */
 :root{
-  --navy:#0E2032; --bg:#F0E9DA; --cream:#FBF6EC; --card:#FFFFFF; --line:#E5DBC7;
-  --fg:#26313B; --muted:#7C756A; --gold:#C9A95C; --gold-ink:#9A7B2A;
-  --crit:#D8493B; --alta:#D9772A; --media:#E3B519; --baja:#9AA0A4;
-  --ok:#2E9E5B; --teal:#16958A;
+  --bg:#eef1f4; --surface:#ffffff; --ink:#14181f; --muted:#5b6573; --line:#d5dbe2;
+  --accent:#1f4fd1; --accent-ink:#ffffff; --accent-soft:#e3eafc;
+  --ok:#137a43; --ok-soft:#dcf2e5; --warn:#9a5b00; --warn-soft:#fdf0d6; --bad:#b4232a; --bad-soft:#fbe1e2;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
 }
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:Calibri,Carlito,'Segoe UI',Candara,Optima,system-ui,sans-serif;background:var(--bg);color:var(--fg);line-height:1.45}
-a{color:var(--gold-ink)}
-header{background:linear-gradient(135deg,#0E2032,#1A3651);color:#F2ECDD;padding:18px 26px;border-bottom:3px solid var(--gold);display:flex;align-items:center;gap:22px;flex-wrap:wrap}
-.logo{font-family:'Playfair Display',Georgia,'Times New Roman',serif;font-size:38px;font-weight:800;letter-spacing:6px;color:#fff;line-height:1}
-.logo small{display:block;font-family:'Segoe UI',system-ui,sans-serif;font-size:10px;letter-spacing:3px;color:var(--gold);font-weight:600;margin-top:3px}
-.hd-stats{display:flex;gap:26px;margin-left:auto;flex-wrap:wrap;align-items:center}
-.hd-stat{text-align:center}
-.hd-stat b{display:block;font-size:22px;color:var(--gold)}
-.hd-stat span{font-size:11px;color:#B9C4CE}
-.ring{position:relative;width:64px;height:64px}
-.ring svg{transform:rotate(-90deg)}
-.ring .pct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:#fff}
-nav{display:flex;gap:4px;background:var(--cream);padding:0 18px;border-bottom:1px solid var(--line);flex-wrap:wrap;position:sticky;top:0;z-index:10;box-shadow:0 2px 8px rgba(0,0,0,.04)}
-nav button{background:none;border:none;color:var(--muted);padding:13px 18px;cursor:pointer;font-size:14px;font-weight:600;border-bottom:3px solid transparent}
-nav button.active{color:var(--navy);border-bottom-color:var(--gold)}
-nav button:hover{color:var(--navy)}
-main{padding:22px;max-width:1180px;margin:0 auto}
-.view{display:none}.view.active{display:block}
-h2{font-size:19px;margin-bottom:4px;color:var(--navy)}
-.sub{color:var(--muted);font-size:13px;margin-bottom:16px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px;box-shadow:0 1px 3px rgba(40,30,10,.04)}
-.next{background:linear-gradient(135deg,#FFFFFF,#FBF1D9);border:1px solid var(--gold)}
-.next .label{font-size:11px;letter-spacing:1px;color:var(--gold-ink);text-transform:uppercase;font-weight:700}
-.next .t{font-size:17px;font-weight:700;margin:4px 0;color:var(--navy)}
-.row{display:flex;gap:10px;flex-wrap:wrap}
-.col{flex:1;min-width:240px}
-.task{display:flex;gap:12px;align-items:flex-start;background:var(--card);border:1px solid var(--line);border-left-width:4px;border-radius:10px;padding:12px 14px;margin-bottom:9px;transition:.15s;box-shadow:0 1px 3px rgba(40,30,10,.04)}
-.task:hover{border-color:var(--gold);box-shadow:0 2px 10px rgba(40,30,10,.08)}
-.task.done{opacity:.55;background:var(--cream)}
-.task.done .tt{text-decoration:line-through}
-.chk{width:22px;height:22px;border-radius:6px;border:2px solid var(--baja);flex:0 0 auto;cursor:pointer;margin-top:2px;display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff}
-.task.done .chk{background:var(--ok);border-color:var(--ok)}
-.tbody{flex:1;min-width:0}
-.tt{font-weight:600;font-size:14.5px}
-.tmeta{display:flex;gap:7px;flex-wrap:wrap;margin-top:6px;align-items:center}
-.tag{font-size:10.5px;padding:2px 8px;border-radius:20px;font-weight:700;letter-spacing:.3px}
-.tag.cat{background:#EEE6D4;color:#5C5340}
-.tag.resp{background:#ECE6F4;color:#5B3F86}
-.pri-crit{border-left-color:var(--crit)} .pri-alta{border-left-color:var(--alta)} .pri-media{border-left-color:var(--media)} .pri-baja{border-left-color:var(--baja)}
-.tag.p-crit{background:var(--crit);color:#fff}.tag.p-alta{background:var(--alta);color:#fff}.tag.p-media{background:var(--media);color:#3a2e00}.tag.p-baja{background:var(--baja);color:#fff}
-.due{font-size:11.5px;color:var(--muted)}
-.due.over{color:var(--crit);font-weight:700}.due.today{color:var(--gold-ink);font-weight:700}
-.tdesc{font-size:12.5px;color:var(--muted);margin-top:5px}
-.tbtns{display:flex;gap:6px;margin-top:8px}
-.mini{font-size:11px;padding:3px 9px;border-radius:6px;border:1px solid var(--line);background:none;color:var(--muted);cursor:pointer}
-.mini:hover{color:var(--navy);border-color:var(--gold)}
-.mini.act{background:var(--teal);color:#fff;border-color:var(--teal)}
-.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
-select,input[type=text],input[type=date]{background:#fff;color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:13px;font-family:inherit}
-.btn{background:var(--gold);color:#3A2C08;border:none;border-radius:8px;padding:8px 14px;font-weight:700;cursor:pointer;font-size:13px}
-.btn:hover{filter:brightness(1.05)}
-.btn.ghost{background:none;border:1px solid var(--line);color:var(--muted)}
-.btn.ghost:hover{color:var(--navy);border-color:var(--gold)}
-.score-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
-.person{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;box-shadow:0 1px 3px rgba(40,30,10,.04)}
-.person .nm{font-weight:700;font-size:15px;display:flex;justify-content:space-between;align-items:center;color:var(--navy)}
-.medal{font-size:18px}
-.bar{height:8px;background:#ECE3D1;border-radius:6px;overflow:hidden;margin:8px 0}
-.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--teal),var(--ok))}
-.pstats{display:flex;gap:14px;font-size:12px;color:var(--muted);margin-top:6px;flex-wrap:wrap}
-.pstats b{color:var(--fg)}
-.pts{font-size:20px;color:var(--gold-ink);font-weight:800}
-.pbar-row{display:flex;align-items:center;gap:12px;margin-bottom:10px}
-.pbar-row .lab{width:170px;font-size:13px}
-.pbar-row .track{flex:1;height:14px;background:#ECE3D1;border-radius:8px;overflow:hidden}
-.pbar-row .track i{display:block;height:100%}
-.pbar-row .num{width:96px;text-align:right;font-size:12px;color:var(--muted)}
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px}
-.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;text-align:center;box-shadow:0 1px 3px rgba(40,30,10,.04)}
-.kpi b{display:block;font-size:28px;color:var(--gold-ink)}
-.kpi span{font-size:12px;color:var(--muted)}
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(120px);background:var(--card);border:1px solid var(--gold);border-radius:12px;padding:14px 20px;max-width:440px;box-shadow:0 10px 40px rgba(40,30,10,.25);transition:.35s;z-index:50;color:var(--fg)}
-.toast.show{transform:translateX(-50%) translateY(0)}
-.toast .tl{color:var(--ok);font-weight:700}
-.toast .nx{color:var(--gold-ink);font-weight:700}
-.empty{text-align:center;color:var(--muted);padding:40px 10px}
-.section-h{font-size:13px;letter-spacing:1px;text-transform:uppercase;color:var(--gold-ink);font-weight:700;margin:18px 0 10px}
-dialog{background:var(--card);color:var(--fg);border:1px solid var(--gold);border-radius:14px;padding:22px;max-width:520px;width:92%}
-dialog::backdrop{background:rgba(20,12,0,.45)}
-dialog h2{color:var(--navy)}
-dialog label{display:block;font-size:12px;color:var(--muted);margin:10px 0 4px}
-dialog input,dialog select,dialog textarea{width:100%;background:#fff;color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:8px;font-size:13px;font-family:inherit}
-.foot{text-align:center;color:var(--muted);font-size:11px;padding:20px}
-#gate{display:none;position:fixed;inset:0;z-index:1000;background:linear-gradient(135deg,#0E2032,#1A3651);align-items:center;justify-content:center;padding:20px}
-.gate-card{background:rgba(255,255,255,.06);border:1px solid rgba(201,169,92,.4);border-radius:16px;padding:30px 26px;max-width:340px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.45)}
-.gate-sub{font-size:11px;letter-spacing:3px;color:var(--gold);font-weight:600;margin-bottom:18px}
-.gate-t{color:#F2ECDD;font-size:15px;margin-bottom:14px}
-#gate input{width:100%;background:#12283f;color:#fff;border:1px solid rgba(201,169,92,.5);border-radius:8px;padding:11px;font-size:15px;text-align:center;letter-spacing:2px;font-family:inherit}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f1318; --surface:#181e26; --ink:#e7ebf0; --muted:#9aa5b3; --line:#2b3440;
+  --accent:#7c9cff; --accent-ink:#0b1020; --accent-soft:#1e2a4a;
+  --ok:#5fd18f; --ok-soft:#14301f; --warn:#f0b54d; --warn-soft:#33270f; --bad:#ff7d7d; --bad-soft:#3a1619; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1318; --surface:#181e26; --ink:#e7ebf0; --muted:#9aa5b3; --line:#2b3440;
+  --accent:#7c9cff; --accent-ink:#0b1020; --accent-soft:#1e2a4a;
+  --ok:#5fd18f; --ok-soft:#14301f; --warn:#f0b54d; --warn-soft:#33270f; --bad:#ff7d7d; --bad-soft:#3a1619; color-scheme:dark}
+*{box-sizing:border-box}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}
+[hidden]{display:none!important}
+.cam{position:relative;border-radius:10px;overflow:hidden;background:#000;aspect-ratio:4/3;max-width:100%}
+.cam video{width:100%;height:100%;object-fit:cover;display:block}
+.cam .frame{position:absolute;inset:18% 22%;border:3px solid rgba(255,255,255,.85);border-radius:12px;transition:border-color .15s}
+.cam.hit .frame{border-color:#3ddc84}
+.cam .hint{position:absolute;left:0;right:0;bottom:8px;text-align:center;color:#fff;font-size:13px;font-weight:600;text-shadow:0 1px 3px #000}
+html,body{background:var(--bg)}
+body{color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.45}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line);
+  padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.topin{max-width:640px;margin:0 auto;display:flex;align-items:center;gap:10px;justify-content:space-between}
+.brand{font-weight:700;letter-spacing:.02em;font-size:15px}
+.brand small{display:block;font-weight:400;color:var(--muted);font-size:12px;letter-spacing:0}
+.sync{font-size:12px;padding:3px 8px;border-radius:99px;white-space:nowrap;font-weight:600}
+.sync.ok{background:var(--ok-soft);color:var(--ok)} .sync.local{background:var(--warn-soft);color:var(--warn)} .sync.err{background:var(--bad-soft);color:var(--bad)}
+main{max-width:640px;margin:0 auto;padding-block:16px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:14px}
+h1{font-size:22px;margin:0;text-wrap:balance} h2{font-size:17px;margin:0} p{margin:0}
+.muted{color:var(--muted)} .small{font-size:13px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.grow{flex:1 1 0;min-width:0}
+label{font-size:13px;font-weight:600;color:var(--muted);display:flex;flex-direction:column;gap:4px}
+input,select,textarea{font:inherit;font-size:16px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px;width:100%}
+textarea{min-height:80px;resize:vertical}
+input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+button{font:inherit;font-weight:600;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:11px 14px;cursor:pointer;min-height:44px}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+button.danger{color:var(--bad);border-color:var(--bad)}
+button.okb{background:var(--ok);border-color:var(--ok);color:var(--surface)}
+button.ghost{border-color:transparent;background:transparent;color:var(--accent);padding-inline:6px}
+button:disabled{opacity:.45;cursor:not-allowed}
+.block{width:100%}
+.note{border-radius:8px;padding:10px 12px;font-size:14px;display:flex;flex-direction:column;gap:6px}
+.note.warn{background:var(--warn-soft);color:var(--warn)} .note.bad{background:var(--bad-soft);color:var(--bad)}
+.note.ok{background:var(--ok-soft);color:var(--ok)} .note.info{background:var(--accent-soft);color:var(--ink)}
+.note b{font-weight:700}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px}
+.stat .n{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
+.stat .l{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+@media (max-width:420px){.stats{grid-template-columns:repeat(2,1fr)}}
+.counter{display:grid;grid-template-columns:1fr 1fr 1fr;text-align:center;gap:6px}
+.counter .n{font-size:34px;font-weight:700;font-variant-numeric:tabular-nums;font-family:var(--mono)}
+.counter .l{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.bar{height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);transition:width .2s}
+.bar.over i{background:var(--bad)} .bar.full i{background:var(--ok)}
+.list{display:flex;flex-direction:column}
+.item{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line)}
+.item:first-child{border-top:0}
+.item .t{flex:1;min-width:0}
+.item .t b{font-weight:600}
+.sku{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.qty{font-family:var(--mono);font-weight:600;font-size:18px;min-width:2.2em;text-align:right;font-variant-numeric:tabular-nums}
+.chip{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:2px 7px;border-radius:99px;white-space:nowrap}
+.chip.open{background:var(--warn-soft);color:var(--warn)} .chip.closed{background:var(--ok-soft);color:var(--ok)} .chip.man{background:var(--accent-soft);color:var(--accent)} .chip.unk{background:var(--bad-soft);color:var(--bad)}
+.boxrow{display:flex;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line);width:100%;text-align:left;background:none;border-left:0;border-right:0;border-bottom:0;border-radius:0;min-height:0;font-weight:400}
+.boxrow:first-child{border-top:0}
+.boxno{font-family:var(--mono);font-weight:700;font-size:18px;min-width:3.2em}
+.scanin{font-family:var(--mono);font-size:18px;text-align:center;border:2px dashed var(--accent);background:var(--accent-soft)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:20;max-width:min(92vw,560px);padding:12px 16px;border-radius:10px;font-weight:600;box-shadow:0 6px 24px rgba(0,0,0,.25)}
+.toast.ok{background:var(--ok);color:var(--surface)} .toast.warn{background:var(--warn);color:var(--surface)} .toast.bad{background:var(--bad);color:var(--surface)}
+.flash{animation:fl .5s}
+@keyframes fl{from{background:var(--ok-soft)}to{background:transparent}}
+@media (prefers-reduced-motion:reduce){.flash{animation:none}.bar i{transition:none}}
+.steps{display:flex;gap:6px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+.steps span{padding:2px 8px;border-radius:99px;border:1px solid var(--line)}
+.steps span.on{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.dims{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:0;border-radius:0;min-height:36px;padding:6px 12px}
+.seg button.on{background:var(--ink);color:var(--surface)}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;font-family:var(--mono)}
+.bigbox{font-family:var(--mono);font-size:44px;font-weight:700;text-align:center;letter-spacing:.04em}
 </style>
-</head>
-<body>
-<div id="gate">
-  <div class="gate-card">
-    <img src="logo_resett.png" alt="RESETT" style="height:52px;margin-bottom:6px">
-    <div class="gate-sub">GESTIÓN OPERATIVA</div>
-    <div class="gate-t">Ingresa el código de acceso</div>
-    <input type="password" id="gateInput" placeholder="Código de acceso" autocomplete="off">
-    <button class="btn" id="gateBtn" style="width:100%;margin-top:10px">Entrar</button>
-    <div id="gateErr" style="color:#ffb3ab;font-size:12.5px;margin-top:8px;min-height:16px"></div>
-  </div>
-</div>
-<header>
-  <div class="logo"><img src="logo_resett.png" data-x="iVBORw0KGgoAAAANSUhEUgAAAMUAAAAwCAYAAAChZ75aAAARG0lEQVR42u2de7DdVXXHP+ucc/O6N+9ESFRiFBQo4ozjSGGwFYiAUFCUR30RMWmobVOhVSMVBtEi6jiKYRpSSZmBTnlUmiJNEwsRBiwFkxJGg5S3QEgxiSYhAZJ77znn2z/22j07P86995x7f+fmnuTumd/87v2d32Pt795rr7XXXmttk/Rd4BWgDBi10gmMA5Rci78L6Aa2AluATcBLwFYz25Pcj6QSUDGz9D0DFklmZpK0CDgM2A0Uk1tKwCSaLwZUgV5gj9fDknfL/7/FzJ6PdDRIc9HMKv53ATgJOAV4D/AWYLIfnUDBadgBPAn8AtgAPAr8ysyqEQegEN8b321mVUnzgXcCu4YRmwJwq5k953WUt9Ms4KIEv6of44DxQIdfr4dlxftgLB3AxCboLjsGAz1vyf3dXseK109+3ljyP67MgIo3zs+B14FX/YWdQBcwA3gz8FZgdvLMS5J+CawH7gUeMrPebIdphjH8+xf6t9KyBVjujdRIpxUwBpgKHAoc6Udf5Rngecel3ACdmFlF0kxgMXAW8JpjcRvwIrDd39eV0HAccCLwQX/dHuB/JN0D/IuZrQcqWeZMsPkk8LYMSb8B/r5JbDocm1nOaEf3c/8m4Lnk/RXgCODqOvdWgY3AUz6IvuJMZwnzzAS+nDyzGbgh6az9MXEFmAMsSa6/CNxY5/kur+Nc4CjgkDrv/EkE+BRJvZJ6JO2RVJb02UY6raQ5ks6VdKOkndq3PC7pi5ImRcZokikKfp4maZPTuNfpW80Qi6TZki6StM7pLSf1X5xIugFp9L8vlbRL0n2STm6Cjk5J50j6qd5Y1ko6LWW+9G9JXZKezdC+KgdsDpU0X9KDTkclef8XIzaxTSWdkdAgSU9KWuCDxEDfmubt2uPvWNkkrYf7c7Fv3NpI35J0gqRbnd747XuR1OE3PeI/7vXzJV7pcX5Oj2LaGZIPTffnXs407DOSzhgkY4z183cy9N3ntIypQ99ARzHTwYrOvGU/JOmagZgiYdqpklb5c3+WGTT+H6/kKPpRyuIh6ZOSNvu7ehMMr8jil2BzVQabn+aIjUn6QtJpJOn7CVOU/O8/llT13++UNKUODtkj0nek17Xiz6/x62MHoDX+fnwGrx8P8HwW84v82aqkDbFiJmmZvzBy+l820CksbeTk+mGS7sk0lCQtaJYxEvo+5u/o9vO92ZF6EKNhbKw46p7t9FYl3dhf/f1Zc4b4udN0XnYEbYKOYsJkcySt93e+5vT8ax2mKPqzZySjnSStzRGbSNOpCS23JN+PTLEwtksiPTpSButnUDkiwxSrG+knyXfen2GKOwd6PsE80j8/SriC68Jy/bm5WZmZzKxqZhXXp01SycxeBM5w/Wys65BVYIWkD/q9jXYaOX2b/P8CORWnv+ygjDGzu4BFrqsemujb9Uqk4x+B9wNLzezH/p5yM/Onp6Pik+eSmb0AnOoT7wl+W7EfbDa3ChunaYyZ3Q18zrE5pA42M72dL4zta2a9zRpYhqskmJcldZjZTcBKYE4K4u/yAjICAnzKrVIlnxABLHWVTf2NIplJID5Bq+TZ8Bm6exycm4G1PnGkXudOjAafA8507L7pI195iLRE/HYAHwFe9p/G9sOku4GeVmDjNEVsbgdWJdhUE4vOO4AbzOwlZ+wK7VMq3nZLgO4UxFdzBLHiwGwHvu7AFVxavBs4yQFtphG7E6tFK8Ext4RMkdTVxwS3KmkCcJl30rVmtiVUPZhSc8LvJWCB17keU8S/X0/Mp63G5kvAhGTOEDv/d4HL/Z52Yghc26ma2TPASYVhAPF2YJuL/4o35KkZu/GIAcfPjwJfczPlG9QmVwlO9tHRgJ95XS1HWsrOGGuANW4Cpw91pNqg6TUPbJ4ArnDz9j7XzWyHS13RhsXN3hsKLQRRPnLuAh5OGs+i+G11Qw6Wbgfn71yFyXbE2PFPS+h/we/Juz5VZ7avAD3JpND2MzbXm9nWOiZOo42L169QaPF3IlCPZa5PHqlMkYDTlyEgqke/lzDInhaKdZnZL4ELIl77cyTuC5tIK21ezKxaGiYQt9WZH4w49Smr1/enRgDTk8vTh0GsPzbSsTlQSmGYvlPJSIbfjHSmaKCko+V7W1mfKNYZLQcUU0zJ/P9ouwKW6M27k8vnuL5fbZVenYdVa7SMDKaIkuEoP5dcJ787o5+3I2a/9vr1EBzoFnrHLY12q1Gm6G9Erbp/zgnegUoEm/7j0f15JEmABkf5eM8D7Ovp+W1Jx5hZb/QnO1BKE9iMMsVAOrdbI84kxEPEld4rRuJ8ogn7epwf/Ziw4BndkycBqyQd7YxROlA6UjuvPYwYpvBJYdVHzKu8I3UAXzOzdYOJrWj1KOgu2BManPQWzexlYCm1lfoqwa//fklnud+Q2pk5Emw6JXWOMsXgQSzFZXPgeuAYH01vNLOrRhJDxHmOj4IrXKo14sVbdca/muC015EwxgzgLknLJc3KMEe7WZA6HJvlwPkNYnNAM0XUIy0ZMbJHIY0LSBwCuyTdTPDbAfhbM1sQJUjOEqmQiVVo5Ig0l1zVmQt8jAYX4aIqYWavA+cQovRKCWNUgYuBRyUtkTQt8TgtDkfHygmbHklvBs6jRQuU7cYUZe/kvVGnrHNEt/GyO7F1ekz1s8BngIeAeWZ2RRrPmxPt0YmrnDh0NXpEmsuSjgPu8tG+uwk9u+rGghcJoaQ/c8aIIZplgov1t4CNkr4uaW50s/eO2yrVKi9s3kfwih0L7D1YmKI/8+FkSW/ijTHKSiabEwlxB+8j+AKdQojjvgdYBtwVR8cWqExdko6gsTjk+Pt4p28mwUz8hwTnxDhyNzWCJ4yxWdIphFj3LyfqVMRtthsYLvVgoRVm9kASy1GKHTlnbIoNSOYsNjMy2JSoBfUftEwRK38p8NmMNJGPGl1ubYn3PuGMcD7wX2a2MxHjeTNEzAhxJCE4vdBAoxeoZSeZAUzL3NODe30OwjITGaOX4Dq9kuAuf2bCsL2xs7oE/Yykh5z+OyJerlZpiMwhQtKBwWAznTe6rOz13ziYmSJaiq4lZFToyEiKsYQV6rmETBQf8pHwCEKqlmeB2MilOBrmqS47Y2wws5MbWe9wFaXoz01w+g8H5hEyhcxmCM6JzhgxFc0G4I8kzQP+CvgwNRf0so/cHcDxflzp868VZvbrhDkG62BnwH+b2bxBYDM+weZkallUdDAxBYk78gWZGO0/b8Li9FHPKBHjhG+T9M48rBWZuOU9SXD8vUmjDuX9M5OkA/OGSnOcsCb//76kFZK2J7HqVY81TxMT7JJ0naS3p1K2gQ6NpDdJeiXNAJITNtMk3eHv/Gje1qf9GaM92Il2TBjQ0Z/VyUfKO12diZLlAmCdpPNiFFkL+dqaYN4s/R1mts3p3U1zCbj6lBqJlalgZg+b2UI3TX8BWOc0j3FJ3esSZCLwF26x+oakziZj2VuBzXZCSPFOBpdc7YCzPkVL0UBWJ3mnL5vZIkIgPw7iP0v6RIw73p8V7YP+XlfxXiMkDyvn+L2YiKDg86r/NbOlZnacqya3uL7e4cxR9mMScLkPKh/IgTGGik03Yb2pZ1R9aiDFTT21wfNE/cpFYUxedmwqLnNWnwo5YGB5qBsNjMalzLV3ucr0aqJWlRM1oCzp832pAg2oTyMam3ZUn5pWG8LJ9gKfT6xEY4EfjuSV0GQxTq38RmKCLbr0eNLMFhPiMW6mlrc1OhkasEzSJcMhMfYXNu2kPg1KZfDGfgC4k9qC2HHAuVHX5iAvSZ6sgqsoT5nZfDfjPk/NydBcpfq+pFP3F2McbKVVDoEGXOOjXWzgv2l1IE4bMkfV51tx3rHaB5C11BbeIlbL3GFxFL92YwpfqDPPln1/Mok8luDyIYYv4q+dmCPmetrqEmMNtcXRCiGdzvmO36i0aDdJkbx3WRQefr74ADFOFFvEHDE7YA/BO+AJxzLmy7rAbx0NTW1DpoiJ0P4deIFgk68Cp0maE/Xpdp4TtPLdLjFeBWIG8zj5PkbS+GQFfbS0C1NEEe+7Gv2TX+4huBGc32KGbLWUmCDprBYzXZQY9xHCXuO8bBph05HR0oaSIhXxNzlDRP+fT7v6UWkzZogjcwdwg9vWrYUSL8az3JGooB3UnPNGJUW7MUXiPfoUwYO2SHBpOJbgCNeuUVy7HLeLWmw0iB4FG5O22kstEbZGu2/7SYp0NMtOuBe2w2JQmsUis4j1W2CRxy23Sr+P+KT5pV4m7Js3orA5mJhiyBWOG7kQ8jw9nky4z5F0yEifcGezWCSdYCsh7uBiX8kvtnBAmZAwySPJfEMjCZuDhSkm5vSNors33OD/9xKc3uaP1Al34jE6S9K1dTrqHmoLkrOobfrRijnF0cm3bx9AqgwnNtMl/eBATOdZ6Ecy5CUa44T6VlcFOrwR/1TSOGrm20ZHzuEocSReSAhEivOfSEPcQnk6cH2cW+SsTijJmwVhn+3Vnmw5a6QoDePgErFZAJwe545DfOc49t3ed0KTzF7Is6+kL8v6y+eS5yfJk7SFsKdYgWCNmgt8qokV2vEE58KWjopJzqpJwF8TFtCyYO90NbAb+IikJS4Nc0lEEEN43bt4nl/+koe81hvIOocZm05CLPrTOQ1Y4zPvGN8kU3Rm7u8cigRNAc7udzyzBROpZdSC4AV8RdIY+t//Ll6fSs17tCWSI6aF8XnCdYR9NDbX+V7cey/GX39L0sLYaYe4K2khwWOpj5rfNLN7+ol3n+wSuNJihojYfM+l5OYhtkV8LsbMx7adGudNA/TB7PNK/x9srHshmUC+I/OhuT6K57WHW8HM1gH3UYs4OxxY7A1d6ke3LgBvy6hjlbziBWIUYeKgdw0hPlkEE2ws0dL0D4SNaMZ5Z+whrF0sSXc5bYa+OonkVhAyaiw3s6/GuO1s+/k35mQ6lXKSWPWwuZKwg6wIm3MOdd5UAN6euT4LmNFIHfz5bN99i6RJg7aQJYEaTyaBLZK0Q9LkvBaoku+cmOyHXZa0O4nnHlNnc/Mxfv5hZh/tDRGUZLP2Zo5CHRrfKumWzP7fl/hv+2ytJWm8pMskbdG+ZaWkd2XeW+pnk/lSZm/sGZJW+7suS+podeiN2FyXweaxlNFywma2pJsy31mSYjOIPtHh5x8lQUKx/52e3tPH87FNfpL03RiodMJAzw9E3KKEqGoSwfTtnEVwMdOIPV6JX0ia2ccogKT3SNrplS4n0WmfyIGmqZL+QNK1kn6b4NDjWHw62/CZxASzJF0u6elMYoLlkt7bBB0znMl2SHpM0gcGYIiIzTGeFKGcOS7MAZspjs33EubvdaaoSlo4WKZI6D9R0utJh44ReA94xnoGqP9p3lbZ59ck91iz4utuQpqavsr9wMfxRaOh2KaTHUSNEPf7J8nPW12P3w78B/CcX/8qyW6cdco6wqJWI0nRUl10CiEH1GEDGBXOMrNVWX0+SWkTs/2NIySDO9vPUaS/QMgeuN7rtM2tV2MJqXWOImxV8G5gC3Cdmd2WTrj7mne4IeDqfrB5xPV+axKbyQk2Xf3c+3EzW9lsKqOYekfSN7x9++q0z7np/sEM1ubzjaXA4n4+9YQ/vz59vhGmuNCtKX3ZvycRMv3tjsQMVU9NrFIfBs51nbITeM119e+Y2Sa//0PeSHv7MDtOYnCLZ1Wfn3T7nKBCzRs17SD/aWa/66vuMW9S2ikkjSdk7zjeO/yxhBSaY/0b3c4YuwibvzwI/JuZbcxaoPrC0PE7ySe8fWEzkcFtItMINgXgQTPb1my/SOg/3du9pw5jVLzd15vZ0/VyWEk6m1oGy3rPTwEeNrNnm9kP5f8AIajpcZt2sZMAAAAASUVORK5CYII=" alt="RESETT" style="height:46px;display:block"><small style="margin-top:5px">GESTIÓN OPERATIVA</small></div>
-  <div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.08);padding:6px 12px;border-radius:10px;border:1px solid rgba(201,169,92,.4)">
-    <span style="font-size:12px;color:#C9A95C;font-weight:600">👤 Yo soy</span>
-    <select id="meSel" style="background:#12283f;color:#F2ECDD;border:1px solid rgba(201,169,92,.5);border-radius:6px;padding:5px 8px;font-size:13px"><option value="">— elige tu nombre —</option></select>
-  </div>
-  <div class="hd-stats">
-    <div class="hd-stat"><b id="hdToday">0</b><span>vencen hoy</span></div>
-    <div class="hd-stat"><b id="hdOver" style="color:var(--crit)">0</b><span>vencidas</span></div>
-    <div class="hd-stat"><b id="hdStreak">0</b><span>días de racha</span></div>
-    <div class="ring">
-      <svg width="64" height="64"><circle cx="32" cy="32" r="27" stroke="#2C4660" stroke-width="7" fill="none"/>
-      <circle id="ringFg" cx="32" cy="32" r="27" stroke="var(--gold)" stroke-width="7" fill="none" stroke-linecap="round" stroke-dasharray="170" stroke-dashoffset="170"/></svg>
-      <div class="pct" id="ringPct">0%</div>
-    </div>
-  </div>
-</header>
-<nav>
-  <button data-v="hoy" class="active">📅 Hoy</button>
-  <button data-v="tareas">✓ Tareas</button>
-  <button data-v="equipo">🏆 Equipo</button>
-  <button data-v="progreso">📊 Progreso</button>
-  <button data-v="datos">⚙️ Datos</button>
-</nav>
-<main>
-  <div class="view active" id="v-hoy">
-    <h2>Tu día</h2>
-    <div class="sub" id="todayDate"></div>
-    <div class="card next" id="nextCard"></div>
-    <div class="kpis" id="hoyKpis"></div>
-    <div class="section-h">🔴 Vencidas (resolver ya)</div>
-    <div id="listOver"></div>
-    <div class="section-h">📅 Para hoy</div>
-    <div id="listToday"></div>
-    <div class="section-h">⏭️ Próximas accionables</div>
-    <div id="listSoon"></div>
-  </div>
-  <div class="view" id="v-tareas">
-    <h2>Todas las tareas</h2>
-    <div class="sub">Filtra, edita y agrega tareas. Marca el círculo para completar.</div>
-    <div class="filters">
-      <select id="fCat"><option value="">Todas las categorías</option></select>
-      <select id="fResp"><option value="">Todos los responsables</option></select>
-      <select id="fEstado"><option value="">Cualquier estado</option><option value="pendiente">Pendientes</option><option value="progreso">En progreso</option><option value="hecho">Hechas</option></select>
-      <input type="text" id="fText" placeholder="Buscar...">
-      <button class="btn" onclick="openAdd()">+ Nueva tarea</button>
-    </div>
-    <div id="listAll"></div>
-  </div>
-  <div class="view" id="v-equipo">
-    <h2>Equipo</h2>
-    <div class="sub">Gestiona las personas y revisa su rendimiento.</div>
-    <div class="card">
-      <div class="section-h" style="margin-top:0">👥 Gestionar equipo</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
-        <input type="text" id="newMember" placeholder="Nombre de la persona" style="flex:1;min-width:180px" onkeydown="if(event.key==='Enter')addMember()">
-        <button class="btn" onclick="addMember()">+ Agregar persona</button>
-      </div>
-      <div id="teamMgr"></div>
-    </div>
-    <div class="section-h">🏆 Calificación · a tiempo = +10 · tarde = +5 · vencida pendiente = −3</div>
-    <div class="score-grid" id="scoreGrid"></div>
-  </div>
-  <div class="view" id="v-progreso">
-    <h2>Progreso general</h2>
-    <div class="sub">Avance global y por frente de trabajo.</div>
-    <div class="kpis" id="progKpis"></div>
-    <div class="card"><div class="section-h" style="margin-top:0">Por categoría</div><div id="progCat"></div></div>
-    <div class="card"><div class="section-h" style="margin-top:0">Por responsable</div><div id="progResp"></div></div>
-  </div>
-  <div class="view" id="v-datos">
-    <h2>Datos y respaldo</h2>
-    <div class="sub">Los datos se guardan en la nube (Supabase) y se comparten con todo el equipo en vivo. Puedes descargar un respaldo cuando quieras.</div>
-    <div class="card">
-      <div class="section-h" style="margin-top:0">🔒 Código de acceso a la app</div>
-      <p class="sub" style="margin-bottom:12px">Quien no tenga este código no puede entrar. Cámbialo cuando quieras y compártelo solo con tu equipo.</p>
-      <div class="row">
-        <input type="text" id="acCode" placeholder="Nuevo código de acceso" style="flex:1;min-width:180px">
-        <button class="btn" onclick="changeAccessCode()">Guardar código</button>
-      </div>
-    </div>
-    <div class="card">
-      <p style="margin-bottom:12px">Respaldo: descarga un archivo <b>.json</b> con todo tu avance. Para restaurar en otro equipo, impórtalo.</p>
-      <div class="row">
-        <button class="btn" onclick="exportData()">⬇️ Exportar respaldo</button>
-        <label class="btn ghost" style="cursor:pointer">⬆️ Importar respaldo<input type="file" id="importFile" accept=".json" style="display:none"></label>
-        <button class="btn" onclick="reprogramarDesdeHoy()">📅 Reprogramar fechas desde hoy</button>
-        <button class="btn ghost" onclick="resetData()" style="color:var(--crit);border-color:var(--crit)">↺ Reiniciar a tareas iniciales</button>
-      </div>
-      <p class="sub" id="saveInfo" style="margin-top:14px"></p>
-    </div>
-    <div class="card">
-      <div class="section-h" style="margin-top:0">📥 Importar del 360 Resett</div>
-      <p class="sub" style="margin-bottom:10px">Pega los action items (uno por línea, formato "Nombre: tarea"). Se crean como tareas de la categoría "Reunión 360", asignadas a cada persona.</p>
-      <textarea id="imp360" rows="6" style="width:100%;background:#fff;color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:8px;font-size:13px;font-family:inherit" placeholder="Marlon: Revisar horarios propuestos con Valentina&#10;Valentina: Enviar el cronograma final..."></textarea>
-      <div class="row" style="margin-top:10px">
-        <button class="btn" onclick="importFrom360()">Crear tareas</button>
-      </div>
-    </div>
-    <div class="card">
-      <div class="section-h" style="margin-top:0">Cómo usarla cada día</div>
-      <ol style="padding-left:20px;color:var(--muted);font-size:13.5px;line-height:1.7">
-        <li>Abre <b>Hoy</b> y resuelve primero las <b>vencidas</b>, luego las de hoy.</li>
-        <li>Marca el círculo al terminar: el sistema te dice el <b>siguiente paso</b>.</li>
-        <li>Revisa <b>Equipo</b> para ver quién va al día y quién está atrasado.</li>
-        <li>No tienes que guardar ni exportar nada: todo se guarda solo en la nube y el equipo lo ve al instante.</li>
-      </ol>
-    </div>
-  </div>
-</main>
-<div class="toast" id="toast"></div>
+</head><body>
 
-<dialog id="dlg">
-  <h2 id="dlgTitle">Nueva tarea</h2>
-  <input type="hidden" id="dId">
-  <label>Título</label><input type="text" id="dTitle">
-  <label>Descripción</label><textarea id="dDesc" rows="2"></textarea>
-  <div class="row">
-    <div class="col"><label>Categoría</label><select id="dCat"></select></div>
-    <div class="col"><label>Responsable</label><input type="text" id="dResp" list="respList"><datalist id="respList"></datalist></div>
-  </div>
-  <div class="row">
-    <div class="col"><label>Prioridad</label><select id="dPri"><option>Crítica</option><option>Alta</option><option>Media</option><option>Baja</option></select></div>
-    <div class="col"><label>Sede / área</label><input type="text" id="dArea"></div>
-    <div class="col"><label>Fecha límite</label><input type="date" id="dDue"></div>
-  </div>
-  <div class="row" style="margin-top:18px;justify-content:flex-end">
-    <button class="btn ghost" onclick="document.getElementById('dlg').close()">Cancelar</button>
-    <button class="btn" onclick="saveTask()">Guardar</button>
-  </div>
-</dialog>
+<header class="top"><div class="topin">
+  <div class="brand">Action Wear · NY Pack-Out<small id="who">—</small></div>
+  <span id="sync" class="sync local">Starting…</span>
+</div></header>
+<main id="app"><div class="panel"><p class="muted">Loading…</p></div></main>
+<div id="toast" class="toast" hidden></div>
 
-<div class="foot">RESETT Ops Tracker · datos compartidos en la nube · sincronización en vivo para todo el equipo</div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-/* ============ SUPABASE CONFIG ============ */
+/* ---------- Supabase config ---------- */
 const SUPABASE_URL="https://xmityeuypjhpxgdasaii.supabase.co";
-const SUPABASE_KEY="sb_publishable_EerBuzFBP7FU4-MRMifCEg_wPOIT_3i";
-const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const SUPABASE_ANON_KEY="sb_publishable_EerBuzFBP7FU4-MRMifCEg_wPOIT_3i";
 
-/* ============ SEED DATA ============ */
-const SEED=[
-{id:"U1",t:"Reparar o retirar las piedras calientes (2 cortocircuitos en un mes)",d:"Riesgo eléctrico grave. Revisar set completo; reemplazar si es necesario.",cat:"Cumplimiento",resp:"Marlon",area:"Todas las sedes",pri:"Crítica",due:"2026-06-28",deps:[]},
-{id:"U2",t:"Revisar todos los cables eléctricos (polo a tierra cortado)",d:"Revisar y adecuar cables en todas las sedes; no cortar la tercera clavija.",cat:"Cumplimiento",resp:"Marlon",area:"Todas las sedes",pri:"Crítica",due:"2026-06-29",deps:["U1"]},
-{id:"U3",t:"Ponerse al día con bitácoras de zona húmeda (pH, cloro, alcalinidad)",d:"Registros incompletos/inventados. Completar y asegurar llenado diario.",cat:"Cumplimiento",resp:"Felipe",area:"Sedes con piscina",pri:"Crítica",due:"2026-06-30",deps:[]},
-{id:"U4",t:"Estandarizar el cálculo de alcalinidad y registro diario",d:"Método actual subjetivo. Definir procedimiento y rangos válidos.",cat:"Cumplimiento",resp:"Laura",area:"Calidad",pri:"Alta",due:"2026-06-30",deps:["U3"]},
-{id:"U5",t:"Crear carpeta de documentación por sede",d:"Habilitación, fichas técnicas INVIMA, plan de emergencia, bitácoras, guías de aseo.",cat:"Cumplimiento",resp:"Valentina",area:"Todas las sedes",pri:"Crítica",due:"2026-06-30",deps:[]},
-{id:"U6",t:"Crear grupo de auditoría de cumplimiento",d:"Centralizar recomendaciones y coordinar correcciones antes de la visita.",cat:"Cumplimiento",resp:"Nat",area:"Dirección",pri:"Alta",due:"2026-06-27",deps:[]},
-{id:"U7",t:"Confirmar fecha exacta de la auditoría (semana del 1 jul)",d:"Definir alcance y responsable de atención de la visita.",cat:"Cumplimiento",resp:"Nat",area:"Dirección",pri:"Alta",due:"2026-06-26",deps:["U6"]},
-{id:"U8",t:"Actualizar botiquines según norma y retirar vencidos",d:"Bajar botiquín sala 3, verificar todas las sedes.",cat:"Cumplimiento",resp:"María Ximena",area:"Todas las sedes",pri:"Alta",due:"2026-06-30",deps:[]},
-{id:"U9",t:"Reubicar residuos peligrosos de sala 3 y etiquetar canecas",d:"Definir ubicación segura; etiquetar con número de sala.",cat:"Cumplimiento",resp:"Marlon",area:"La 33",pri:"Alta",due:"2026-06-29",deps:[]},
-{id:"U10",t:"Solicitar fichas técnicas e inventario de químicos (aseo y médicos)",d:"Con registro INVIMA; crear plantilla de etiquetas base + fecha.",cat:"Cumplimiento",resp:"Felipe",area:"Operaciones",pri:"Alta",due:"2026-06-30",deps:[]},
-{id:"U11",t:"Instalar señalización de seguridad",d:"Antideslizante, piso resbaloso, rutas de evacuación, traje de baño obligatorio.",cat:"Cumplimiento",resp:"Felipe",area:"Todas las sedes",pri:"Media",due:"2026-07-01",deps:[]},
-{id:"O1",t:"Inventario de procesos: qué existe vs qué falta documentar",d:"Masajes, agendamiento, equipos, atención al cliente.",cat:"Operativo",resp:"Marlon",area:"Operaciones",pri:"Alta",due:"2026-06-25",deps:[]},
-{id:"O2",t:"Priorizar Top 5 procesos críticos",d:"Validar inventario y priorizar lo más urgente.",cat:"Operativo",resp:"Nat",area:"Dirección",pri:"Alta",due:"2026-06-26",deps:["O1"]},
-{id:"O3",t:"Contratar a Sara (externa) para manuales de cosmetología",d:"Definir alcance, entregables y fechas.",cat:"Operativo",resp:"Nat",area:"Dirección",pri:"Alta",due:"2026-06-26",deps:[]},
-{id:"O4",t:"Diseñar protocolo de estandarización de atención (tipo PAIS/ADA)",d:"Esquema de evaluación y auditoría para cosmetólogas y fisioterapeutas.",cat:"Operativo",resp:"Laura",area:"Área técnica",pri:"Alta",due:"2026-06-27",deps:["O1"]},
-{id:"O5",t:"Propuesta del plan comisional (cosmetólogas y fisioterapeutas)",d:"Estructura de comisiones por venta de paquetes.",cat:"Operativo",resp:"Valentina",area:"Comercial/Financiero",pri:"Alta",due:"2026-06-27",deps:[]},
-{id:"O6",t:"Definir y publicar protocolo de llegadas tarde",d:"Tiempo máx de espera, recorte de servicio, reincidencias.",cat:"Operativo",resp:"Valentina",area:"Operaciones",pri:"Alta",due:"2026-06-30",deps:[]},
-{id:"O7",t:"Actualizar mensaje de confirmación + consentimiento informado",d:"Explícito sobre el recorte por retraso; trazabilidad.",cat:"Operativo",resp:"Valentina",area:"Operaciones",pri:"Alta",due:"2026-07-02",deps:["O6"]},
-{id:"O8",t:"Reestructurar reparto de propinas (equitativo)",d:"Proporcional a días trabajados, cortes quincenales.",cat:"Operativo",resp:"Ana",area:"Financiero",pri:"Alta",due:"2026-07-03",deps:[]},
-{id:"O9",t:"Definir % de comisiones y protocolo de ventas",d:"Aprobación de Nat. Meta de implementación: julio.",cat:"Operativo",resp:"Ana",area:"Financiero",pri:"Alta",due:"2026-07-03",deps:["O5"]},
-{id:"O10",t:"Definir tiempos de limpieza entre servicios por protocolo",d:"5 min ropa, 10–15 agua/aceite; ajustar el sistema.",cat:"Operativo",resp:"Felipe",area:"Operaciones",pri:"Alta",due:"2026-06-29",deps:[]},
-{id:"O11",t:"Política de confirmación con cutoff (15:00) y liberación de cupos",d:"Liberar espacios no confirmados; evitar citas 'en azul'.",cat:"Operativo",resp:"Valentina",area:"Operaciones",pri:"Alta",due:"2026-06-30",deps:[]},
-{id:"O12",t:"Regla de secuenciación de masajes",d:"Evitar consecutivos de alta carga; intercalar drenaje/aparatología.",cat:"Operativo",resp:"Felipe",area:"Operaciones",pri:"Media",due:"2026-07-02",deps:[]},
-{id:"O13",t:"Protocolo de valoración previa (medidas, fotos, metas, consentimiento)",d:"Formatos de registro estandarizados.",cat:"Operativo",resp:"Laura",area:"Área técnica",pri:"Alta",due:"2026-07-02",deps:["O4"]},
-{id:"O14",t:"Estandarizar paquetes moldeo vs reducción",d:"Mín 10 sesiones, metas, puntos de control (sesión 4, 8, final).",cat:"Operativo",resp:"Laura",area:"Área técnica",pri:"Media",due:"2026-07-04",deps:["O13"]},
-{id:"O15",t:"Política clara de membresías 'ilimitado'",d:"Tiempo por estación, repetición, comunicación contractual.",cat:"Operativo",resp:"Paulina",area:"Comercial",pri:"Alta",due:"2026-07-03",deps:[]},
-{id:"O16",t:"Protocolo de cobro por usos cruzados (sauna/jacuzzi)",d:"Guion de comunicación y evidencia de soporte.",cat:"Operativo",resp:"Felipe",area:"Operaciones",pri:"Media",due:"2026-07-04",deps:["O15"]},
-{id:"O17",t:"Hojas de vida de equipos (vida útil, mantenimiento)",d:"Registro de activos por sede.",cat:"Operativo",resp:"Marlon",area:"Operaciones",pri:"Alta",due:"2026-07-05",deps:[]},
-{id:"O18",t:"Evaluar cierre los lunes para limpieza profunda",d:"Desmontar domingo, mantenimiento lunes, reabrir lunes tarde/martes.",cat:"Operativo",resp:"Nat",area:"Dirección",pri:"Media",due:"2026-07-01",deps:[]},
-{id:"O19",t:"Capacitación: masajes embarazadas + protocolos unificados",d:"Hoy solo 1 persona formada. Incluir manejo de objeciones.",cat:"Operativo",resp:"Sara",area:"Área técnica",pri:"Media",due:"2026-07-08",deps:["O3"]},
-{id:"O20",t:"Reuniones periódicas con equipos de sede (San Lucas, Escobero)",d:"Mejorar comunicación; canal directo de escalamiento.",cat:"Operativo",resp:"Nat",area:"Dirección",pri:"Media",due:"2026-07-03",deps:[]},
-{id:"S1",t:"Definir catálogo de servicios (duración, buffer, equipo requerido)",d:"Base del motor de agenda. Cada servicio con su carga física.",cat:"Software F1",resp:"Valentina",area:"Producto",pri:"Crítica",due:"2026-07-05",deps:["O10"]},
-{id:"S2",t:"Cargar capacidad por sede (espacios, personal, equipo)",d:"Disponibilidad = mín(espacios, personal, equipo).",cat:"Software F1",resp:"Marlon",area:"Producto",pri:"Crítica",due:"2026-07-07",deps:["S1","O17"]},
-{id:"S3",t:"Definir roles y permisos (asesor / cosmetóloga / fisio)",d:"Dinero y agenda = asesor; ejecución = cosmetóloga; valoración = fisio.",cat:"Software F1",resp:"Nat",area:"Producto",pri:"Alta",due:"2026-07-05",deps:[]},
-{id:"S4",t:"Especificar reglas de agenda (buffers, recorte, ventanas)",d:"Incluye secuenciación y bloqueos de descanso.",cat:"Software F1",resp:"Felipe",area:"Producto",pri:"Alta",due:"2026-07-08",deps:["S1","O12"]},
-{id:"S5",t:"Configurar consentimiento digital + cuestionario de contraindicaciones",d:"Hard-stop: no atender sin firmar / con contraindicación sin aval.",cat:"Software F1",resp:"Laura",area:"Producto",pri:"Crítica",due:"2026-07-08",deps:["O7","O13"]},
-{id:"S6",t:"Definir control de paquetes/bonos (saldo, vigencia, redención)",d:"Bloqueo si agotado o vencido.",cat:"Software F1",resp:"Ana",area:"Producto",pri:"Alta",due:"2026-07-09",deps:[]},
-{id:"S7",t:"Definir flujo POS venta→factura→comisión",d:"Toda venta registrada y comisión vinculada al vendedor.",cat:"Software F1",resp:"Ana",area:"Producto",pri:"Alta",due:"2026-07-09",deps:["O9"]},
-{id:"S8",t:"Definir plantillas de mensajes (confirmación, recorte, recordatorios)",d:"Variables por sede/servicio.",cat:"Software F1",resp:"Paulina",area:"Comercial",pri:"Media",due:"2026-07-08",deps:["O7"]},
-{id:"S9",t:"Activar confirmación + recordatorios 24h/2h automáticos",d:"Liberación de cupo y oferta a lista de espera.",cat:"Software F1",resp:"Valentina",area:"Producto",pri:"Alta",due:"2026-07-12",deps:["S8","O11"]},
-{id:"S10",t:"Seleccionar sede piloto (La 33) e iniciar el producto mínimo",d:"Medir no-show, ocupación y ventas 2–4 semanas antes de replicar.",cat:"Software F1",resp:"Nat",area:"Dirección",pri:"Alta",due:"2026-07-10",deps:["S2","S3","S5"]},
-{id:"M1",t:"Revisar horarios propuestos con Valentina y dar feedback de distribución de especialistas",d:"360 Resett · 10 jul",cat:"Reunión 360",resp:"Marlon",area:"360 Resett",pri:"Alta",due:"2026-07-12",deps:[]},
-{id:"M2",t:"Enviar cronograma final y preparar capacitación (sistema funcionando el jueves 16 jul)",d:"360 Resett · 10 jul",cat:"Reunión 360",resp:"Valentina",area:"360 Resett",pri:"Alta",due:"2026-07-12",deps:[]},
-{id:"M3",t:"Cambiar días de descanso del personal (trasladar descansos a miércoles según demanda)",d:"360 Resett · 10 jul",cat:"Reunión 360",resp:"Valentina",area:"360 Resett",pri:"Media",due:"2026-07-12",deps:[]},
-{id:"M4",t:"Revisar operación por servicios en San Lucas y confirmar soporte nocturno reportado",d:"360 Resett · 10 jul",cat:"Reunión 360",resp:"Valentina",area:"360 Resett",pri:"Media",due:"2026-07-12",deps:[]},
-{id:"M5",t:"Revisar con André y Pipe los horarios de las asesoras comerciales para optimizarlos",d:"360 Resett · 10 jul",cat:"Reunión 360",resp:"Valentina",area:"360 Resett",pri:"Media",due:"2026-07-12",deps:[]},
-{id:"M6",t:"Programar reunión operacional con Marlon, André y equipo para la próxima semana",d:"360 Resett · 10 jul",cat:"Reunión 360",resp:"Felipe",area:"360 Resett",pri:"Media",due:"2026-07-12",deps:[]},
-{id:"M7",t:"Finalizar horarios por sede y confirmar cronograma operativo global (salida jueves 16)",d:"360 Resett · 10 jul",cat:"Reunión 360",resp:"Valentina",area:"360 Resett",pri:"Alta",due:"2026-07-12",deps:[]},
-{id:"M8",t:"Enviar propuesta de cronograma de capacitaciones para gerentes, administrativos y asesores",d:"360 Resett · 10 jul",cat:"Reunión 360",resp:"Valentina",area:"360 Resett",pri:"Media",due:"2026-07-12",deps:[]},
-{id:"M9",t:"Confirmar capacidad y reglas de sauna, turco, crioterapia y jacuzzi por sede",d:"360 Resett · 10 jul",cat:"Reunión 360",resp:"Valentina",area:"360 Resett",pri:"Media",due:"2026-07-12",deps:[]},
-{id:"M10",t:"Presentar propuesta de comunicación para el espacio tipo piscina antes de la próxima reunión",d:"360 Resett · 10 jul",cat:"Reunión 360",resp:"Paulina",area:"360 Resett",pri:"Media",due:"2026-07-12",deps:[]},
-{id:"M11",t:"Enviar lista de tareas mal asignadas para reasignarlas en la app",d:"360 Resett · 10 jul",cat:"Reunión 360",resp:"Paulina",area:"360 Resett",pri:"Alta",due:"2026-07-12",deps:[]},
-{id:"M12",t:"Desplegar la app de gestión y dar credenciales a todo el equipo",d:"360 Resett · 10 jul",cat:"Reunión 360",resp:"Valentina",area:"360 Resett",pri:"Alta",due:"2026-07-12",deps:[]},
-{id:"M13",t:"Coordinar con Leo y Gauchó reparación de cajas sin conector o compra de cajas/piedras nuevas",d:"360 Resett · 10 jul",cat:"Reunión 360",resp:"Marlon",area:"360 Resett",pri:"Alta",due:"2026-07-12",deps:[]},
-{id:"M14",t:"Analizar opciones de compra de piedras calientes y reunir 2-3 cotizaciones comparativas",d:"360 Resett · 10 jul",cat:"Reunión 360",resp:"Sin asignar",area:"360 Resett",pri:"Media",due:"2026-07-12",deps:[]},
-{id:"M15",t:"Consolidar inventario documental y definir faltantes de catálogo y consentimiento digital (miércoles)",d:"360 Resett · 10 jul",cat:"Reunión 360",resp:"Sin asignar",area:"360 Resett",pri:"Alta",due:"2026-07-12",deps:[]},
-{id:"M16",t:"Documentar evidencias de la conducta de la colaboradora para evaluar proceso disciplinario",d:"360 Resett · 10 jul",cat:"Reunión 360",resp:"Marlon",area:"360 Resett",pri:"Alta",due:"2026-07-12",deps:[]},
-{id:"M17",t:"Apoyar contratación de candidata para vacante operativa y coordinar selección",d:"360 Resett · 10 jul",cat:"Reunión 360",resp:"Nat",area:"360 Resett",pri:"Media",due:"2026-07-12",deps:[]},
-{id:"M18",t:"Repetir prueba de conocimientos al finalizar capacitación y ajustar contenidos según objeciones",d:"360 Resett · 10 jul",cat:"Reunión 360",resp:"Marlon",area:"360 Resett",pri:"Media",due:"2026-07-12",deps:[]},
-{id:"M19",t:"Compartir el documento de objeciones en el grupo del equipo",d:"360 Resett · 10 jul",cat:"Reunión 360",resp:"Marlon",area:"360 Resett",pri:"Baja",due:"2026-07-12",deps:[]},
-{id:"M20",t:"Liderar sesión del miércoles con metodólogas para construir protocolos de cosmetología y masajes",d:"360 Resett · 10 jul",cat:"Reunión 360",resp:"Valentina",area:"360 Resett",pri:"Alta",due:"2026-07-12",deps:[]},
-{id:"M21",t:"Visitar sedes para revisar necesidades y preparar entrada de nueva cosmetóloga en Escobedo",d:"360 Resett · 10 jul",cat:"Reunión 360",resp:"Marlon",area:"360 Resett",pri:"Media",due:"2026-07-12",deps:[]},
-{id:"M22",t:"Enviar lista de fichas pendientes por ciudad para seguimiento",d:"360 Resett · 10 jul",cat:"Reunión 360",resp:"Nat",area:"360 Resett",pri:"Media",due:"2026-07-12",deps:[]},
-{id:"M23",t:"Coordinar formación comercial y esquema de comisiones para cosmetólogas y fichas",d:"360 Resett · 10 jul",cat:"Reunión 360",resp:"Nat",area:"360 Resett",pri:"Media",due:"2026-07-12",deps:[]},
-{id:"M24",t:"Reunión para revisar operaciones en Sport Club y acciones para aumentar facturación",d:"360 Resett · 10 jul",cat:"Reunión 360",resp:"Sin asignar",area:"360 Resett",pri:"Media",due:"2026-07-12",deps:[]},
-{id:"M25",t:"Contratar personal de fin de semana (vie-sáb-dom y lunes festivos) en Escobero",d:"360 Resett · 3 jul",cat:"Reunión 360",resp:"Sin asignar",area:"360 Resett",pri:"Alta",due:"2026-07-12",deps:[]},
-{id:"M26",t:"Publicar la vacante de fin de semana e iniciar entrevistas la próxima semana",d:"360 Resett · 3 jul",cat:"Reunión 360",resp:"Nat",area:"360 Resett",pri:"Media",due:"2026-07-12",deps:[]},
-{id:"M27",t:"Implementar respuesta más rápida ante fallas de estaciones (incl. jacuzzi) en San Lucas",d:"360 Resett · 3 jul",cat:"Reunión 360",resp:"Marlon",area:"360 Resett",pri:"Alta",due:"2026-07-12",deps:[]},
-{id:"M28",t:"Dar capacitación comercial a asesores para aumentar prospección en horas de alto flujo",d:"360 Resett · 3 jul",cat:"Reunión 360",resp:"Paulina",area:"360 Resett",pri:"Media",due:"2026-07-12",deps:[]},
-{id:"M29",t:"Definir meta financiera para EZ Norte (deuda pendiente y potencial de ventas)",d:"360 Resett · 3 jul",cat:"Reunión 360",resp:"Sin asignar",area:"360 Resett",pri:"Media",due:"2026-07-12",deps:[]},
-{id:"M30",t:"Continuar liderando capacitación y estandarización de protocolos junto con Naty",d:"360 Resett · 3 jul",cat:"Reunión 360",resp:"Valentina",area:"360 Resett",pri:"Alta",due:"2026-07-12",deps:[]},
-{id:"M31",t:"Dar seguimiento a la cotización del gimnasio y la propuesta de publicidad por equipos",d:"360 Resett · 3 jul",cat:"Reunión 360",resp:"Sin asignar",area:"360 Resett",pri:"Baja",due:"2026-07-12",deps:[]},
-{id:"M32",t:"Analizar el REU y la propuesta de largo plazo de Nacional",d:"360 Resett · 3 jul",cat:"Reunión 360",resp:"Sin asignar",area:"360 Resett",pri:"Baja",due:"2026-07-12",deps:[]},
-{id:"M33",t:"Coordinar quiénes se suman al proceso de alineación comercial la próxima semana",d:"360 Resett · 3 jul",cat:"Reunión 360",resp:"Sin asignar",area:"360 Resett",pri:"Baja",due:"2026-07-12",deps:[]},
-{id:"M34",t:"Continuar visitas a sedes, agregar observaciones al documento compartido y compartirlo",d:"360 Resett · 3 jul",cat:"Reunión 360",resp:"Marlon",area:"360 Resett",pri:"Media",due:"2026-07-12",deps:[]},
-{id:"M35",t:"Desarrollar herramientas y planes de acción para los casos de cosmetólogas presentados",d:"360 Resett · 3 jul",cat:"Reunión 360",resp:"Paulina",area:"360 Resett",pri:"Media",due:"2026-07-12",deps:[]},
-];
-const CATS=["Cumplimiento","Operativo","Software F1","Reunión 360"];
-const PRI_ORDER={"Crítica":3,"Alta":2,"Media":1,"Baja":0};
-const PRI_CLASS={"Crítica":"crit","Alta":"alta","Media":"media","Baja":"baja"};
+/* ---------- Catalog (SKU guide: style + color(3) + size(2)) ---------- */
+const STYLES={"10110":"Sport Bra","10114":"Sport Bra U","10115":"Square Neck Bra","10123":"Low Cross Top","10126":"One Shoulder Sport Bra","10127":"Parfait Sport Bra","10128":"Contrast Halter Top","10129":"High Sport Bra","10130":"Racerback Seamless","10131":"Sculpt Seamless","10132":"Square Bra","10133":"Square Blis","10135":"Ballerina Sport Bra","1018":"Strappy Bra","1019":"Well Bra","1031":"Performance Tee (Women)","1036":"Strappy T-Shirt","1037":"Quarter Zip Crop","1043":"Performance Tank (Women)","1052":"Oversized Zip Neck","1053":"Crop Jacket","10613":"Parfait High Waist Biker","10618":"Side Cuts Biker","1067":"Mini Short Sens 3\"","1068":"Mini Short Sens 3\"","1071":"Biker Pocket Sens","1084":"High Waist Leggings Sens","1087":"Leggings Pocket Suplex","10913":"Parfait High Waist Leggings","10914":"Flare Power Leggings","1172":"Sleek Skirt","1192":"Strappy Romper Sens","1193":"Quarter Zip Jumpsuit Biker","1194":"Streep Contrast Jumpsuit","2037":"Performance Tee (Men)","2042":"Performance Tank (Men)","2043":"High Neck Tank (Men)","3113":"Bandage Gloves"};
+const COLORS={"000":"White","013":"Black","020":"Latte","021":"Ivory","022":"Stone","023":"Navy","027":"Wine","029":"Mushroom","033":"Chocolate","034":"Cosmic Grey","035":"Macadamia","039":"Merlot","041":"Night Blue","057":"Black Smoke","064":"Mermaid","067":"Canyon","068":"Gulf Coast","069":"Tourmaline","075":"Silver Mist","076":"Willow","078":"Plum Purple","611":"Dark Lilac"};
+const SIZES={"XS":"XS","SS":"S","MM":"M","LL":"L","XL":"XL","SM":"S/M","UU":"One size"};
+const SIZE_CODE={"XS":"XS","S":"SS","M":"MM","L":"LL","XL":"XL","S/M":"SM","One size":"UU"};
+const MAX_PILE=60;
 
-/* ============ STATE (Supabase / nube) ============ */
-let state={tasks:[],team:[]};
-const COLS="id,t,d,cat,resp,area,pri,due,deps,estado,completed_at";
-function toRow(t){return {id:t.id,t:t.t,d:t.d||"",cat:t.cat,resp:t.resp,area:t.area||"",pri:t.pri,due:t.due,deps:t.deps||[],estado:t.estado||"pendiente",completed_at:t.completedAt||null,updated_at:new Date().toISOString()};}
-function fromRow(r){return {id:r.id,t:r.t,d:r.d||"",cat:r.cat,resp:r.resp,area:r.area||"",pri:r.pri,due:r.due,deps:Array.isArray(r.deps)?r.deps:[],estado:r.estado||"pendiente",completedAt:r.completed_at||null};}
-function seedTasks(){const off={"Crítica":1,"Alta":3,"Media":6,"Baja":9};return SEED.map(t=>({...t,estado:"pendiente",completedAt:null,due:addDays(todayStr(),off[t.pri]||5)}));}
-async function loadFromCloud(){
-  const {data,error}=await sb.from('tasks').select(COLS);
-  if(error){console.error(error);alert("No pude conectar con la base de datos. Revisa tu conexión a internet y recarga.");return;}
-  if(!data||data.length===0){
-    state.tasks=seedTasks();
-    const {error:e2}=await sb.from('tasks').upsert(state.tasks.map(toRow));
-    if(e2)console.error(e2);
-  }else{
-    state.tasks=data.map(fromRow);
+function decodeSku(sku){
+  const m=/^(\d{6,9})(XS|SS|MM|LL|XL|SM|UU)$/.exec(sku); if(!m) return null;
+  const digits=m[1], color=digits.slice(-3), style=digits.slice(0,-3);
+  return {sku, style, color, size:m[2], name:STYLES[style]||null, colorName:COLORS[color]||("Color "+color), sizeName:SIZES[m[2]]};
+}
+function parseCode(raw){
+  const s=String(raw||"").trim().toUpperCase().replace(/\s+/g,"");
+  if(!s) return null;
+  const direct=decodeSku(s); if(direct) return direct;
+  const m=/(\d{6,9})(XS|SS|MM|LL|XL|SM|UU)(?![A-Z0-9])/.exec(s);
+  return m? decodeSku(m[1]+m[2]) : null;
+}
+
+/* ---------- Helpers ---------- */
+const $=s=>document.querySelector(s);
+const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const now=()=>Date.now();
+const fmtT=t=>t?new Date(t).toLocaleString("en-US",{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}):"";
+const ls={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const clientId=(()=>{let id=ls.get("nyp_client",null);if(!id){id="c"+Math.random().toString(36).slice(2,10);ls.set("nyp_client",id)}return id})();
+function scannedOf(b){return Object.values(b.items||{}).reduce((a,i)=>a+(i.qty||0),0)}
+let toastT;
+function toast(msg,kind="ok",ms=2200){const t=$("#toast");t.textContent=msg;t.className="toast "+kind;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,ms)}
+let actx;
+function beep(ok=true){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();const o=actx.createOscillator(),g=actx.createGain();o.frequency.value=ok?1320:300;g.gain.value=.08;o.connect(g);g.connect(actx.destination);o.start();o.stop(actx.currentTime+(ok?.08:.25))}catch(e){} try{navigator.vibrate&&navigator.vibrate(ok?40:[80,60,80])}catch(e){}}
+
+/* ---------- State ---------- */
+const S={name:ls.get("nyp_name",""),location:ls.get("nyp_loc",""),view:"welcome",boxes:new Map(),issues:new Map(),cur:null,mode:"local",sync:"local",undo:[],closeStep:null,unit:ls.get("nyp_unit","in"),viewBox:null,issueDraft:null,lastScan:{code:"",t:0},kbd:false};
+
+/* ---------- Store (shared db when available, else this device) ---------- */
+let sb=null, db=null;
+const store={
+  async saveBox(b){ cacheLocal(); if(!sb) return; const {error}=await sb.from("ny_boxes").upsert({id:b.id,data:b,updated_at:new Date().toISOString()}); if(error) throw {code:"unavailable",message:error.message}; },
+  async deleteBox(id){ cacheLocal(); if(!sb) return; const {error}=await sb.from("ny_boxes").delete().eq("id",id); if(error) throw {code:"unavailable",message:error.message}; },
+  async saveIssue(i){ cacheLocal(); if(!sb) return; const {error}=await sb.from("ny_issues").upsert({id:i.id,data:i,created_at:new Date(i.createdAt).toISOString()}); if(error) throw {code:"unavailable",message:error.message}; }
+};
+function cacheLocal(){ ls.set("nyp_local",{boxes:[...S.boxes.values()],issues:[...S.issues.values()]}); }
+function persistLocal(){ cacheLocal(); }
+function loadLocal(){ const d=ls.get("nyp_local",{boxes:[],issues:[]}); (d.boxes||[]).forEach(b=>S.boxes.set(b.id,b)); (d.issues||[]).forEach(i=>S.issues.set(i.id,i)); }
+const wq={};
+function saveBox(b){ b.updatedAt=now(); S.boxes.set(b.id,b); const q=wq[b.id]||(wq[b.id]={busy:false,dirty:false}); q.dirty=true; if(!q.busy) flush(b.id); }
+async function flush(id){
+  const q=wq[id]; q.busy=true; let tries=0;
+  while(q.dirty){ q.dirty=false; const b=S.boxes.get(id); if(!b) break;
+    try{ await store.saveBox(b); setSync(db?"ok":"local"); tries=0; }
+    catch(e){ const c=e&&e.code; setSync("err",c==="quota_exceeded"?"Storage full — tell Colombia":"Not saved — check internet");
+      if(c==="invalid_argument"){ break; }
+      q.dirty=true; tries++; await sleep(Math.min(8000,1000*tries)+Math.random()*400); }
   }
+  q.busy=false;
 }
-async function saveOne(t){updateSaveInfo();const {error}=await sb.from('tasks').upsert(toRow(t));if(error)console.error(error);}
-async function saveAll(){updateSaveInfo();const {error}=await sb.from('tasks').upsert(state.tasks.map(toRow));if(error)console.error(error);}
+function pending(id){const q=wq[id];return q&&(q.busy||q.dirty)}
+function setSync(s,msg){S.sync=s;const el=$("#sync");if(!el)return;el.className="sync "+(s==="ok"?"ok":s==="err"?"err":"local");el.textContent=s==="ok"?"Synced with Colombia":s==="err"?(msg||"Not saved"):"This device only"}
 
-/* ============ EQUIPO (personas) ============ */
-async function loadTeam(){
-  const {data,error}=await sb.from('team').select('id,name,pin');
-  if(error){console.error(error);return;}
-  if(!data||data.length===0){
-    const names=[...new Set(state.tasks.map(t=>t.resp).filter(Boolean))].sort();
-    state.team=names.map((n,i)=>({id:'P'+(Date.now()+i),name:n}));
-    if(state.team.length){const {error:e3}=await sb.from('team').upsert(state.team);if(e3)console.error(e3);}
-  }else{state.team=data;}
-}
-function roster(){const names=new Set(state.team.map(m=>m.name));state.tasks.forEach(t=>{if(t.resp)names.add(t.resp);});return [...names].sort((a,b)=>a.localeCompare(b));}
-async function addMember(){
-  const inp=document.getElementById('newMember');const name=(inp.value||'').trim();if(!name)return;
-  if(state.team.some(m=>m.name.toLowerCase()===name.toLowerCase())){alert('Esa persona ya está en el equipo.');return;}
-  const m={id:'P'+Date.now(),name};state.team.push(m);inp.value='';
-  const {error}=await sb.from('team').upsert(m);if(error)console.error(error);
-  fillSelects();fillMe();renderEquipo();
-}
-async function addExisting(name){
-  if(state.team.some(m=>m.name===name))return;
-  const m={id:'P'+Date.now(),name};state.team.push(m);
-  const {error}=await sb.from('team').upsert(m);if(error)console.error(error);
-  fillSelects();fillMe();renderEquipo();
-}
-async function renameMember(id){
-  const m=state.team.find(x=>x.id===id);if(!m)return;
-  const nn=prompt('Nuevo nombre para "'+m.name+'":',m.name);if(nn===null)return;
-  const nuevo=nn.trim();if(!nuevo||nuevo===m.name)return;
-  if(state.team.some(x=>x.id!==id&&x.name.toLowerCase()===nuevo.toLowerCase())){alert('Ya existe otra persona con ese nombre.');return;}
-  const old=m.name;m.name=nuevo;await sb.from('team').upsert(m);
-  const afectadas=state.tasks.filter(t=>t.resp===old);afectadas.forEach(t=>t.resp=nuevo);
-  if(afectadas.length){const {error}=await sb.from('tasks').upsert(afectadas.map(toRow));if(error)console.error(error);}
-  if(ME===old){ME=nuevo;localStorage.setItem('resett_me',ME);}
-  fillSelects();fillMe();renderAll();
-}
-async function deleteMember(id){
-  const m=state.team.find(x=>x.id===id);if(!m)return;
-  const afectadas=state.tasks.filter(t=>t.resp===m.name);
-  const msg=afectadas.length?('"'+m.name+'" tiene '+afectadas.length+' tarea(s). Se eliminará del equipo y esas tareas quedarán como "Sin asignar". ¿Continuar?'):('¿Eliminar a "'+m.name+'" del equipo?');
-  if(!confirm(msg))return;
-  if(afectadas.length){
-    afectadas.forEach(t=>t.resp='Sin asignar');
-    const {error:e1}=await sb.from('tasks').upsert(afectadas.map(toRow));if(e1)console.error(e1);
-  }
-  state.team=state.team.filter(x=>x.id!==id);
-  const {error:e2}=await sb.from('team').delete().eq('id',id);if(e2)console.error(e2);
-  if(ME===m.name){ME='';localStorage.setItem('resett_me','');}
-  fillSelects();fillMe();renderAll();
-}
-async function resetPin(id){
-  const m=state.team.find(x=>x.id===id);if(!m)return;
-  if(!confirm('¿Borrar el PIN de "'+m.name+'"? Tendrá que crear uno nuevo la próxima vez que entre.'))return;
-  m.pin=null;
-  const {error}=await sb.from('team').upsert({id:m.id,name:m.name,pin:null});if(error)console.error(error);
-  renderTeamMgr();
-}
-async function mergeByName(src){
-  const otros=roster().filter(n=>n!==src&&n!=='Sin asignar');
-  if(!otros.length){alert('No hay otra persona con quien fusionar.');return;}
-  const target=prompt('Fusionar "'+src+'" en otra persona. Escribe el nombre exacto de quien se queda ('+otros.join(', ')+'):');
-  if(target===null)return;
-  const dest=otros.find(n=>n.toLowerCase()===(target||'').trim().toLowerCase());
-  if(!dest){alert('No encontré esa persona. Escríbelo tal cual aparece en la lista.');return;}
-  const afectadas=state.tasks.filter(t=>t.resp===src);
-  if(!confirm('Se pasarán '+afectadas.length+' tarea(s) de "'+src+'" a "'+dest+'" y el perfil "'+src+'" se eliminará. ¿Continuar?'))return;
-  if(afectadas.length){
-    afectadas.forEach(t=>t.resp=dest);
-    const {error:e1}=await sb.from('tasks').upsert(afectadas.map(toRow));if(e1)console.error(e1);
-  }
-  const m=state.team.find(x=>x.name===src);
-  if(m){state.team=state.team.filter(x=>x.id!==m.id);const {error:e2}=await sb.from('team').delete().eq('id',m.id);if(e2)console.error(e2);}
-  if(ME===src){ME=dest;localStorage.setItem('resett_me',ME);}
-  fillSelects();fillMe();renderAll();
-  alert('Perfiles fusionados en "'+dest+'" ✓');
-}
-function renderTeamMgr(){
-  const el=document.getElementById('teamMgr');if(!el)return;
-  const names=roster();
-  el.innerHTML=names.length?names.map(n=>{
-    const m=state.team.find(x=>x.name===n);
-    const nTasks=state.tasks.filter(t=>t.resp===n).length;
-    return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 12px;border:1px solid var(--line);border-radius:9px;margin-bottom:7px;background:#fff">
-      <span style="font-weight:600">${esc(n)} ${m?(m.pin?'🔒':'🔓'):''} <span style="color:var(--muted);font-weight:400;font-size:12px">· ${nTasks} tarea(s)</span></span>
-      <span style="display:flex;gap:6px;flex-wrap:wrap">${m?`<button class="mini" onclick="renameMember('${m.id}')">✏️ Renombrar</button><button class="mini" onclick="resetPin('${m.id}')">🔑 PIN</button>`:`<button class="mini" onclick="addExisting('${esc(n)}')">+ Añadir al equipo</button>`}${n!=='Sin asignar'?`<button class="mini" onclick="mergeByName('${esc(n)}')">🔗 Fusionar</button>`:''}${m?`<button class="mini" onclick="deleteMember('${m.id}')" style="color:var(--crit);border-color:var(--crit)">✕ Quitar</button>`:''}</span>
-    </div>`;
-  }).join(''):empty('Aún no hay personas. Agrega la primera arriba.');
-}
-function updateSaveInfo(){const el=document.getElementById('saveInfo');if(el)el.textContent="Sincronizado en la nube · "+new Date().toLocaleString('es-CO');}
-
-/* ============ HELPERS ============ */
-function todayStr(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,'0')+"-"+String(d.getDate()).padStart(2,'0');}
-function daysBetween(a,b){return Math.round((new Date(b)-new Date(a))/86400000);}
-function addDays(dateStr,n){const d=new Date(dateStr+'T00:00:00');d.setDate(d.getDate()+n);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
-function fmtDue(due){
-  const t=todayStr();const diff=daysBetween(t,due);
-  if(diff<0)return {txt:"Venció hace "+(-diff)+"d ("+due+")",cls:"over"};
-  if(diff===0)return {txt:"Vence HOY",cls:"today"};
-  if(diff===1)return {txt:"Vence mañana",cls:""};
-  return {txt:"Vence en "+diff+"d ("+due+")",cls:""};
-}
-function depsResolved(task){return (task.deps||[]).every(id=>{const d=state.tasks.find(x=>x.id===id);return !d||d.estado==="hecho";});}
-function pendingTasks(){return state.tasks.filter(t=>t.estado!=="hecho");}
-function inScope(t){return !ME||t.resp===ME;}
-function scopedTasks(){return state.tasks.filter(inScope);}
-function scopedPending(){return scopedTasks().filter(t=>t.estado!=="hecho");}
-
-/* ============ RENDER TASK ITEM ============ */
-function taskHTML(t,opts={}){
-  const due=fmtDue(t.due);
-  const done=t.estado==="hecho";
-  const blocked=!done&&!depsResolved(t);
-  const depNames=(t.deps||[]).filter(id=>{const d=state.tasks.find(x=>x.id===id);return d&&d.estado!=="hecho";}).map(id=>id).join(", ");
-  return `<div class="task pri-${PRI_CLASS[t.pri]} ${done?'done':''}" data-id="${t.id}">
-    <div class="chk" onclick="toggle('${t.id}')">${done?'✓':''}</div>
-    <div class="tbody">
-      <div class="tt">${esc(t.t)}</div>
-      ${t.d?`<div class="tdesc">${esc(t.d)}</div>`:''}
-      <div class="tmeta">
-        <span class="tag p-${PRI_CLASS[t.pri]}">${t.pri}</span>
-        <span class="tag cat">${t.cat}</span>
-        <span class="tag resp">${esc(t.resp)}</span>
-        <span class="due ${due.cls}">${due.txt}</span>
-        ${blocked?`<span class="due over">⛔ espera: ${depNames}</span>`:''}
-      </div>
-      <div class="tbtns">
-        <button class="mini ${t.estado==='progreso'?'act':''}" onclick="setProg('${t.id}')">En progreso</button>
-        <button class="mini" onclick="openEdit('${t.id}')">Editar</button>
-      </div>
-    </div>
-  </div>`;
-}
-function esc(s){return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
-
-/* ============ ACTIONS ============ */
-function toggle(id){
-  const t=state.tasks.find(x=>x.id===id);if(!t)return;
-  if(t.estado==="hecho"){t.estado="pendiente";t.completedAt=null;saveOne(t);renderAll();return;}
-  t.estado="hecho";t.completedAt=todayStr();saveOne(t);renderAll();suggestNext(t);
-}
-function setProg(id){const t=state.tasks.find(x=>x.id===id);if(!t)return;t.estado=t.estado==="progreso"?"pendiente":"progreso";saveOne(t);renderAll();}
-function suggestNext(justDone){
-  const cand=pendingTasks().filter(depsResolved);
-  cand.sort((a,b)=>{
-    const sameA=a.resp===justDone.resp?1:0, sameB=b.resp===justDone.resp?1:0;
-    if(sameA!==sameB)return sameB-sameA;
-    if(PRI_ORDER[b.pri]!==PRI_ORDER[a.pri])return PRI_ORDER[b.pri]-PRI_ORDER[a.pri];
-    return a.due.localeCompare(b.due);
-  });
-  const nx=cand[0];
-  showToast(`<span class="tl">✓ ¡Hecho!</span> ${esc(justDone.t)}<br>`+
-    (nx?`<span class="nx">⏭️ Siguiente paso${nx.resp===justDone.resp?' ('+esc(nx.resp)+')':''}:</span> ${esc(nx.t)}`:`<span class="nx">🎉 ¡No quedan tareas accionables pendientes!</span>`));
-}
-let toastTimer;
-function showToast(html){const el=document.getElementById('toast');el.innerHTML=html;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),6000);}
-
-/* ============ STREAK ============ */
-function computeStreak(){
-  const days=new Set(scopedTasks().filter(t=>t.completedAt).map(t=>t.completedAt));
-  let streak=0;let cur=new Date();
-  if(!days.has(todayStr()))cur.setDate(cur.getDate()-1);
-  while(true){const s=cur.getFullYear()+"-"+String(cur.getMonth()+1).padStart(2,'0')+"-"+String(cur.getDate()).padStart(2,'0');if(days.has(s)){streak++;cur.setDate(cur.getDate()-1);}else break;}
-  return streak;
-}
-
-/* ============ RENDER VIEWS ============ */
-function renderAll(){renderHeader();renderHoy();renderTareas();renderEquipo();renderProgreso();}
-function renderHeader(){
-  const t=todayStr();
-  const over=scopedPending().filter(x=>x.due<t).length;
-  const today=scopedPending().filter(x=>x.due===t).length;
-  const total=scopedTasks().length, done=scopedTasks().filter(x=>x.estado==="hecho").length;
-  const pct=total?Math.round(done/total*100):0;
-  document.getElementById('hdToday').textContent=today;
-  document.getElementById('hdOver').textContent=over;
-  document.getElementById('hdStreak').textContent=computeStreak();
-  document.getElementById('ringPct').textContent=pct+"%";
-  const circ=2*Math.PI*27;
-  const fg=document.getElementById('ringFg');fg.setAttribute('stroke-dasharray',circ);fg.setAttribute('stroke-dashoffset',circ*(1-pct/100));
-}
-function renderHoy(){
-  const t=todayStr();
-  document.getElementById('todayDate').textContent=new Date().toLocaleDateString('es-CO',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-  const hoyH2=document.querySelector('#v-hoy h2');if(hoyH2)hoyH2.textContent=ME?('Tu día · '+ME):'Tu día (todo el equipo)';
-  const over=scopedPending().filter(x=>x.due<t).sort(byPriDue);
-  const today=scopedPending().filter(x=>x.due===t).sort(byPriDue);
-  const soon=scopedPending().filter(x=>x.due>t&&depsResolved(x)).sort(byPriDue).slice(0,6);
-  const nextCand=[...over,...today,...soon].filter(depsResolved);
-  const nx=nextCand[0];
-  document.getElementById('nextCard').innerHTML=nx
-    ?`<div class="label">⏭️ Tu siguiente paso ahora</div><div class="t">${esc(nx.t)}</div><div class="tmeta"><span class="tag p-${PRI_CLASS[nx.pri]}">${nx.pri}</span><span class="tag resp">${esc(nx.resp)}</span><span class="due ${fmtDue(nx.due).cls}">${fmtDue(nx.due).txt}</span></div>`
-    :`<div class="label">🎉</div><div class="t">No hay tareas accionables pendientes. ¡Vas al día!</div>`;
-  const doneToday=scopedTasks().filter(x=>x.completedAt===t).length;
-  document.getElementById('hoyKpis').innerHTML=
-    kpi(doneToday,"completadas hoy")+kpi(today.length,"pendientes hoy")+kpi(over.length,"vencidas",over.length?'var(--crit)':null)+kpi(soon.length,"próximas listas");
-  document.getElementById('listOver').innerHTML=over.length?over.map(x=>taskHTML(x)).join(''):empty("Sin tareas vencidas. 👌");
-  document.getElementById('listToday').innerHTML=today.length?today.map(x=>taskHTML(x)).join(''):empty("Nada vence hoy.");
-  document.getElementById('listSoon').innerHTML=soon.length?soon.map(x=>taskHTML(x)).join(''):empty("—");
-}
-function kpi(n,l,color){return `<div class="kpi"><b ${color?`style="color:${color}"`:''}>${n}</b><span>${l}</span></div>`;}
-function empty(m){return `<div class="empty">${m}</div>`;}
-function byPriDue(a,b){if(PRI_ORDER[b.pri]!==PRI_ORDER[a.pri])return PRI_ORDER[b.pri]-PRI_ORDER[a.pri];return a.due.localeCompare(b.due);}
-
-function renderTareas(){
-  const cat=document.getElementById('fCat').value, resp=document.getElementById('fResp').value,
-        est=document.getElementById('fEstado').value, txt=document.getElementById('fText').value.toLowerCase();
-  let list=state.tasks.filter(t=>
-    (!cat||t.cat===cat)&&(!resp||t.resp===resp)&&
-    (!est||(est==="hecho"&&t.estado==="hecho")||(est==="progreso"&&t.estado==="progreso")||(est==="pendiente"&&t.estado==="pendiente"))&&
-    (!txt||(t.t+t.d+t.resp+t.area).toLowerCase().includes(txt)));
-  list.sort((a,b)=>{const o={hecho:2,progreso:0,pendiente:1};if(o[a.estado]!==o[b.estado])return o[a.estado]-o[b.estado];return byPriDue(a,b);});
-  document.getElementById('listAll').innerHTML=list.length?list.map(x=>taskHTML(x)).join(''):empty("Sin resultados.");
-}
-
-function renderEquipo(){
-  renderTeamMgr();
-  const people={};
-  roster().forEach(n=>{people[n]={resp:n,total:0,done:0,onTime:0,late:0,overduePending:0,pts:0};});
-  state.tasks.forEach(t=>{
-    const p=people[t.resp]||(people[t.resp]={resp:t.resp,total:0,done:0,onTime:0,late:0,overduePending:0,pts:0});
-    p.total++;
-    if(t.estado==="hecho"){p.done++;if(t.completedAt&&t.completedAt<=t.due){p.onTime++;p.pts+=10;}else{p.late++;p.pts+=5;}}
-    else if(t.due<todayStr()){p.overduePending++;p.pts-=3;}
-  });
-  const arr=Object.values(people).sort((a,b)=>b.pts-a.pts);
-  const medals=["🥇","🥈","🥉"];
-  document.getElementById('scoreGrid').innerHTML=arr.map((p,i)=>{
-    const rate=p.done?Math.round(p.onTime/p.done*100):0;
-    const prog=Math.round(p.done/p.total*100);
-    return `<div class="person">
-      <div class="nm">${esc(p.resp)} <span class="medal">${i<3?medals[i]:''}</span></div>
-      <div class="pts">${p.pts} pts</div>
-      <div class="bar"><i style="width:${prog}%"></i></div>
-      <div class="pstats">
-        <span><b>${p.done}/${p.total}</b> hechas</span>
-        <span><b>${rate}%</b> a tiempo</span>
-        ${p.late?`<span style="color:var(--media)">${p.late} tarde</span>`:''}
-        ${p.overduePending?`<span style="color:var(--crit)">${p.overduePending} vencidas</span>`:''}
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function renderProgreso(){
-  const total=state.tasks.length,done=state.tasks.filter(t=>t.estado==="hecho").length;
-  const t=todayStr();
-  document.getElementById('progKpis').innerHTML=
-    kpi(Math.round(done/total*100)+"%","avance global")+
-    kpi(done+"/"+total,"tareas hechas")+
-    kpi(pendingTasks().filter(x=>x.due<t).length,"vencidas",'var(--crit)')+
-    kpi(pendingTasks().filter(x=>x.pri==="Crítica").length,"críticas pendientes",'var(--alta)');
-  const colors={Cumplimiento:'#D8493B',Operativo:'#16958A','Software F1':'#9A7B2A','Reunión 360':'#5B3F86'};
-  document.getElementById('progCat').innerHTML=CATS.map(c=>{
-    const tot=state.tasks.filter(x=>x.cat===c).length,dn=state.tasks.filter(x=>x.cat===c&&x.estado==="hecho").length;
-    const p=tot?Math.round(dn/tot*100):0;
-    return pbar(c,p,dn+"/"+tot,colors[c]);
-  }).join('');
-  const people={};state.tasks.forEach(x=>{const p=people[x.resp]||(people[x.resp]={t:0,d:0});p.t++;if(x.estado==="hecho")p.d++;});
-  document.getElementById('progResp').innerHTML=Object.entries(people).sort((a,b)=>b[1].t-a[1].t).map(([r,v])=>{
-    const p=Math.round(v.d/v.t*100);return pbar(r,p,v.d+"/"+v.t,'#16958A');
-  }).join('');
-}
-function pbar(lab,pct,num,color){return `<div class="pbar-row"><div class="lab">${esc(lab)}</div><div class="track"><i style="width:${pct}%;background:${color}"></i></div><div class="num">${num} · ${pct}%</div></div>`;}
-
-/* ============ DIALOG ============ */
-function fillSelects(){
-  const cats=[...new Set(state.tasks.map(t=>t.cat))];
-  const resps=roster();
-  document.getElementById('fCat').innerHTML='<option value="">Todas las categorías</option>'+cats.map(c=>`<option>${c}</option>`).join('');
-  document.getElementById('fResp').innerHTML='<option value="">Todos los responsables</option>'+resps.map(c=>`<option>${esc(c)}</option>`).join('');
-  document.getElementById('dCat').innerHTML=cats.map(c=>`<option>${c}</option>`).join('');
-  document.getElementById('respList').innerHTML=resps.map(c=>`<option value="${esc(c)}">`).join('');
-}
-function openAdd(){document.getElementById('dlgTitle').textContent="Nueva tarea";['dId','dTitle','dDesc','dArea'].forEach(i=>document.getElementById(i).value='');document.getElementById('dPri').value="Media";document.getElementById('dDue').value=todayStr();document.getElementById('dlg').showModal();}
-function openEdit(id){const t=state.tasks.find(x=>x.id===id);if(!t)return;document.getElementById('dlgTitle').textContent="Editar tarea";document.getElementById('dId').value=t.id;document.getElementById('dTitle').value=t.t;document.getElementById('dDesc').value=t.d;document.getElementById('dCat').value=t.cat;document.getElementById('dResp').value=t.resp;document.getElementById('dPri').value=t.pri;document.getElementById('dArea').value=t.area;document.getElementById('dDue').value=t.due;document.getElementById('dlg').showModal();}
-function saveTask(){
-  const id=document.getElementById('dId').value;
-  const data={t:document.getElementById('dTitle').value.trim(),d:document.getElementById('dDesc').value.trim(),cat:document.getElementById('dCat').value,resp:document.getElementById('dResp').value.trim()||"Sin asignar",pri:document.getElementById('dPri').value,area:document.getElementById('dArea').value.trim(),due:document.getElementById('dDue').value||todayStr()};
-  if(!data.t){alert("Pon un título");return;}
-  let saved;
-  if(id){saved=state.tasks.find(x=>x.id===id);Object.assign(saved,data);}
-  else{saved={id:"X"+Date.now(),...data,deps:[],estado:"pendiente",completedAt:null};state.tasks.push(saved);}
-  saveOne(saved);fillSelects();fillMe();renderAll();document.getElementById('dlg').close();
-}
-
-/* ============ DATA ============ */
-function exportData(){const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download="resett_tracker_respaldo_"+todayStr()+".json";a.click();}
-document.getElementById('importFile').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=async()=>{try{const s=JSON.parse(r.result);if(s.tasks){state=s;await saveAll();fillSelects();fillMe();renderAll();alert("Respaldo importado y subido a la nube ✓");}}catch(err){alert("Archivo inválido");}};r.readAsText(f);});
-async function reprogramarDesdeHoy(){
-  const pend=state.tasks.filter(t=>t.estado!=='hecho'&&t.due);
-  if(!pend.length){alert('No hay tareas pendientes con fecha.');return;}
-  const min=pend.map(t=>t.due).sort()[0];
-  const shift=daysBetween(min,todayStr());
-  if(shift<=0){alert('Las tareas pendientes ya empiezan hoy o más adelante. No hay retrasos.');return;}
-  if(!confirm('Se moverán TODAS las tareas pendientes '+shift+' día(s) hacia adelante para que empiecen desde hoy, sin retrasos. ¿Continuar?'))return;
-  pend.forEach(t=>t.due=addDays(t.due,shift));
-  await saveAll();renderAll();
-  alert('Fechas reprogramadas desde hoy ✓');
-}
-async function importFrom360(){
-  const ta=document.getElementById('imp360');
-  const lines=(ta.value||'').split('\n').map(s=>s.trim()).filter(Boolean);
-  if(!lines.length){alert('Pega primero los action items.');return;}
-  const known={valentina:'Valentina',marlon:'Marlon',natasha:'Nat',nati:'Nat',naty:'Nat',nat:'Nat',laura:'Laura',felipe:'Felipe',pipe:'Felipe',paulina:'Paulina',ana:'Ana',sara:'Sara'};
-  const nuevas=[];let dup=0;
-  lines.forEach((line,i)=>{
-    let resp='Sin asignar',t=line;
-    const idx=line.indexOf(':');
-    if(idx>0&&idx<40){
-      const namePart=line.slice(0,idx).trim();
-      t=line.slice(idx+1).trim();
-      const first=namePart.split(/[\s/]+/)[0].toLowerCase();
-      let match=known[first];
-      if(!match){
-        const r=roster().find(x=>{const rl=x.toLowerCase();return rl!=='sin asignar'&&(rl===first||first.startsWith(rl)||rl.startsWith(first));});
-        if(r)match=r;
-      }
-      resp=match||(namePart.length<=18?namePart:'Sin asignar');
-    }
-    if(!t)return;
-    if(state.tasks.some(x=>x.t===t)){dup++;return;}
-    nuevas.push({id:'R'+Date.now()+i,t,d:'360 Resett',cat:'Reunión 360',resp,area:'360 Resett',pri:'Media',due:addDays(todayStr(),3),deps:[],estado:'pendiente',completedAt:null});
-  });
-  if(!nuevas.length){alert('No se crearon tareas nuevas'+(dup?' ('+dup+' ya existían).':'.'));return;}
-  state.tasks.push(...nuevas);
-  await saveAll();fillSelects();fillMe();renderAll();
-  ta.value='';
-  alert(nuevas.length+' tarea(s) creada(s) del 360 Resett ✓'+(dup?' ('+dup+' repetidas omitidas)':''));
-}
-async function resetData(){if(confirm("¿Reiniciar a las tareas iniciales? Esto reemplaza las tareas de TODO el equipo en la nube.")){await sb.from('tasks').delete().neq('id','');state.tasks=seedTasks();await saveAll();fillSelects();fillMe();renderAll();}}
-
-/* ============ NAV ============ */
-document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
-  document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');
-  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-  document.getElementById('v-'+b.dataset.v).classList.add('active');
-});
-['fCat','fResp','fEstado'].forEach(i=>document.getElementById(i).addEventListener('change',renderTareas));
-document.getElementById('fText').addEventListener('input',renderTareas);
-
-/* ============ IDENTIDAD (Yo soy) ============ */
-let ME=localStorage.getItem('resett_me')||"";
-function fillMe(){
-  const resps=roster();
-  const sel=document.getElementById('meSel');if(!sel)return;
-  sel.innerHTML='<option value="">— elige tu nombre —</option>'+resps.map(r=>`<option ${r===ME?'selected':''}>${esc(r)}</option>`).join('');
-  if(ME){const f=document.getElementById('fResp');if(f)f.value=ME;}
-}
-function goHoyAndRender(){
-  const f=document.getElementById('fResp');if(f)f.value=ME;
-  document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));
-  const hb=document.querySelector('nav button[data-v="hoy"]');if(hb)hb.classList.add('active');
-  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-  document.getElementById('v-hoy').classList.add('active');
-  renderAll();
-}
-document.getElementById('meSel').addEventListener('change',async e=>{
-  const name=e.target.value;
-  if(!name){ME="";localStorage.setItem('resett_me','');goHoyAndRender();return;}
-  let m=state.team.find(x=>x.name===name);
-  if(!m){m={id:'P'+Date.now(),name,pin:null};state.team.push(m);await sb.from('team').upsert(m);}
-  if(!m.pin){
-    const np=prompt('Primera vez, '+name+'. Crea tu PIN personal (4 a 6 dígitos):');
-    if(np===null){e.target.value=ME;return;}
-    if(!/^[0-9]{4,6}$/.test(np.trim())){alert('El PIN debe ser de 4 a 6 dígitos.');e.target.value=ME;return;}
-    m.pin=np.trim();
-    const {error}=await sb.from('team').upsert({id:m.id,name:m.name,pin:m.pin});if(error)console.error(error);
-  }else{
-    const ip=prompt('Hola '+name+', ingresa tu PIN:');
-    if(ip===null){e.target.value=ME;return;}
-    if(ip.trim()!==m.pin){alert('PIN incorrecto.');e.target.value=ME;return;}
-  }
-  ME=name;localStorage.setItem('resett_me',ME);
-  goHoyAndRender();
-});
-
-/* ============ INIT (nube + tiempo real) ============ */
-async function refreshFromCloud(){
-  const fc=document.getElementById('fCat').value,fr=document.getElementById('fResp').value,fe=document.getElementById('fEstado').value,ft=document.getElementById('fText').value;
-  await loadFromCloud();await loadTeam();
-  fillSelects();fillMe();
-  document.getElementById('fCat').value=fc;document.getElementById('fResp').value=fr;document.getElementById('fEstado').value=fe;document.getElementById('fText').value=ft;
-  renderAll();
+async function pullAll(){
+  if(!sb) return;
+  const [bx,is]=await Promise.all([sb.from("ny_boxes").select("id,data"),sb.from("ny_issues").select("id,data")]);
+  if(bx.error||is.error){ setSync("err","Can't reach the server — check internet"); return; }
+  const seen=new Set();
+  bx.data.forEach(r=>{ seen.add(r.id); if(pending(r.id)) return; const loc=S.boxes.get(r.id); if(loc&&(loc.updatedAt||0)>(r.data.updatedAt||0)){ saveBox(loc); return; } S.boxes.set(r.id,r.data); });
+  [...S.boxes.keys()].forEach(id=>{ if(!seen.has(id)&&!pending(id)){ const b=S.boxes.get(id); if(b.packer===S.name&&b._local) saveBox(b); else S.boxes.delete(id); } });
+  is.data.forEach(r=>S.issues.set(r.id,r.data));
+  [...S.issues.values()].forEach(i=>{ if(!is.data.find(r=>r.id===i.id)&&i.reporter===S.name) store.saveIssue(i).catch(()=>{}); });
+  cacheLocal(); if(S.sync!=="err"||navigator.onLine) setSync("ok");
 }
 async function init(){
-  await loadFromCloud();await loadTeam();
-  fillSelects();fillMe();renderAll();updateSaveInfo();
-  sb.channel('resett-rt')
-    .on('postgres_changes',{event:'*',schema:'public',table:'tasks'},refreshFromCloud)
-    .on('postgres_changes',{event:'*',schema:'public',table:'team'},refreshFromCloud)
-    .subscribe();
+  loadLocal(); render();
+  if(window.supabase&&!SUPABASE_URL.startsWith("__")){
+    sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{persistSession:false}});
+    db=true; S.mode="sync";
+    await pullAll();
+    sb.channel("ny-packout").on("postgres_changes",{event:"*",schema:"public",table:"ny_boxes"},p=>{ const r=p.new&&p.new.id?p.new:null; const id=(p.new&&p.new.id)||(p.old&&p.old.id); if(!id||pending(id)) return; if(p.eventType==="DELETE") S.boxes.delete(id); else if(r) S.boxes.set(id,r.data); cacheLocal(); liveRefresh(); })
+      .on("postgres_changes",{event:"*",schema:"public",table:"ny_issues"},p=>{ if(p.new&&p.new.id){ S.issues.set(p.new.id,p.new.data); cacheLocal(); liveRefresh(); } }).subscribe();
+    setInterval(()=>pullAll().then(liveRefresh),20000);
+    window.addEventListener("online",()=>{ pullAll().then(liveRefresh); Object.keys(wq).forEach(id=>{ if(!wq[id].busy&&S.boxes.get(id)) saveBox(S.boxes.get(id)); }); });
+  } else { S.mode="local"; setSync("local"); }
+  S.view=S.name?"home":"welcome";
+  render();
+}
+function liveRefresh(){ if(["home","summary","issues","boxview"].includes(S.view)) render(); else if(S.view==="scan") renderScanParts(); }
+
+/* ---------- Box numbering ---------- */
+async function nextBoxNumber(){
+  const maxLocal=Math.max(0,...[...S.boxes.values()].map(b=>b.number||0));
+  if(!sb) return maxLocal+1;
+  try{ const {data,error}=await sb.rpc("ny_next_box"); if(!error&&data) return Math.max(+data,maxLocal+1); }catch(e){}
+  toast("Offline: box number may repeat. Check before writing it on the box","warn",4000);
+  return maxLocal+1;
 }
 
-/* ============ PUERTA DE ACCESO (código) ============ */
-async function getAccessCode(){
+/* ---------- Views ---------- */
+function stepper(on){const st=["Count","Scan & pack","Check","Measure & weigh"];return `<div class="steps">${st.map((s,i)=>`<span class="${i===on?"on":""}">${i+1}. ${s}</span>`).join("")}</div>`}
+function modeNote(){ return S.mode==="local"?`<div class="note warn"><b>Not connected to the server.</b><span>Work is saved on this phone only. When you finish, download the Excel from “My summary” and send it to Colombia. Don't clear this browser's data until then.</span></div>`:""; }
+
+function render(){
+  $("#who").textContent=S.name?`${S.name}${S.location?" · "+S.location:""}`:"Packing list & box count";
+  const app=$("#app"); const v=S.view;
+  if(v==="welcome") app.innerHTML=vWelcome();
+  else if(v==="home") app.innerHTML=vHome();
+  else if(v==="count") app.innerHTML=vCount();
+  else if(v==="scan"){ app.innerHTML=vScan(); renderScanParts(); if(CAM.on) attachCam(); else focusScan(); }
+  else if(v==="close") app.innerHTML=vClose();
+  else if(v==="dims") app.innerHTML=vDims();
+  else if(v==="boxdone") app.innerHTML=vBoxDone();
+  else if(v==="manual") app.innerHTML=vManual();
+  else if(v==="issues") app.innerHTML=vIssues();
+  else if(v==="summary") app.innerHTML=vSummary();
+  else if(v==="boxview") app.innerHTML=vBoxView();
+  bind();
+}
+function go(v){ if(v!=="scan") stopCam(); S.view=v;render();window.scrollTo(0,0)}
+function cur(){return S.cur?S.boxes.get(S.cur):null}
+
+function vWelcome(){return `
+<div class="panel">
+  <h1>Pack the NY inventory</h1>
+  <p class="muted">Each box: count the garments on the table, scan each one as it goes into the box, check the count, then measure and weigh the box.</p>
+  <label>Your full name<input id="f_name" autocomplete="name" value="${esc(S.name)}" placeholder="e.g. Laura Gómez"></label>
+  <label>Where are you packing?<select id="f_loc">${["","Dumbo","Tribeca","Nomad","Warehouse / other"].map(o=>`<option ${o===S.location?"selected":""} value="${esc(o)}">${o||"Choose a location"}</option>`).join("")}</select></label>
+  <button class="primary block" data-a="start">Start</button>
+</div>
+<div class="note info"><b>Before you start</b><span>Have ready: boxes, tape, a marker, a tape measure and a scale. A handheld QR scanner (USB or Bluetooth) is the fastest way; you can also take a photo of each QR with your phone.</span></div>`}
+
+function vHome(){
+  const boxes=[...S.boxes.values()].sort((a,b)=>a.number-b.number);
+  const closed=boxes.filter(b=>b.status==="closed");
+  const units=closed.reduce((a,b)=>a+scannedOf(b),0);
+  const open=boxes.filter(b=>b.status!=="closed");
+  const myOpen=open.filter(b=>b.packer===S.name);
+  const issues=[...S.issues.values()];
+  return `
+${modeNote()}
+<div class="stats">
+  <div class="stat"><div class="n">${closed.length}</div><div class="l">Boxes closed</div></div>
+  <div class="stat"><div class="n">${units}</div><div class="l">Garments packed</div></div>
+  <div class="stat"><div class="n">${open.length}</div><div class="l">Boxes open</div></div>
+  <div class="stat"><div class="n">${issues.length}</div><div class="l">Issues</div></div>
+</div>
+${myOpen.length?`<div class="note warn"><b>You have ${myOpen.length===1?"an open box":myOpen.length+" open boxes"}: ${myOpen.map(b=>"Box "+b.number).join(", ")}.</b><span>Finish it before starting another one, so garments don't get mixed.</span><button class="primary" data-a="resume" data-id="${myOpen[0].id}">Continue Box ${myOpen[0].number}</button></div>`:""}
+<button class="primary block" data-a="newbox" ${myOpen.length?"disabled":""}>Start a new box</button>
+<div class="row"><button class="grow" data-a="go" data-v="issues">Report an issue</button><button class="grow" data-a="go" data-v="summary">My summary</button></div>
+<div class="panel"><div class="row"><h2 class="grow">All boxes</h2><span class="small muted">${S.mode==="sync"?"Everyone's boxes, live":"This device"}</span></div>
+  ${boxes.length?`<div class="list">${boxes.map(b=>`<button class="boxrow" data-a="openbox" data-id="${b.id}"><span class="boxno">#${b.number}</span><span class="grow"><b>${scannedOf(b)} garments</b><br><span class="small muted">${esc(b.packer)}${b.location?" · "+esc(b.location):""} · ${fmtT(b.closedAt||b.createdAt)}</span></span><span class="chip ${b.status==="closed"?"closed":"open"}">${b.status==="closed"?"Closed":"Open"}</span></button>`).join("")}</div>`:`<p class="muted">No boxes yet. Tap “Start a new box” to begin with Box 1.</p>`}
+</div>
+<div class="panel"><h2>Download for Colombia</h2><p class="small muted">Packing list per box, box sizes and weights, totals per SKU and all issues, in one Excel file.</p><button data-a="xlsx_all">Download full packing list (Excel)</button></div>
+<button class="ghost" data-a="changeuser">Not ${esc(S.name)}? Change name</button>`}
+
+function vCount(){const b=cur();return `
+${stepper(0)}
+<div class="panel">
+  <h1>Box ${b.number}: count first</h1>
+  <p>Put the garments for this box on the table and count them by hand. Only put on the table what fits in one box.</p>
+  <label>How many garments are on the table?<input id="f_decl" type="number" inputmode="numeric" min="1" step="1" value="${b.declared||""}" placeholder="e.g. 40"></label>
+  <div id="declwarn"></div>
+  <button class="primary block" data-a="setdecl">Start scanning</button>
+</div>
+<div class="note info"><b>Tip</b><span>Group similar garments in the same box (bras with bras, leggings with leggings). Keep piles at ${MAX_PILE} or fewer so the count stays accurate.</span></div>
+<button class="ghost" data-a="cancelbox">Cancel this box</button>`}
+
+function vScan(){const b=cur();return `
+${stepper(1)}
+<div class="panel">
+  <div class="row"><h1 class="grow">Box ${b.number}</h1><span class="small muted">Counted on table: <b>${b.declared}</b> <button class="ghost small" data-a="editdecl">change</button></span></div>
+  <div id="counter"></div>
+  <div id="scanmsg"></div>
+  <div id="camwrap" class="cam" hidden><video id="cam" playsinline muted></video><div class="frame"></div><div class="hint" id="camhint">Hold one QR inside the frame</div></div>
+  <button class="primary block" data-a="cam" id="cambtn">${CAM.on?"Stop camera":"Scan with camera"}</button>
+  <label>Or use a handheld scanner<input id="scan" class="scanin" autocomplete="off" autocapitalize="characters" spellcheck="false" ${S.kbd?"":'inputmode="none"'} placeholder="Point the scanner at the QR"></label>
+  <div class="row">
+    <button class="grow" data-a="photo" type="button">Take a photo of the QR</button>
+    <button class="grow" data-a="go" data-v="manual">No tag? Add by hand</button>
+  </div>
+  <input id="photoin" type="file" accept="image/*" capture="environment" hidden>
+  <div class="row small"><button class="ghost" data-a="kbd">${S.kbd?"Hide keyboard":"Type a code by hand"}</button><button class="ghost" data-a="undo" ${S.undo.length?"":"disabled"}>Undo last scan</button></div>
+  <p class="small muted">Rule: scan a garment, then put it in the box right away. Unscanned garments stay on the table. With the camera, move each garment out of the frame before showing the next one.</p>
+</div>
+<div class="panel"><div class="row"><h2 class="grow">In this box</h2><span class="small muted">Tap − to remove one</span></div><div id="items" class="list"></div></div>
+<button class="primary block" data-a="toclose">Close box</button>
+<div id="restartzone"><button class="danger block" data-a="restartask">Restart this box</button></div>
+<button class="ghost" data-a="go" data-v="home">Back to all boxes (box stays open)</button>`}
+
+function renderScanParts(){
+  const b=cur(); if(!b||!$("#counter")) return;
+  const n=scannedOf(b), d=b.declared||0, left=d-n;
+  const pct=d?Math.min(100,n/d*100):0;
+  $("#counter").innerHTML=`<div class="counter"><div><div class="n">${d}</div><div class="l">Counted</div></div><div><div class="n">${n}</div><div class="l">Scanned</div></div><div><div class="n" style="color:${left<0?"var(--bad)":left===0?"var(--ok)":"inherit"}">${left<0?"+"+(-left):left}</div><div class="l">${left<0?"Over count":"On table"}</div></div></div><div class="bar ${left<0?"over":left===0?"full":""}"><i style="width:${pct}%"></i></div>`;
+  $("#scanmsg").innerHTML= left===0&&n>0?`<div class="note ok"><b>Count reached.</b><span>The table should now be empty. If it is, tap “Close box”.</span></div>`
+    : left<0?`<div class="note bad"><b>You scanned ${-left} more than you counted.</b><span>A garment may have been scanned twice. Check the list and tap − on the repeated one, or change the counted number if your count was wrong.</span></div>`:"";
+  const items=Object.entries(b.items||{}).sort((x,y)=>(y[1].t||0)-(x[1].t||0));
+  $("#items").innerHTML=items.length?items.map(([k,i])=>`<div class="item ${S.lastKey===k?"flash":""}"><div class="t"><b>${esc(i.name)}</b> · ${esc(i.color)} · ${esc(i.size)} ${i.manual?'<span class="chip man">By hand</span>':""} ${i.unknown?'<span class="chip unk">Not in guide</span>':""}<div class="sku">${esc(i.sku)}</div></div><span class="qty">${i.qty}</span><button data-a="minus" data-k="${esc(k)}" aria-label="Remove one">−</button></div>`).join(""):`<p class="muted">Nothing scanned yet.</p>`;
+  bindDyn();
+}
+
+function vClose(){const b=cur();const n=scannedOf(b),d=b.declared,left=d-n;
+  let body="";
+  if(n===0) body=`<div class="note bad"><b>This box is empty.</b><span>Scan at least one garment, or cancel the box.</span></div><button class="block" data-a="backscan">Back to scanning</button><button class="ghost" data-a="cancelbox">Cancel this box</button>`;
+  else if(left===0) body=`<div class="note ok"><b>Correct: you counted ${d} and scanned ${n}.</b><span>Make sure the table is empty, then seal the box.</span></div><button class="primary block" data-a="todims">Continue to size and weight</button><button class="ghost" data-a="backscan">Back to scanning</button>`;
+  else if(left>0) body=`<div class="note warn"><b>You scanned ${n}. You counted ${d}, so ${left} should still be on the table.</b><span>Count what is left on the table. Is it ${left}?</span></div>
+    <button class="primary block" data-a="closepartial">Yes, ${left} are on the table. Close box with ${n}</button>
+    <p class="small muted">The ${left} left on the table go into the next box. You will count them again there.</p>
+    <button class="block" data-a="backscan">No, keep scanning</button>
+    <button class="danger block" data-a="restartask2">No, the numbers don't match. Restart this box</button>`;
+  else body=`<div class="note bad"><b>You scanned ${n} but counted ${d}: ${-left} extra.</b><span>Something was scanned twice, or the first count was wrong. Remove the repeated scans, or recount everything inside the box.</span></div>
+    <button class="block" data-a="backscan">Review the list</button>
+    <label>I recounted the box and there are:<input id="f_recount" type="number" inputmode="numeric" min="1" placeholder="${n}"></label>
+    <button class="primary block" data-a="recount">Confirm recount</button>
+    <button class="danger block" data-a="restartask2">Restart this box</button>`;
+  return `${stepper(2)}<div class="panel"><h1>Close Box ${b.number}</h1>${body}</div><div id="restartzone"></div>`}
+
+function vDims(){const b=cur();const u=S.unit;const L=u==="in"?["in","lb"]:["cm","kg"];const dm=b.dims||{},w=b.weight||{};
+  return `${stepper(3)}<div class="panel"><h1>Box ${b.number}: size and weight</h1>
+  <p>Seal the box and write <b>BOX ${b.number}</b> on two sides with the marker. Then measure the outside of the box and weigh it.</p>
+  <div class="row"><span class="small muted grow">Units</span><div class="seg"><button class="${u==="in"?"on":""}" data-a="unit" data-u="in">in / lb</button><button class="${u==="cm"?"on":""}" data-a="unit" data-u="cm">cm / kg</button></div></div>
+  <div class="dims"><label>Length (${L[0]})<input id="f_l" type="number" inputmode="decimal" step="0.1" value="${dm.unit===u?dm.l??"":""}"></label><label>Width (${L[0]})<input id="f_w" type="number" inputmode="decimal" step="0.1" value="${dm.unit===u?dm.w??"":""}"></label><label>Height (${L[0]})<input id="f_h" type="number" inputmode="decimal" step="0.1" value="${dm.unit===u?dm.h??"":""}"></label></div>
+  <label>Weight (${L[1]})<input id="f_kg" type="number" inputmode="decimal" step="0.1" value="${w.unit===(u==="in"?"lb":"kg")?w.v??"":""}"></label>
+  <div id="dimwarn"></div>
+  <button class="primary block" data-a="savedims">Close box</button>
+  <button class="ghost" data-a="backscan">Back to scanning</button></div>`}
+
+function vBoxDone(){const b=cur();return `<div class="panel" style="text-align:center"><p class="muted">Closed</p><div class="bigbox">BOX ${b.number}</div><p><b>${scannedOf(b)} garments</b> · ${dimTxt(b)} · ${wTxt(b)}</p><p class="small muted">Write “BOX ${b.number}” on the box if you haven't yet.</p></div>
+${b.leftover?`<div class="note warn"><b>${b.leftover} garments are still on the table.</b><span>Start the next box with them.</span><button class="primary" data-a="newbox" data-decl="${b.leftover}">Start next box with these ${b.leftover}</button></div>`:""}
+<button class="${b.leftover?"":"primary "}block" data-a="newbox">Start a new box</button>
+<button class="block" data-a="go" data-v="summary">I'm done: show my summary</button>
+<button class="ghost" data-a="go" data-v="home">All boxes</button>`}
+
+function vManual(){const st=Object.entries(STYLES).filter((e,i,a)=>a.findIndex(x=>x[1]===e[1])===i).sort((a,b)=>a[1].localeCompare(b[1]));
+  return `<div class="panel"><h1>Add a garment by hand</h1><p class="muted">Use this only when the garment has no tag or the QR can't be read. It will also be reported as an issue to Colombia.</p>
+  <label>Type of garment<select id="m_style"><option value="">Choose…</option>${st.map(([k,v])=>`<option value="${k}">${esc(v)}</option>`).join("")}<option value="OTHER">Not in the list</option></select></label>
+  <label id="m_otherw" hidden>Describe the garment<input id="m_other" placeholder="e.g. green zip hoodie"></label>
+  <label>Color<select id="m_color"><option value="">Choose…</option>${Object.entries(COLORS).sort((a,b)=>a[1].localeCompare(b[1])).map(([k,v])=>`<option value="${k}">${esc(v)}</option>`).join("")}<option value="OTHER">Other</option></select></label>
+  <label id="m_ocw" hidden>Color name<input id="m_ocolor" placeholder="e.g. Sage"></label>
+  <label>Size<select id="m_size"><option value="">Choose…</option>${Object.keys(SIZE_CODE).map(s=>`<option>${s}</option>`).join("")}</select></label>
+  <label>Why by hand?<select id="m_why"><option>No tag</option><option>Tag without QR</option><option>QR won't scan</option><option>Tag is damaged</option></select></label>
+  <div id="mwarn"></div>
+  <button class="primary block" data-a="addmanual">Add 1 to Box ${cur()?.number}</button>
+  <button class="ghost" data-a="backscan">Cancel</button></div>`}
+
+const ISSUE_TYPES=["Damaged garment","Stained or dirty","No tag / no QR","QR won't scan","Not in our catalog","Count difference","Missing items","Other"];
+function vIssues(){const d=S.issueDraft||{};const list=[...S.issues.values()].sort((a,b)=>b.createdAt-a.createdAt);
+  const myBoxes=[...S.boxes.values()].sort((a,b)=>a.number-b.number);
+  return `<div class="panel"><h1>Report an issue</h1>
+  <p class="muted">${S.mode==="sync"?"Issues go straight to the Colombia team. If you are offline, they are sent when the connection comes back.":"Issues are saved on this device. Send the Excel to Colombia when you finish."}</p>
+  <label>What happened?<select id="i_type">${ISSUE_TYPES.map(t=>`<option ${t===d.type?"selected":""}>${t}</option>`).join("")}</select></label>
+  <label>Garment (scan, or describe)<input id="i_item" value="${esc(d.item||"")}" placeholder="Scan the QR or write e.g. Strappy Bra Merlot M"></label>
+  <div class="row"><label class="grow">Quantity<input id="i_qty" type="number" inputmode="numeric" min="1" value="${d.qty||1}"></label>
+  <label class="grow">Box<select id="i_box"><option value="">Not packed / none</option>${myBoxes.map(b=>`<option value="${b.number}" ${String(b.number)===String(d.box)?"selected":""}>Box ${b.number}</option>`).join("")}</select></label></div>
+  <label>Details<textarea id="i_notes" placeholder="What do you see? e.g. seam open on left strap">${esc(d.notes||"")}</textarea></label>
+  <div id="iwarn"></div>
+  <button class="primary block" data-a="saveissue">Send issue</button>
+  <button class="ghost" data-a="go" data-v="${S.cur&&cur()&&cur().status!=="closed"?"scan":"home"}">Back</button></div>
+  <div class="panel"><h2>Reported issues (${list.length})</h2>${list.length?`<div class="list">${list.map(i=>`<div class="item"><div class="t"><b>${esc(i.type)}</b> · ${i.qty}× ${esc(i.item||"—")}${i.box?` · Box ${i.box}`:""}<div class="small muted">${esc(i.notes)}</div><div class="sku">${esc(i.reporter)} · ${fmtT(i.createdAt)}${i.auto?" · added automatically":""}</div></div></div>`).join("")}</div>`:`<p class="muted">No issues reported.</p>`}</div>`}
+
+function vSummary(){const mine=[...S.boxes.values()].filter(b=>b.packer===S.name).sort((a,b)=>a.number-b.number);
+  const closed=mine.filter(b=>b.status==="closed"), open=mine.filter(b=>b.status!=="closed");
+  const tot=closed.reduce((a,b)=>a+scannedOf(b),0); const iss=[...S.issues.values()].filter(i=>i.reporter===S.name);
+  const man=closed.reduce((a,b)=>a+Object.values(b.items).filter(i=>i.manual).reduce((x,i)=>x+i.qty,0),0);
+  return `<div class="panel"><h1>Summary for ${esc(S.name)}</h1><p class="muted">${fmtT(now())}</p>
+  <div class="stats"><div class="stat"><div class="n">${closed.length}</div><div class="l">Boxes closed</div></div><div class="stat"><div class="n">${tot}</div><div class="l">Garments</div></div><div class="stat"><div class="n">${man}</div><div class="l">Added by hand</div></div><div class="stat"><div class="n">${iss.length}</div><div class="l">Issues</div></div></div>
+  ${open.length?`<div class="note warn"><b>You still have ${open.length} open box${open.length>1?"es":""}: ${open.map(b=>"Box "+b.number).join(", ")}.</b><span>Close or cancel ${open.length>1?"them":"it"} before you leave.</span><button data-a="resume" data-id="${open[0].id}">Go to Box ${open[0].number}</button></div>`:""}
+  </div>
+  <div class="panel"><h2>Boxes you packed</h2>${closed.length?`<div class="tablewrap"><table><thead><tr><th>Box</th><th class="num">Garments</th><th>Size</th><th>Weight</th></tr></thead><tbody>${closed.map(b=>`<tr><td><button class="ghost" data-a="openbox" data-id="${b.id}">Box ${b.number}</button></td><td class="num">${scannedOf(b)}</td><td>${dimTxt(b)}</td><td>${wTxt(b)}</td></tr>`).join("")}<tr><td><b>Total</b></td><td class="num"><b>${tot}</b></td><td></td><td>${totW(closed)}</td></tr></tbody></table></div>`:`<p class="muted">No closed boxes yet.</p>`}</div>
+  ${modeNote()}
+  <button class="primary block" data-a="xlsx_me">Download my summary (Excel)</button>
+  <button class="ghost" data-a="go" data-v="home">All boxes</button>`}
+
+function vBoxView(){const b=S.boxes.get(S.viewBox);if(!b)return `<p>Box not found.</p>`;const items=Object.values(b.items||{}).sort((x,y)=>x.name.localeCompare(y.name)||x.color.localeCompare(y.color));
+  return `<div class="panel"><div class="row"><h1 class="grow">Box ${b.number}</h1><span class="chip ${b.status==="closed"?"closed":"open"}">${b.status==="closed"?"Closed":"Open"}</span></div>
+  <p class="muted">${esc(b.packer)}${b.location?" · "+esc(b.location):""} · ${fmtT(b.closedAt||b.createdAt)}</p>
+  <p><b>${scannedOf(b)} garments</b>${b.status==="closed"?` · ${dimTxt(b)} · ${wTxt(b)}`:""}${b.restarts?` · restarted ${b.restarts}×`:""}</p>
+  <div class="tablewrap"><table><thead><tr><th>Garment</th><th>Color</th><th>Size</th><th class="num">Qty</th></tr></thead><tbody>${items.map(i=>`<tr><td>${esc(i.name)}${i.manual?' <span class="chip man">By hand</span>':""}<div class="sku">${esc(i.sku)}</div></td><td>${esc(i.color)}</td><td>${esc(i.size)}</td><td class="num">${i.qty}</td></tr>`).join("")}</tbody></table></div>
+  ${b.status!=="closed"&&b.packer===S.name?`<button class="primary" data-a="resume" data-id="${b.id}">Continue this box</button>`:""}
+  ${b.status!=="closed"&&b.packer!==S.name?`<div class="note info"><span>${esc(b.packer)} is packing this box. You can take it over only if they stopped.</span><button data-a="takeover" data-id="${b.id}">Take over this box</button></div>`:""}
+  ${b.status==="closed"?`<div id="reopenzone"><button class="danger" data-a="reopenask">Reopen this box</button></div>`:""}
+  </div><button class="ghost" data-a="back">Back</button>`}
+
+function dimTxt(b){const d=b.dims;return d&&d.l?`${d.l}×${d.w}×${d.h} ${d.unit}`:"no size"}
+function wTxt(b){const w=b.weight;return w&&w.v?`${w.v} ${w.unit}`:"no weight"}
+function toKg(w){return w&&w.v?(w.unit==="lb"?w.v*0.453592:w.v):0}
+function totW(bs){const kg=bs.reduce((a,b)=>a+toKg(b.weight),0);return kg?`${(kg/0.453592).toFixed(1)} lb · ${kg.toFixed(1)} kg`:""}
+
+/* ---------- Actions ---------- */
+let backTo="home";
+function bind(){
+  document.querySelectorAll("#app [data-a]").forEach(el=>{ if(el.dataset.bound) return; el.dataset.bound=1; el.addEventListener("click",e=>{e.preventDefault();act(el.dataset.a,el)}); });
+  const sc=$("#scan"); if(sc&&!sc.dataset.bound){ sc.dataset.bound=1; sc.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key==="Tab"){ e.preventDefault(); const v=sc.value; sc.value=""; if(v.trim()) onScan(v); } }); }
+  const ph=$("#photoin"); if(ph&&!ph.dataset.bound){ ph.dataset.bound=1; ph.addEventListener("change",onPhoto); }
+  const dc=$("#f_decl"); if(dc) dc.addEventListener("input",()=>{const n=+dc.value;$("#declwarn").innerHTML=n>MAX_PILE?`<div class="note warn"><b>${n} is a big pile.</b><span>Counts over ${MAX_PILE} are easy to get wrong and may not fit one box. Consider splitting into two boxes.</span></div>`:""});
+  const ms=$("#m_style"); if(ms){ ms.addEventListener("change",()=>$("#m_otherw").hidden=ms.value!=="OTHER"); $("#m_color").addEventListener("change",()=>$("#m_ocw").hidden=$("#m_color").value!=="OTHER"); }
+  const ii=$("#i_item"); if(ii) ii.addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); const p=parseCode(ii.value); if(p) ii.value=`${p.name||"Unknown item"} ${p.colorName} ${p.sizeName} (${p.sku})`; } });
+}
+function bindDyn(){ document.querySelectorAll("#items [data-a]").forEach(el=>{ if(el.dataset.bound) return; el.dataset.bound=1; el.addEventListener("click",e=>{e.preventDefault();act(el.dataset.a,el)}); }); }
+function focusScan(){ if(CAM.on) return; const sc=$("#scan"); if(sc) setTimeout(()=>sc.focus({preventScroll:true}),30); }
+
+async function act(a,el){
+  const b=cur();
+  switch(a){
+  case "start":{ const n=$("#f_name").value.trim(), l=$("#f_loc").value; if(n.length<3){toast("Write your full name","bad");return} if(!l){toast("Choose where you are packing","bad");return} S.name=n;S.location=l;ls.set("nyp_name",n);ls.set("nyp_loc",l);go("home");break}
+  case "changeuser": go("welcome");break;
+  case "go": go(el.dataset.v);break;
+  case "back": go(backTo);break;
+  case "openbox": backTo=S.view; S.viewBox=el.dataset.id; go("boxview");break;
+  case "resume": S.cur=el.dataset.id; S.undo=[]; const rb=cur(); go(rb.declared?"scan":"count"); break;
+  case "takeover":{ const tb=S.boxes.get(el.dataset.id); tb.notes=(tb.notes||[]).concat(`Taken over by ${S.name} from ${tb.packer} ${fmtT(now())}`); tb.packer=S.name; saveBox(tb); S.cur=tb.id; S.undo=[]; go(tb.declared?"scan":"count"); break}
+  case "newbox":{
+    const mine=[...S.boxes.values()].find(x=>x.status!=="closed"&&x.packer===S.name); if(mine){toast(`Finish Box ${mine.number} first`,"warn");return}
+    el.disabled=true; const num=await nextBoxNumber();
+    const nb={_local:true,id:"box-"+num+"-"+Math.random().toString(36).slice(2,7),number:num,packer:S.name,location:S.location,status:"open",declared:el.dataset.decl?+el.dataset.decl:null,items:{},restarts:0,createdAt:now(),notes:[]};
+    if(el.dataset.decl) nb.notes.push(`Started with ${el.dataset.decl} left over from previous box`);
+    saveBox(nb); S.cur=nb.id; S.undo=[]; go("count"); break}
+  case "cancelbox":{ if(scannedOf(b)>0){toast("Remove the scanned garments first, or restart the box","warn");return} S.boxes.delete(b.id); try{await store.deleteBox(b.id)}catch(e){} S.cur=null; toast(`Box ${b.number} cancelled`,"warn"); go("home"); break}
+  case "setdecl":{ const n=Math.floor(+$("#f_decl").value); if(!n||n<1){toast("Write how many garments you counted","bad");return} b.declared=n; b.status="open"; saveBox(b); go("scan"); break}
+  case "editdecl":{ S.view="count"; render(); break}
+  case "kbd": S.kbd=!S.kbd; render(); break;
+  case "photo": $("#photoin").click(); break;
+  case "cam": if(CAM.on) stopCam(); else startCam(); break;
+  case "undo":{ const k=S.undo.pop(); if(k&&b.items[k]){ b.items[k].qty--; if(b.items[k].qty<=0) delete b.items[k]; saveBox(b); toast("Last scan removed","warn"); } renderScanParts(); $("[data-a=undo]").disabled=!S.undo.length; focusScan(); break}
+  case "minus":{ const k=el.dataset.k; if(b.items[k]){ b.items[k].qty--; if(b.items[k].qty<=0) delete b.items[k]; b.notes=(b.notes||[]); saveBox(b); toast("Removed one. Take that garment out of the box and put it back on the table","warn",3200);} renderScanParts(); focusScan(); break}
+  case "restartask": case "restartask2":{ const z=$("#restartzone"); z.innerHTML=`<div class="note bad"><b>Restart Box ${b.number}?</b><span>This deletes the ${scannedOf(b)} garments scanned in this box only. Other boxes are not affected. Take everything out of the box, put it back on the table and count again.</span><div class="row"><button class="danger grow" data-a="restartyes">Yes, restart Box ${b.number}</button><button class="grow" data-a="restartno">Cancel</button></div></div>`; bind(); z.scrollIntoView({block:"center"}); break}
+  case "restartno": render(); break;
+  case "restartyes":{ b.items={}; b.declared=null; b.restarts=(b.restarts||0)+1; b.leftover=null; b.status="open"; b.notes=(b.notes||[]).concat(`Restarted by ${S.name} ${fmtT(now())}`); saveBox(b); S.undo=[]; toast(`Box ${b.number} restarted. Count the table again`,"warn",3000); go("count"); break}
+  case "toclose": go("close"); break;
+  case "backscan": go("scan"); break;
+  case "todims": go("dims"); break;
+  case "closepartial":{ const n=scannedOf(b), left=b.declared-n; b.notes=(b.notes||[]).concat(`Counted ${b.declared}, scanned ${n}; ${left} left on table for next box`); b.leftover=left; b.declared=n; saveBox(b); go("dims"); break}
+  case "recount":{ const r=Math.floor(+$("#f_recount").value), n=scannedOf(b); if(!r){toast("Write the recount","bad");return} if(r!==n){ toast(`Recount is ${r} but ${n} are scanned. Fix the list or restart the box`,"bad",4000); return } b.notes=(b.notes||[]).concat(`Count changed from ${b.declared} to ${r} after recount`); b.declared=r; saveBox(b); go("dims"); break}
+  case "unit": S.unit=el.dataset.u; ls.set("nyp_unit",S.unit); render(); break;
+  case "savedims":{ const l=+$("#f_l").value,w=+$("#f_w").value,h=+$("#f_h").value,kg=+$("#f_kg").value; const u=S.unit;
+    if(!(l>0&&w>0&&h>0)){toast("Write length, width and height","bad");return} if(!(kg>0)){toast("Write the weight","bad");return}
+    const lim=u==="in"?{min:4,max:48,wmax:70,wu:"lb",du:"in"}:{min:10,max:122,wmax:32,wu:"kg",du:"cm"};
+    const warns=[]; [l,w,h].forEach(x=>{ if(x<lim.min||x>lim.max) warns.push(`A side of ${x} ${lim.du} looks unusual for a box. Check the unit.`) });
+    if(kg>lim.wmax) warns.push(`${kg} ${lim.wu} is heavy. Most carriers charge extra or refuse boxes over ${lim.wmax} ${lim.wu}. Consider splitting.`);
+    const per=(u==="in"?kg*0.453592:kg)/Math.max(1,scannedOf(b)); if(per>1.2) warns.push(`That is over ${(per).toFixed(1)} kg per garment. Check the weight and unit.`);
+    if(warns.length&&!el.dataset.ok){ $("#dimwarn").innerHTML=`<div class="note warn">${warns.map(x=>`<span>${x}</span>`).join("")}<span>Tap “Close box” again if the numbers are right.</span></div>`; el.dataset.ok=1; return }
+    b.dims={l,w,h,unit:u==="in"?"in":"cm"}; b.weight={v:kg,unit:u==="in"?"lb":"kg"}; b.status="closed"; b.closedAt=now(); b.closedBy=S.name; saveBox(b); beep(true); go("boxdone"); break}
+  case "addmanual":{ const st=$("#m_style").value,co=$("#m_color").value,sz=$("#m_size").value,why=$("#m_why").value;
+    if(!st||!co||!sz){toast("Choose type, color and size","bad");return}
+    let name=st==="OTHER"?$("#m_other").value.trim():STYLES[st]; let cname=co==="OTHER"?$("#m_ocolor").value.trim():COLORS[co];
+    if(!name||!cname){toast("Describe the garment and its color","bad");return}
+    const sku=(st!=="OTHER"&&co!=="OTHER")?st+co+SIZE_CODE[sz]:"MANUAL";
+    const key="M:"+(sku==="MANUAL"?[name,cname,sz].join("|").toUpperCase():sku);
+    addItem(b,key,{sku,name,color:cname,size:sz,manual:true});
+    const iss={id:"iss-"+now()+"-"+Math.random().toString(36).slice(2,6),type:why==="QR won't scan"?"QR won't scan":"No tag / no QR",item:`${name} ${cname} ${sz}${sku!=="MANUAL"?" ("+sku+")":""}`,qty:1,box:b.number,notes:`Added by hand: ${why}`,reporter:S.name,location:S.location,createdAt:now(),auto:true};
+    S.issues.set(iss.id,iss); store.saveIssue(iss).catch(()=>setSync("err","Issue not sent — check internet"));
+    toast(`Added: ${name} ${cname} ${sz}`); go("scan"); break}
+  case "saveissue":{ const d={type:$("#i_type").value,item:$("#i_item").value.trim(),qty:Math.max(1,Math.floor(+$("#i_qty").value||1)),box:$("#i_box").value,notes:$("#i_notes").value.trim()};
+    if(d.notes.length<5){ S.issueDraft=d; $("#iwarn").innerHTML=`<div class="note bad"><span>Write a few words in “Details” so Colombia understands the issue.</span></div>`; return }
+    const iss={id:"iss-"+now()+"-"+Math.random().toString(36).slice(2,6),...d,box:d.box?+d.box:null,reporter:S.name,location:S.location,createdAt:now()};
+    S.issues.set(iss.id,iss); S.issueDraft=null;
+    try{ await store.saveIssue(iss); toast(S.mode==="sync"?"Issue sent to Colombia":"Issue saved on this device"); }catch(e){ setSync("err","Issue not sent — check internet"); toast("Not sent. Check internet and try again","bad"); }
+    render(); break}
+  case "reopenask":{ $("#reopenzone").innerHTML=`<div class="note bad"><b>Reopen Box ${S.boxes.get(S.viewBox).number}?</b><span>Only do this if you need to add or remove garments. You will have to count, check and weigh it again.</span><div class="row"><button class="danger grow" data-a="reopenyes">Yes, reopen</button><button class="grow" data-a="back">Cancel</button></div></div>`; bind(); break}
+  case "reopenyes":{ const ob=S.boxes.get(S.viewBox); const mine=[...S.boxes.values()].find(x=>x.status!=="closed"&&x.packer===S.name); if(mine){toast(`Finish Box ${mine.number} first`,"warn");return} ob.status="open"; ob.notes=(ob.notes||[]).concat(`Reopened by ${S.name} ${fmtT(now())}`); ob.packer=S.name; ob.closedAt=null; saveBox(ob); S.cur=ob.id; S.undo=[]; go("scan"); break}
+  case "xlsx_all": exportXlsx(null); break;
+  case "xlsx_me": exportXlsx(S.name); break;
+  }
+}
+
+function addItem(b,key,info){
+  b.items=b.items||{}; const it=b.items[key]||(b.items[key]={...info,qty:0}); it.qty++; it.t=now();
+  S.undo.push(key); S.lastKey=key; saveBox(b);
+}
+function onScan(raw){
+  const b=cur(); if(!b) return;
+  const code=String(raw).trim(); const t=now();
+  if(code===S.lastScan.code && t-S.lastScan.t<700){ return; }
+  S.lastScan={code,t};
+  const p=parseCode(code);
+  if(!p){ beep(false); toast("This is not a garment code. Scan the garment's QR, or add it by hand","bad",3500); return; }
+  const unknown=!p.name;
+  addItem(b,p.sku,{sku:p.sku,name:p.name||"Unknown item",color:p.colorName,size:p.sizeName,manual:false,unknown});
+  const left=b.declared-scannedOf(b);
+  if(left<0){ beep(false); toast(`Over your count by ${-left}. Check for a repeated scan`,"bad",3000); }
+  else if(unknown){ beep(false); toast(`Added, but ${p.sku} is not in the guide. Report it if it looks wrong`,"warn",3500); }
+  else { beep(true); toast(`${p.name} · ${p.colorName} · ${p.sizeName}${left===0?"  —  count reached":""}`,"ok",1600); }
+  renderScanParts(); const u=$("[data-a=undo]"); if(u) u.disabled=false; focusScan();
+}
+async function onPhoto(e){
+  const f=e.target.files&&e.target.files[0]; e.target.value=""; if(!f) return;
+  if(typeof jsQR!=="function"){ toast("The QR reader didn't load. Use a scanner or add by hand","bad",3500); return; }
+  toast("Reading QR…","warn",1200);
   try{
-    const {data}=await sb.from('config').select('value').eq('key','access_code').maybeSingle();
-    if(data&&data.value)return data.value;
-    await sb.from('config').upsert({key:'access_code',value:'RESETT2026'});
-  }catch(e){console.error(e);}
-  return 'RESETT2026';
+    const img=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=URL.createObjectURL(f)});
+    let found=null;
+    for(const max of [1400,900,2000]){
+      const s=Math.min(1,max/Math.max(img.width,img.height)); const c=document.createElement("canvas"); c.width=Math.round(img.width*s); c.height=Math.round(img.height*s);
+      const x=c.getContext("2d",{willReadFrequently:true}); x.drawImage(img,0,0,c.width,c.height); const d=x.getImageData(0,0,c.width,c.height);
+      const r=jsQR(d.data,c.width,c.height,{inversionAttempts:"attemptBoth"}); if(r&&r.data){found=r.data;break}
+    }
+    URL.revokeObjectURL(img.src);
+    if(!found){ beep(false); toast("Couldn't read the QR. Take the photo closer, in good light, or add it by hand","bad",4000); return; }
+    S.lastScan={code:"",t:0}; onScan(found);
+  }catch(err){ toast("Couldn't open the photo. Try again","bad"); }
 }
-async function changeAccessCode(){
-  const inp=document.getElementById('acCode');const v=(inp.value||'').trim();
-  if(!v){alert('Escribe el nuevo código.');return;}
-  const {error}=await sb.from('config').upsert({key:'access_code',value:v});
-  if(error){console.error(error);alert('No se pudo guardar.');return;}
-  localStorage.setItem('resett_gate',v);inp.value='';
-  alert('Código de acceso actualizado ✓');
+
+
+/* ---------- Live camera scanning ---------- */
+const CAM={on:false,stream:null,raf:0,lastCode:"",lastSeen:0,armed:true,lastAccept:0,canvas:null,wake:null};
+async function startCam(){
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){ toast("This browser can't open the camera. Use Safari or Chrome, or take a photo","bad",4000); return; }
+  if(typeof jsQR!=="function"){ toast("The QR reader didn't load. Reload the page","bad"); return; }
+  try{
+    CAM.stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"},width:{ideal:1280},height:{ideal:720}},audio:false});
+  }catch(e){
+    const m=e&&e.name==="NotAllowedError"?"Camera blocked. Allow camera access for this site in the browser settings, then try again":"Couldn't open the camera. Close other apps using it and try again";
+    toast(m,"bad",5000); return;
+  }
+  CAM.on=true; CAM.armed=true; CAM.lastCode=""; 
+  try{ CAM.wake=await navigator.wakeLock.request("screen"); }catch(e){}
+  attachCam(); const b=$("#cambtn"); if(b) b.textContent="Stop camera";
 }
-function enterApp(){document.getElementById('gate').style.display='none';init();}
-async function startGate(){
-  const code=await getAccessCode();
-  const saved=localStorage.getItem('resett_gate');
-  if(saved&&saved===code){enterApp();return;}
-  const g=document.getElementById('gate');g.style.display='flex';
-  const inp=document.getElementById('gateInput'),btn=document.getElementById('gateBtn'),err=document.getElementById('gateErr');
-  inp.focus();
-  btn.onclick=()=>{
-    const v=(inp.value||'').trim();
-    if(v===code){localStorage.setItem('resett_gate',code);enterApp();}
-    else{err.textContent='Código incorrecto.';inp.value='';inp.focus();}
-  };
-  inp.addEventListener('keydown',e=>{if(e.key==='Enter')btn.click();});
+function attachCam(){
+  const v=$("#cam"), w=$("#camwrap"); if(!v||!CAM.stream) return;
+  w.hidden=false; v.srcObject=CAM.stream; v.play().catch(()=>{});
+  cancelAnimationFrame(CAM.raf); let lastT=0;
+  const loop=t=>{ CAM.raf=requestAnimationFrame(loop); if(t-lastT<110) return; lastT=t; tick(v); };
+  CAM.raf=requestAnimationFrame(loop);
 }
-startGate();
+function stopCam(){
+  cancelAnimationFrame(CAM.raf); if(CAM.stream){ CAM.stream.getTracks().forEach(t=>t.stop()); } CAM.stream=null; CAM.on=false;
+  try{ CAM.wake&&CAM.wake.release(); }catch(e){} CAM.wake=null;
+  const w=$("#camwrap"); if(w) w.hidden=true; const b=$("#cambtn"); if(b) b.textContent="Scan with camera";
+}
+function tick(v){
+  if(!v.videoWidth) return;
+  const W=640, sc=W/v.videoWidth, H=Math.round(v.videoHeight*sc);
+  const c=CAM.canvas||(CAM.canvas=document.createElement("canvas")); c.width=W; c.height=H;
+  const x=c.getContext("2d",{willReadFrequently:true}); x.drawImage(v,0,0,W,H);
+  const r=jsQR(x.getImageData(0,0,W,H).data,W,H,{inversionAttempts:"dontInvert"});
+  const t=now(); const hint=$("#camhint");
+  if(r&&r.data){
+    CAM.lastSeen=t;
+    const same=r.data===CAM.lastCode;
+    if(CAM.armed && t-CAM.lastAccept>800){
+      CAM.armed=false; CAM.lastCode=r.data; CAM.lastAccept=t;
+      const w=$("#camwrap"); if(w){ w.classList.add("hit"); setTimeout(()=>w.classList.remove("hit"),350); }
+      S.lastScan={code:"",t:0}; onScan(r.data);
+      if(hint) hint.textContent="Got it. Move it away, then show the next one";
+    } else if(!same && t-CAM.lastAccept>800){ CAM.armed=true; }
+  } else if(!CAM.armed && t-CAM.lastSeen>600){
+    CAM.armed=true; if(hint) hint.textContent="Hold one QR inside the frame";
+  }
+}
+document.addEventListener("visibilitychange",()=>{ if(document.hidden&&CAM.on){ stopCam(); } });
+
+/* ---------- Excel export ---------- */
+async function exportXlsx(person){
+  if(typeof XLSX==="undefined"){ toast("Excel tool didn't load. Reload the page","bad"); return; }
+  const boxes=[...S.boxes.values()].filter(b=>!person||b.packer===person).sort((a,b)=>a.number-b.number);
+  const issues=[...S.issues.values()].filter(i=>!person||i.reporter===person).sort((a,b)=>a.createdAt-b.createdAt);
+  const cm=(v,u)=>v?(u==="in"?+(v*2.54).toFixed(1):+v):""; const inch=(v,u)=>v?(u==="cm"?+(v/2.54).toFixed(1):+v):"";
+  const kg=w=>w&&w.v?+toKg(w).toFixed(2):""; const lb=w=>w&&w.v?+(toKg(w)/0.453592).toFixed(2):"";
+  const pl=[["Box","Status","Packed by","Location","SKU","Garment","Color","Size","Qty","Added by hand","Not in guide"]];
+  boxes.forEach(b=>Object.values(b.items||{}).sort((x,y)=>x.name.localeCompare(y.name)||x.color.localeCompare(y.color)||x.size.localeCompare(y.size)).forEach(i=>pl.push([b.number,b.status,b.packer,b.location||"",i.sku,i.name,i.color,i.size,i.qty,i.manual?"Yes":"",i.unknown?"Yes":""])));
+  const bx=[["Box","Status","Packed by","Location","Counted","Scanned","Difference","Length (cm)","Width (cm)","Height (cm)","Weight (kg)","Length (in)","Width (in)","Height (in)","Weight (lb)","Restarts","Started","Closed","Notes"]];
+  boxes.forEach(b=>{const d=b.dims||{};const n=scannedOf(b);bx.push([b.number,b.status,b.packer,b.location||"",b.declared||"",n,(b.declared||0)-n,cm(d.l,d.unit),cm(d.w,d.unit),cm(d.h,d.unit),kg(b.weight),inch(d.l,d.unit),inch(d.w,d.unit),inch(d.h,d.unit),lb(b.weight),b.restarts||0,fmtT(b.createdAt),fmtT(b.closedAt),(b.notes||[]).join(" | ")])});
+  const agg={}; boxes.forEach(b=>Object.values(b.items||{}).forEach(i=>{const k=i.sku+"|"+i.name+"|"+i.color+"|"+i.size;const a=agg[k]||(agg[k]={sku:i.sku,name:i.name,color:i.color,size:i.size,qty:0,boxes:new Set()});a.qty+=i.qty;a.boxes.add(b.number)}));
+  const bs=[["SKU","Garment","Color","Size","Total qty","In boxes"]]; Object.values(agg).sort((x,y)=>x.name.localeCompare(y.name)||x.color.localeCompare(y.color)).forEach(a=>bs.push([a.sku,a.name,a.color,a.size,a.qty,[...a.boxes].sort((x,y)=>x-y).join(", ")]));
+  const is=[["Date","Reported by","Location","Type","Garment","Qty","Box","Details","Automatic"]]; issues.forEach(i=>is.push([fmtT(i.createdAt),i.reporter,i.location||"",i.type,i.item||"",i.qty,i.box||"",i.notes,i.auto?"Yes":""]));
+  const closed=boxes.filter(b=>b.status==="closed");
+  const sm=[["NY Pack-Out — "+(person?"summary for "+person:"all boxes")],["Generated",fmtT(now())],["Boxes closed",closed.length],["Boxes still open",boxes.length-closed.length],["Garments in closed boxes",closed.reduce((a,b)=>a+scannedOf(b),0)],["Garments in open boxes",boxes.filter(b=>b.status!=="closed").reduce((a,b)=>a+scannedOf(b),0)],["Total weight (kg)",+closed.reduce((a,b)=>a+toKg(b.weight),0).toFixed(2)],["Issues reported",issues.length]];
+  const wb=XLSX.utils.book_new();
+  const add=(rows,name,w)=>{const ws=XLSX.utils.aoa_to_sheet(rows);ws["!cols"]=w.map(x=>({wch:x}));XLSX.utils.book_append_sheet(wb,ws,name)};
+  add(sm,"Summary",[28,24]); add(pl,"Packing list",[6,8,18,12,13,30,14,8,6,10,10]); add(bx,"Boxes",[6,8,18,12,8,8,10,11,11,11,11,11,11,11,11,8,16,16,50]); add(bs,"By SKU",[13,30,14,8,9,20]); add(is,"Issues",[16,18,12,18,30,6,6,50,10]);
+  const out=XLSX.write(wb,{type:"array",bookType:"xlsx"});
+  const fname=`NY_PackOut_${person?person.replace(/[^A-Za-z0-9]+/g,"_")+"_":""}${new Date().toISOString().slice(0,10)}.xlsx`;
+  const blob=new Blob([out],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+  const file=new File([blob],fname,{type:blob.type});
+  if(person&&navigator.canShare&&navigator.canShare({files:[file]})){ try{ await navigator.share({files:[file],title:fname,text:"NY Pack-Out summary"}); return; }catch(e){ if(e&&e.name==="AbortError") return; } }
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=fname; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000); toast("Excel downloaded");
+}
+async function copyFallback(rows){
+  const txt=rows.map(r=>r.join("\t")).join("\n");
+  try{ await navigator.clipboard.writeText(txt); toast("Downloads aren't available here. The packing list was copied — paste it into Excel or WhatsApp","warn",5000); }
+  catch(e){ toast("Downloads aren't available on this view. Open the page in a browser to download","bad",5000); }
+}
+
+window.addEventListener("beforeunload",e=>{ if(Object.values(wq).some(q=>q.busy||q.dirty)){ e.preventDefault(); e.returnValue=""; } });
+init();
 </script>
-</body>
-</html>
+</body></html>
