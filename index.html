@@ -105,12 +105,16 @@ table{border-collapse:collapse;width:100%;font-size:14px}
 th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
 td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;font-family:var(--mono)}
 .bigbox{font-family:var(--mono);font-size:44px;font-weight:700;text-align:center;letter-spacing:.04em}
+.hdr{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.hbtn{min-height:32px;padding:4px 10px;font-size:13px;border-radius:99px}
+.howto{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px}
+.howto li{line-height:1.45}
 </style>
 </head><body>
 
 <header class="top"><div class="topin">
   <div class="brand">Action Wear · NY Pack-Out<small id="who">—</small></div>
-  <span id="sync" class="sync local">Starting…</span>
+  <div class="hdr"><span id="sync" class="sync local">…</span><button id="helpbtn" class="hbtn" type="button">Help</button><button id="langbtn" class="hbtn" type="button">ES</button></div>
 </div></header>
 <main id="app"><div class="panel"><p class="muted">Loading…</p></div></main>
 <div id="toast" class="toast" hidden></div>
@@ -120,78 +124,101 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;font-family:var
 const SUPABASE_URL="https://xmityeuypjhpxgdasaii.supabase.co";
 const SUPABASE_ANON_KEY="sb_publishable_EerBuzFBP7FU4-MRMifCEg_wPOIT_3i";
 
+/* ---------- Official SKU guide (SKU.xlsx) ---------- */
+const GUIDE_N=["ACONDICIONADOR HIDRATANTE", "ACONDICIONADOR PURIFICANTE DETOX", "AVIATOR SUNGLASSES", "Advance Pro Short Women", "Advance Pro T-Shirt Men", "Advance Pro Tank Men", "Advance Pro Tank Women", "Air Touch Hoodie", "Apple CurveUp Leggings", "Apple CurveUp biker", "Aura Dress", "Balance Sport Bra", "Ballerina Leggings", "Ballerina sport bra", "Basic Box", "Basic Short Men", "Basic Short Women", "Basic T-shirt AW", "Basic T-shirt Women", "Basic Tank Texturizada", "Basic Tank Women", "Basic biker Seamless", "Better contrast", "Biker Pocket Sens", "Biker pocket sens", "Blis Dress", "Blis biker", "Bliss Top", "Bloom Sport bra", "BodySuit Long sleve", "BodySuit Tee", "Bodysuit tee flow", "Bomber", "Bottom Monaco", "Bottom Praga", "Buso Crew Neck", "Camiseta Oversized", "Camiseta dri-fit", "Camiseta texturizado", "Camisilla Oversized", "Cap A", "Cap AW", "Cap New york", "Cap tribeca", "Cargo Pant", "Clasic Crop top AW", "Clasic Short Men", "Clasic short Women", "Clasic sock", "Classic Crewk", "Classic Cutoff", "Classic Mini Short Women", "Classic T-Shirt AW", "Classic Tank Men", "Classic Tank Top", "Classic thong", "Colab Cap plana", "Colab cap curva", "Constrast layer t shirt", "Contour Love Biker", "Contrast Dress", "Contrast Halter top", "Contrast Motion Sport Bra", "Contrast Pockets Biker", "Contrast Pockets leggings", "Contrast Straple", "Contrast Strappy Sport bra", "Contrast biker V", "Contrast leggings V", "Contrast pant", "Cop top tee MV", "Core Sculpt Asymmetrical Bodysuit", "Core Sculpt Long Sleeve bodysuit", "Core Sculpt Short", "Core biker", "CoreSupport Bodysuit", "CoreSupport Top", "Countour Leggings", "Crew Neck", "Crew Neck Asc", "Crew Neck Mix", "Crimson bite Leggings", "Crimson bite biker", "Crimson men short sleeve t-shirt", "Crimson men tank", "Crimson short men", "Crop Hoodie tribeca", "Crop Top", "Crop Top lavado", "Crop jacket", "Crop side cuts", "Crop top AW", "Crop top Oversized lite", "Crop top texturizado", "Crop top tirantes", "Cropped Polo", "Cropped tee", "Cross Fins Biker", "Cross Fins Leggings", "Crossback Bra", "Crossover Bralette", "CurveUp Crossover Biker", "CurveUp Crossover Leggings", "CurveUp Crossover Pant", "Cutoff tank", "DRY GLOW", "Essence Leggings", "Fierceneck", "Flare power leggings", "Flow Motion Skirt", "Flow Motion short", "Flow Pant", "GLOW UP LEAVE IN", "Gorra", "Guante - venda", "Half moon Sport Bra", "Half moon shorts", "High Neck Bodysuit Flow", "High Waist Flare Leggings Sens", "High Waist Leggings Sens", "High Waist leggins Pocket suplex", "High Waist leggins Suplex", "High Waist leggins V", "High neck Tank men´s", "High neck boyduit", "High sport bra", "High waist leggings flair", "High waist leggings pocket sens", "High waist leggings seamless", "High-waist Leggins sens", "Hoddie Clasic Men", "Hoddie Classic Women", "Hoddie clasico", "Hoddie clasico 3/4", "Hoodie tribeca", "Jogger Clasico AW", "Jogger clasico", "Leggings Plus Form", "Leggings Pockets/Bonding", "Leggins", "Leggins lavado", "Long Sleeve Crop", "Long Sleeve Crop Sens", "Long Sleeve bodysuit", "Long sleeve Men", "Long sleeve women", "Long sleve crop", "Low Cross top", "Low Strappy", "Lush Top", "Lush Top Suplex", "LuxeMove Leggings", "Luxemove jumpsuit", "Luxemove leggings Power", "MONACO SUNGLASSES", "Medias signature logo", "Mini Short Plus Form", "Mini Short Suplex", "Mini short", "Mini short Sens 3´", "Mini short Sens 5´", "Mini short lavado", "Mini short seamless", "Mini short turquesa", "Mix Biker", "Mix Strappy Sport Bra", "Muse Skirt", "Muse sport bra", "NOVA SPORT BRA", "New Well Sport Bra", "Nipcover Adhesive-free", "Nipcover ultra-thin", "Nipple Cover", "One shoulder bodysuit", "One shoulder sport bra", "One shoulder sport bra Sens", "Oversize Hoodie Men", "Oversize Hoodie Women", "Oversize Lite", "Oversize Premiun", "Overzised Neck Zip", "PRAGA SUNGLASSES", "PROTEINA REPARADORA CAPILAR", "Pantaloneta Cargo", "Pantaloneta Texturizada", "Pantaloneta cargo", "Parachute Clasico", "Parfait high waist biker", "Parfait high waist leggings", "Parfait sport bra", "Performance One Cut Tee", "Performance Short Sleeve", "Performance Tank women", "Performance crop tank", "Performance short men", "Performance tee", "Performance tee man", "Polo Tee", "Pro Run Socks", "Quarter Zip Sport Bra", "Quarter zip crop", "Quarter zip jumpsuit biker", "Racer Zip Sport Bra", "Racercerback seamless", "Rib Body Suit", "Rib Mini short", "Rib Tank", "Rib Tank Top", "Rib Top Strapless", "Rib leggins", "Rib long sleeve top", "Rib short set", "Rib sport bra", "Rib tank", "Rib tank top", "Rib top set", "Run Fit Socks", "SHAMPOO HIDRATANTE", "SHAMPOO PURIFICANTE DETOX", "Sanley", "Savage Short Men", "Savage Short Women", "Sculpt Seamless top", "Set", "Short AW", "Short Clasico", "Short Dri-Fit", "Short sleeve Cropped Tee", "Short tribeca", "Shorts", "Side cuts biker", "Signature", "Skirt Pleated", "Skyline Top", "Sleek Skirt", "Slim Pant", "Slim Performance Tee", "Slip Midi Dress", "Socks AW", "Sport Bra Cross Fins", "Sport Bra Suplex", "Sport bra", "Sport bra U", "Square Bralette", "Square Neck", "Square Neck Suplex", "Square blis top", "Square bra seamless", "Square jumpsuit Long Sleeve", "Square neck bodysuit", "Square sport bra", "Square tee Long Sleeve", "Straight Leg Parachute", "Straight Leg Sweatpant", "Straight Leg Vessel", "Straple crop", "Strappy Bra Power", "Strappy Bra Suplex", "Strappy bra", "Strappy jumpsuit Sens", "Strappy romper Sens", "Strappy t-shirt", "Street contrast jumpsuit", "Stride Biker", "Stride Pant", "Sudadera campo leon", "T SHIRT ULTRA", "T Shirt Overzised Women", "T shirt AW", "T-Shirt Box Texturizada", "Tank side cuts", "Top Monaco", "Top Plus Form", "Top Praga", "Top asimetrico", "Top delgado", "Top delgado lavado", "Top espalda cruzada", "Top plus form Sens", "Tote bag", "Triaungular Nipcover", "Twist High waist Biker", "Twist High waist leggings", "Twist sport bra", "U neck bodyuit", "Ultra Straightr Leg Men", "Ultra Straightr Leg Women", "V Neck Bra Suplex", "V Neck Sens", "V neck running", "VELA SKIRT", "Visor Action Run", "Wave Tank", "Wave Tank Top", "Well bra", "Wellness Polo", "Wellness Pull Over", "Wellness Straight Leg Men", "Wenever T shirt", "flow motion short running", "new well", "racerback bra sens", "racerback bra suplex", "strapless Crop sens", "twist halter sport bra", "twist sport bra", "well skirt"];
+const GUIDE_C=["1029000XS", "1029013XS", "?", "Acqua", "Almond", "Arena", "Azul", "Azul Astoria", "Azul Denim", "Azul Navy", "Azul Noche", "Azul Oscuro", "Azul astoria", "Azul noche", "BUTTER", "Beige", "Blanco", "Blanco Madison", "Blanco Mix", "Blanco con negro", "Blanco madison", "Blossom", "Blush", "Burgundy", "Butter", "Canyon", "Carbon", "Chantilly", "Chilli", "Chocoalte", "Chocolate", "Classic Blue", "Cocoa", "Cocoa Glow", "Cocoa Vessel", "Cosmic Gray", "Cosmic Grey", "Cosmic gray", "Crema", "Crudo", "Crudo Mix", "Crudo Trinity", "Deep Red", "Deep Rose", "Deep Wine", "Deep rose", "Depp Rose", "Etherea", "Evergreen", "Expresso", "Garden Green", "Golden Olive", "Golden Palm", "Gray", "Gris", "Gris Ash", "Gris Lavado", "Gris Oscuro", "Gris lavado", "Gris oscuro", "Gulf coast", "Gulft coast", "Hudson Navy", "Iron Blue", "Jasper", "LILA OSCURO", "LULU", "Latte", "Latte Brooklyn", "Latte Lavado", "Latte brooklyn", "Lavander", "Lepard", "Ligh blue", "Light Blue", "Light Green", "Light blue", "Light green", "Ligth blue", "Lila", "Lila Mix", "Lila Oscuro", "Limoncello", "Limonchello", "Lulu", "Macadamia", "Macchiato", "Marfil", "Ment", "Merlot", "Mermaid", "Midnight", "Midnight Green", "Mix crema", "Mocha", "Morado", "Morado azucena", "Moss", "Mousse", "NAVY", "Navy", "Negra", "Negras", "Negras mix", "Negro", "Negro Mix", "Negro Smoke", "Negro Smokek", "Negro Soho", "Negro Somke", "Negro con blanco", "Negro lavado", "Negro sesgo blanco", "Negro smoke", "Negro soho", "Neon blom", "Nrgto", "Nude", "Ocean", "Pinecone", "Plum purple", "Rosa", "Rosado", "Rust Red", "Sage", "Sage Broadway", "Salmon", "Scarlet", "Silver", "Silver Mist", "Silver mist", "Stone", "Stone chelsea", "Sunset Glow", "Toulose Rose", "Tourmaline", "Turmaline", "Turquesa", "Uva", "Uva Lavado", "Vanilla", "Verde", "Verde Lavado", "Verde Militar", "Verde Moss", "Verde esmeralda", "Verde lavado", "Verde militar", "Verde pino", "Wild Flame", "Willow", "blush", "bra", "butter", "cappuccino", "cocoa glow", "crudo", "evergreen", "lime mist", "negro", "rosa", "verde mermaid", "verde pino mix"];
+const GUIDE_PACK="1061012,158,123,6;1061405,158,73,6;1061013,158,104,6;1061002,158,117,6;1081012,139,123,6;1081405,139,73,6;1081013,139,104,6;1081002,139,117,6;1011012,241,123,6;1011405,241,73,6;1011013,241,104,6;1011002,241,117,6;1012012,275,123,6;1012405,275,73,6;1012013,275,104,6;1012002,275,117,6;1013008,274,137,6;1013013,274,104,6;1062008,163,137,6;1014013,277,104,6;1063204,161,58,6;1063207,161,146,6;1063214,161,111,6;1082204,140,58,6;1082207,140,146,6;1082214,140,111,6;1015204,276,58,6;1015207,276,146,6;1015214,276,111,6;1021204,88,58,6;1021207,88,146,6;1021214,88,111,6;1017013,215,104,6;1017000,215,16,6;1066013,211,104,6;1066000,211,16,6;1101000,223,16,6;1101013,223,104,6;1064211,205,79,6;1064210,205,6,6;1083210,209,6,6;1016211,212,79,6;1016210,212,6,6;3051001,132,38,14;3051015,132,26,14;3051013,132,104,14;3091001,136,38,14;3091015,136,26,14;3091013,136,104,14;1057013,133,104,14;1051000,133,16,14;1051017,133,57,14;1065013,225,104,14;1065000,225,16,14;1065017,225,57,14;1022013,87,104,14;1022017,87,59,14;1022000,87,16,14;1022001,87,38,14;1023013,70,104,14;1023000,70,16,14;2031013,36,104,14;2031000,36,16,14;2032013,231,104,14;2032000,231,16,14;2061013,229,104,14;2041013,39,104,14;2041000,39,16,14;2033013,37,104,14;2033000,37,16,14;2033016,37,147,14;3111000,155,16,32;3111013,155,104,32;3112013,113,104,32;3113013,114,104,72;3114001,279,38,32;3114017,279,59,32;3114013,279,104,32;3114214,279,111,32;31111001,279,38,32;31111017,279,59,32;31111013,279,104,32;31111214,279,111,32;1018013,258,114,31;1018019,258,7,14;1018020,258,68,14;1018022,258,132,31;1018021,258,41,31;1018085,258,42,15;1018087,258,49,31;1018023,258,100,14;1018033,258,30,14;1018039,258,89,14;1018047,258,3,15;1018048,258,28,15;1018035,258,85,15;1018032,258,122,15;1018611,258,81,15;1018030,258,144,15;1018041,258,10,31;1018077,258,84,31;1018057,258,106,31;1018088,258,92,31;1018034,258,36,31;10117060,257,21,31;10117030,257,144,31;10117029,257,95,31;10117611,257,81,31;1019013,294,108,14;1019021,294,41,14;1019018,294,125,14;1019022,294,132,31;1019020,294,70,31;1019058,294,47,31;1019041,294,10,31;1019039,294,89,31;1019023,294,62,14;1071013,24,114,14;1071049,24,76,15;1071021,24,41,15;1071039,24,89,31;1071058,24,47,31;1071023,24,100,31;1071057,24,106,31;1071022,24,131,31;1071075,24,130,31;1071041,24,10,31;1071027,24,138,31;1071034,24,36,29;1071088,24,92,31;1071020,24,68,15;1071095,24,158,31;1071097,24,157,31;1084013,129,114,31;1084019,129,12,14;1084020,129,68,31;1084018,129,125,14;1084021,129,41,31;1084023,129,62,10;1084022,129,132,14;1084039,129,89,31;1084038,129,22,31;1084027,129,138,15;1084034,129,36,15;1084041,129,10,31;1084054,129,50,31;1084064,129,90,31;1084047,129,3,31;1084068,129,60,31;1084055,129,55,31;1084029,129,95,31;1084088,129,92,31;1084058,129,47,31;1084057,129,106,31;1084092,129,43,31;1084093,129,155,31;1084033,129,30,31;1084094,129,86,31;2034953,179,34,31;2034013,179,108,31;2034000,179,17,31;2035953,178,34,31;2035013,178,114,31;2035000,178,17,31;1034000,92,20,31;1034013,92,108,31;1041000,214,16,31;1041024,214,19,31;1041013,214,104,31;1041025,214,110,31;1041953,214,32,31;1042000,213,16,31;1042024,213,19,31;1042013,213,104,31;1042025,213,110,31;1042953,213,32,31;1035013,93,104,31;1035026,93,87,31;2036013,38,104,31;2036026,38,87,31;10110027,241,138,31;10110000,241,20,14;10110013,241,114,14;10110033,241,30,15;10110034,241,36,15;10110021,241,39,15;10110041,241,10,31;10110606,241,77,31;10110029,241,95,31;10110053,241,31,31;10110040,241,63,31;10110057,241,106,31;10110405,241,74,31;10110059,241,8,31;10110039,241,89,31;10110055,241,55,31;10110028,241,5,15;10118029,240,95,31;10118039,240,89,31;10118606,240,77,27;10110806,240,77,4;10118059,240,8,31;1068013,159,104,31;1068034,159,36,15;1068033,159,30,15;1068040,159,63,15;1068023,159,100,31;1068953,159,32,31;1068041,159,10,31;1068018,159,125,31;1068039,159,89,31;1068611,159,81,31;1068020,159,70,31;1068405,159,76,31;1068022,159,132,31;1068057,159,106,31;1068048,159,28,31;1068027,159,138,31;1068058,159,47,31;1068021,159,39,31;1069060,157,21,31;1069029,157,95,31;1069030,157,144,31;1069606,157,77,31;1069611,157,81,31;1067027,160,138,15;1067023,160,62,15;1067013,160,108,15;1067000,160,20,15;1031000,195,16,31;1031013,195,108,31;1031021,195,39,31;1031020,195,70,1;103020,195,70,30;1031405,195,78,31;1031034,195,36,31;1031058,195,47,31;1031035,195,85,31;2037013,196,104,31;2037022,196,131,31;2037023,196,62,31;2037021,196,39,31;2037000,196,20,31;2042023,196,62,14;2042021,196,39,31;2042020,196,67,31;2042058,196,47,31;2042013,196,108,31;10111013,301,104,31;10111020,301,67,31;1011606,301,77,31;1011057,301,106,31;1011058,301,47,31;10111050,301,51,31;10112606,302,75,31;10112030,302,144,31;10112029,302,96,31;1085029,121,95,31;1085606,121,77,31;1085059,121,8,31;1085061,121,91,31;1085611,121,65,31;1085062,121,53,31;1085030,121,144,31;10113030,287,145,14;10113060,287,21,31;10113062,287,91,31;10113611,287,81,31;10113029,287,95,31;10113013,287,104,31;1086030,120,145,14;1086013,120,114,14;10114953,242,32,14;10114023,242,100,14;10114058,242,47,31;10114057,242,106,31;10114022,242,131,31;10114221,242,70,31;10114013,242,104,31;10114039,242,89,31;1043013,192,114,31;1043000,192,16,14;1043405,192,76,31;1043021,192,39,31;1043034,192,36,31;1044953,214,32,14;1044000,214,16,14;1044013,214,104,14;1045953,213,32,14;1045000,213,16,14;1045013,213,104,14;1068003,228,54,14;10617013,228,104,14;1068001,228,38,14;1058003,86,54,14;1058013,86,104,14;1058001,86,38,14;3052031,134,148,14;3052023,134,11,14;3052027,134,138,14;3113009,57,6,32;3113032,57,121,32;3114009,56,6,32;3114032,56,160,32;3115001,42,93,32;3116405,43,73,32;3116001,43,38,32;3116031,43,162,32;3117013,40,101,32;3117001,40,38,32;3118013,41,101,32;3118001,41,38,32;1026953,91,32,14;3053028,78,5,14;3053033,78,29,14;3092028,135,5,14;3092033,135,29,14;2062028,224,5,14;1046204,207,56,14;1046214,207,111,14;1046227,207,139,14;1047204,206,56,14;1047214,206,111,14;1047227,206,139,14;1048207,293,142,14;1048214,293,111,14;1048221,293,69,14;1049207,292,142,14;1049214,292,111,14;1049221,292,69,14;1121207,208,142,14;1121214,208,111,14;1121221,208,69,14;3119013,238,104,32;3119000,238,16,32;3119003,238,54,32;31110013,48,104,32;31110000,48,16,32;10115013,244,104,31;10115000,244,39,29;101150001,244,39,2;10115034,244,36,31;10115040,244,63,31;10115033,244,30,31;10115041,244,10,31;10115050,244,52,31;10115062,244,53,31;10115039,244,89,31;10115022,244,132,31;10115018,244,124,31;10115020,244,67,31;10115027,244,138,31;10125062,245,53,31;1087013,138,104,31;1087028,138,5,15;1087029,138,95,31;1087611,138,81,31;1087033,138,30,15;1131000,284,16,15;1131013,284,104,15;1131953,284,32,15;1132003,124,54,15;1132071,124,94,15;1132021,124,38,15;1132023,124,9,15;1132013,124,104,15;3093013,186,104,15;3093000,186,16,15;3093036,186,118,15;2063013,226,104,15;2063023,226,9,15;2063001,226,38,15;10410000,207,16,15;10410013,207,104,15;10410021,207,39,15;1133000,204,16,15;1133013,204,104,15;1133021,204,39,15;2038000,17,16,30;2038013,17,104,30;2038001,17,38,30;1141024,271,18,15;1141025,271,105,15;1141037,271,80,15;1151024,33,18,15;1151025,33,105,15;1151037,33,80,15;1142038,273,22,15;1142029,273,95,15;1142036,273,118,15;1152038,34,22,15;1152029,34,95,15;1152036,34,118,15;2043013,123,104,31;2043021,123,39,31;2043000,123,16,31;1024013,146,104,15;1024021,146,38,15;1024071,146,94,15;1024070,146,119,15;1024042,146,4,15;1024033,146,30,15;1025013,255,104,15;1025021,255,38,15;1025042,255,4,15;1025033,255,30,15;1026013,96,104,15;1026021,96,38,15;1026042,96,4,15;1026033,96,30,15;1027013,94,104,15;1027021,94,38,15;1027042,94,4,15;1027033,94,30,15;1134013,29,104,15;1134021,29,38,15;1134042,29,4,15;1135013,30,104,15;1135071,30,94,15;1135021,30,38,15;1135042,30,4,15;1088013,137,104,15;1088045,137,64,31;1088043,137,83,31;10623013,156,104,31;10623045,156,64,31;10623043,156,82,31;10116025,272,112,31;10116013,272,104,31;10116000,272,16,31;10116044,272,64,31;10116046,272,97,31;1051013,131,104,31;1051033,131,30,31;1051021,131,39,31;1051011,131,79,31;1051018,131,124,31;1091021,253,39,31;1091018,253,124,31;1091013,253,104,31;3053013,35,104,31;3053021,35,39,31;1161013,32,104,31;1161021,32,39,31;10610013,47,104,31;10610033,47,30,31;10610021,47,39,31;10610011,47,79,31;10610018,47,124,31;2064013,46,104,31;2064021,46,39,31;2064023,46,100,31;1092021,265,39,31;1092013,265,104,31;1092953,265,32,31;1094021,44,39,31;1094013,44,104,31;1094028,44,5,31;1171013,232,101,31;1171021,232,38,31;1171023,232,100,31;1028011,210,79,31;1028018,210,124,31;1028953,210,32,31;2039013,52,104,31;2039021,52,38,31;2039006,52,141,31;2039056,52,126,31;2039000,52,16,31;1029013,45,1,30;1029000,45,0,30;2044000,19,16,31;2044013,19,104,31;2044052,19,15,31;2045001,104,38,31;2045013,104,104,31;2045021,104,39,31;2065013,185,104,31;2065028,183,5,31;2066021,184,39,31;2066013,184,104,31;10411000,20,16,31;10411013,20,104,31;10312000,18,16,31;10312013,18,104,31;1181063,237,23,31;1181013,237,104,31;1181953,237,32,31;1089035,106,85,31;1089057,106,109,31;1089019,106,7,31;1089022,106,132,31;10810405,151,74,31;10810057,151,106,31;10810066,151,71,31;10810041,151,10,31;10810055,151,55,31;10811020,122,67,31;10811057,122,113,31;10811405,122,74,31;10811066,122,71,31;10119020,233,67,1;10119058,233,67,30;10119057,233,113,31;10119054,233,50,31;10119405,233,76,31;10119066,233,71,31;10120057,27,113,31;10120041,27,10,31;10120405,27,74,31;10120066,27,71,31;10120039,27,89,31;10120038,27,22,31;10120055,27,55,31;10121405,149,74,31;10121057,149,107,31;10121035,149,85,31;10121020,149,67,31;10121019,149,7,31;10122611,150,81,31;1172058,234,47,31;1172080,234,40,31;1172025,234,105,31;1172068,234,61,31;1172057,234,113,31;1172035,234,85,31;11702092,234,42,31;11702093,234,155,31;11702077,234,84,31;1172013,234,104,31;1172021,234,39,31;1032013,191,104,31;1032023,191,100,31;1032021,191,39,31;10123057,147,106,31;10123013,147,104,31;10123022,147,131,31;10123041,147,13,31;10124057,288,106,31;10124013,288,104,31;10124083,288,42,31;10124084,288,149,31;10123064,288,90,31;10124021,288,39,31;10124022,288,132,31;10124096,288,115,31;10124095,288,158,31;10912057,126,106,31;10912013,126,104,31;10912022,126,132,31;10912041,126,13,31;1191057,259,106,31;1191013,259,104,31;1191022,259,131,31;1191041,259,13,31;1192057,260,106,31;1192013,260,104,31;1192023,260,100,31;1192064,260,161,31;1052013,180,104,31;1052021,180,39,31;1052023,180,100,31;2046013,107,104,31;2046935,107,32,31;2046021,107,39,31;2091013,254,104,31;2091935,254,32,31;2091021,254,39,31;1033003,267,54,31;1033023,267,100,31;1033013,267,104,31;10611003,16,54,31;10611023,16,100,31;10611013,16,104,31;2047013,50,104,31;2047935,50,32,31;2047021,50,39,31;2048013,53,104,31;2048000,53,16,31;2048016,53,143,31;20310013,14,104,31;20310021,14,39,31;20310016,14,143,31;2092013,235,104,31;2092028,235,5,31;1054013,80,104,31;1054028,80,5,31;10612013,51,104,31;10612028,51,5,31;20311000,266,16,31;20311013,266,104,31;20312000,269,16,31;20312013,269,104,31;2051028,176,5,31;2051013,176,104,31;2094028,285,5,31;2094013,285,104,31;1055028,177,5,31;1055013,177,104,31;1093028,286,5,31;1093013,286,104,31;2095013,252,104,31;2095028,252,5,31;2067028,15,5,31;2067013,15,104,31;10412013,54,104,31;10412000,54,16,31;3055006,79,141,31;3055021,79,39,31;1036069,261,136,31;1036020,261,67,31;1036013,261,104,31;1036067,261,25,31;10913069,188,136,31;10913020,188,67,31;10913013,188,104,31;10913067,188,25,31;10126013,174,104,31;10126068,174,60,31;10126021,174,39,31;10914013,108,104,31;10914068,108,60,31;10914021,108,39,31;10127068,189,60,31;10127020,189,67,31;10127013,189,104,31;10613068,187,60,31;10613020,187,67,31;10613013,187,104,31;1053013,89,104,31;1053021,89,39,31;1053069,89,135,31;1037013,200,104,31;1037021,200,39,31;1037088,200,92,31;1037020,200,67,31;1037069,200,135,31;1193013,201,104,31;1193067,201,25,31;1193068,201,60,31;1136013,173,104,31;1136021,173,38,31;1136070,173,119,31;1137013,249,104,31;1137021,249,38,31;1137070,249,119,31;1114,172,2,32;3201013,154,102,32;3201021,154,38,32;3201953,154,32,32;3202013,181,102,32;3202025,181,103,32;3202072,181,72,32;3203073,2,128,32;3203074,2,133,32;3203013,2,102,32;3221,182,2,32;3222,217,2,32;3223,0,2,32;3224,112,2,32;3225,218,2,32;3226,1,2,32;3227,105,2,32;3214013,219,122,32;3214032,219,104,32;10128013,61,104,31;10128029,61,95,31;10128041,61,10,31;10128075,61,130,31;10915013,69,104,31;10915029,69,95,31;10915041,69,10,31;10915075,69,130,31;10129021,125,39,31;10129029,125,95,31;10129041,125,10,31;10129086,125,98,31;10129013,125,104,31;10129022,125,131,31;10129075,125,130,31;10129097,125,157,31;10129095,125,158,31;1194022,262,131,31;1194029,262,95,31;1194041,262,10,31;1194094,262,86,31;1194034,262,22,31;1194013,262,104,31;1195027,152,138,31;1195041,152,10,31;1195013,152,104,31;1038029,251,95,31;1038041,251,13,31;1038013,251,104,31;1038021,251,39,31;1196013,248,104,31;1196075,248,129,31;1196041,248,13,31;10130013,203,104,31;10130611,203,81,31;10130076,203,150,31;10916013,128,104,31;10916611,128,81,31;10916076,128,150,31;10131013,222,104,31;10131611,222,81,31;10131076,222,150,31;10614013,162,104,31;10614611,162,81,31;10614076,162,150,30;10132013,247,104,31;10132611,247,81,31;10132076,247,150,31;10615013,21,104,31;10615611,21,81,31;10615076,21,150,31;10917041,153,10,31;10917021,153,39,31;10917013,153,104,31;10917027,153,138,31;10133041,246,10,31;10133021,246,39,31;10133013,246,104,31;10133027,246,138,31;10134041,256,10,31;10134021,256,39,31;10134013,256,104,31;10134027,256,138,31;10616041,26,10,31;10616021,26,39,31;10616013,26,104,31;10616027,26,138,31;10135013,13,104,31;10135023,13,100,31;10135021,13,39,31;10135077,13,84,31;10135078,13,120,31;10618013,230,104,31;10618023,230,100,31;10618021,230,39,31;10618077,230,84,31;10618078,230,120,31;10918013,12,104,31;10918023,12,100,31;10918078,12,120,31;10918021,12,39,31;10136013,115,104,31;10136023,115,100,31;10136077,115,84,31;10136021,115,39,31;10136038,115,22,31;10136094,115,86,31;10136078,115,120,31;10619013,116,104,31;10619023,116,100,31;10619078,116,120,31;10619077,116,39,31;1056013,90,104,31;1056023,90,100,31;1056078,90,120,31;1056038,90,22,31;1056094,90,86,31;1056021,90,39,31;20313013,144,104,31;20313085,144,42,31;20313096,144,42,31;20313097,144,42,31;20313021,144,39,31;2049023,270,100,31;2049021,270,39,31;2068023,194,100,31;2068085,194,42,31;2068013,194,104,31;10137013,100,152,31;10137071,100,94,31;10138013,243,104,31;10138071,243,94,31;1231013,55,104,31;1231071,55,94,31;10620013,73,104,31;10620071,73,94,31;1138013,72,104,31;1138029,72,95,31;1139013,71,104,31;1139023,71,100,31;113102013,249,104,31;113102029,249,95,31;113102000,249,16,31;113112013,143,104,31;113112064,143,90,31;113112023,143,100,31;1039013,227,104,31;1039034,227,37,31;1039023,227,100,31;10310021,95,39,31;10310038,197,151,31;10310013,95,104,31;10139021,300,39,31;10139063,169,23,31;10139098,169,24,31;10139013,300,104,31;1173021,306,39,31;1173013,306,104,31;1173079,306,127,31;10140021,99,39,31;10140083,99,42,31;10140023,99,100,31;10140013,99,104,31;10621021,63,39,31;10621013,63,104,31;10621023,63,100,31;10919021,64,39,31;10919013,64,104,31;10919023,64,100,31;10920021,98,39,31;10920081,98,88,31;10920022,98,131,31;10622021,97,39,31;10622081,97,88,31;10622022,97,131,31;10141021,239,39,31;10141081,239,88,31;10141013,239,104,31;10141022,239,131,31;1182021,25,39,31;1182023,25,100,31;1182034,25,37,31;1182063,25,23,31;1182013,25,104,31;10311021,236,39,31;10311013,236,104,31;10311092,236,46,31;10311093,236,33,31;10311022,236,131,31;10142013,283,104,31;10142082,283,134,31;10142023,305,100,31;10921013,282,104,31;10921082,282,134,31;10921023,282,100,31;10143013,304,104,31;10143082,304,134,31;10624013,281,104,31;10624082,281,134,31;10313021,145,39,31;10313096,145,115,31;10313097,145,48,31;10313013,145,104,31;20314021,190,39,31;20314013,190,104,31;10922013,127,104,31;10922082,127,134,31;1183013,60,104,31;1183034,60,37,31;1183021,60,39,31;10625083,3,42,31;10314083,6,42,31;10314021,6,39,31;10626085,221,44,31;10626083,221,42,31;10626013,221,104,31;20315083,4,42,31;20315021,4,39,31;20411083,5,42,31;2069083,220,42,31;2069085,220,44,31;2069013,220,104,31;2052013,130,104,31;2052021,130,39,31;2053021,296,39,31;2053013,296,104,31;2096021,297,39,31;2096013,297,104,31;20316033,298,30,31;20316013,298,104,31;20316021,298,39,31;20319033,268,30,31;20319013,268,104,31;20319021,268,39,31;20317013,295,104,31;20317028,295,5,31;10627013,110,104,31;10627034,110,151,31;10627094,110,86,31;10627095,110,158,31;10627021,110,39,31;1174013,109,104,31;1174021,109,39,31;10144023,175,100,31;10144021,175,39,31;10144086,175,98,31;10628013,82,104,31;10628086,82,98,31;10923086,81,98,31;10923021,81,39,31;10923023,81,100,31;20318021,83,39,31;20318013,83,104,31;20318023,83,100,31;20412021,84,39,31;20412013,84,104,31;20412023,84,100,31;20610016,85,143,31;20610013,85,104,31;20610023,85,100,31;31113083,291,42,32;31113000,291,16,32;31113013,291,104,32;31114083,216,42,64;31114000,216,16,64;31115000,198,16,64;31115083,198,42,64;31115013,198,104,64;10145085,278,42,31;10145087,278,49,31;10145013,278,104,31;10629085,101,42,31;10629021,101,39,31;10629087,101,49,31;10629013,101,104,31;10924075,102,42,31;10924078,102,49,31;10924013,102,104,31;10826013,8,104,31;10826088,8,92,31;10826034,8,35,31;10826087,8,49,23;108260387,8,49,8;10826038,8,151,31;10826039,8,89,31;10826021,8,39,27;108260821,8,39,4;106230021,9,39,31;106230075,9,42,31;106230087,9,49,31;106230013,9,104,31;10146085,76,42,31;10146087,76,49,31;10146013,76,104,31;10147013,303,104,31;10147021,303,38,31;1095013,103,104,31;11312021,75,39,31;11312013,75,104,31;11313085,31,42,31;11313013,31,104,31;10148034,250,35,31;10148013,250,104,31;10148021,250,39,31;10210034,141,35,31;10210088,141,92,29;10210013,141,104,31;10210021,141,39,31;10825034,118,35,31;10825013,118,104,31;10825088,118,92,31;1072035,23,2,15;107203,23,2,16;1096013,111,104,31;1096021,111,39,31;1096088,111,92,31;1162021,119,39,31;1162013,119,104,31;10149013,199,104,31;10149021,199,39,31;10149088,199,92,31;1059013,7,159,31;1059021,7,39,31;11314034,117,35,31;11314013,117,104,31;11314088,117,92,31;11314021,117,39,31;1115089,171,140,32;1115090,171,27,32;1115091,171,154,32;1116089,280,140,32;1116090,280,27,32;1116091,280,154,32;1117089,170,140,32;10150092,66,43,31;10150021,66,39,31;10150077,66,84,31;10150093,66,33,31;10151092,62,43,31;10151021,62,39,31;10151093,62,33,31;10111092,142,43,31;10111021,142,39,31;10222093,142,33,31;1184092,10,45,31;1184021,10,33,31;2097013,264,104,31;2097028,264,5,31;2054013,49,104,31;2054021,49,39,31;10152038,11,22,31;10152094,11,86,31;10152021,11,39,31;10153038,28,22,31;10153094,28,86,31;10153021,28,39,31;10631034,74,22,31;10631094,74,86,31;10154021,165,39,31;10154077,165,66,31;10632021,164,39,31;10632077,164,66,31;10315096,193,115,31;10315097,193,157,31;10315021,193,39,31;10155021,22,66,31;10155077,22,39,31;10156021,148,39,31;10156013,148,104,31;10156088,148,92,31;10156034,148,35,31;10157095,202,158,31;10157097,202,157,31;10633013,263,104,31;10633096,263,115,31;10633097,263,48,31;10827095,77,158,31;10827013,77,104,31;1042063,58,23,31;1042098,58,153,31;1042023,58,100,31;10828063,68,23,31;10828021,68,156,31;10828023,68,100,31;10158039,65,89,31;10158023,65,99,31;10158063,65,23,31;10158038,65,22,31;10159039,167,89,31;10159038,167,22,31;1175039,166,89,31;1175038,166,22,31;10634039,59,89,31;10634038,59,22,31;10835063,67,23,31;10835098,67,14,31;10835023,67,100,31;1176063,290,23,31;1176098,290,153,31;10160098,168,153,31;10160023,168,99,31;10160063,168,23,31;10161013,289,104,31;10635013,299,116,31;10162099,299,116,31;10163099,299,116,31;10836099,299,116,31;10829099,299,116,31";
+const GUIDE=(()=>{const o={},Z=["XS","SS","MM","LL","XL","UU","SM"];GUIDE_PACK.split(";").forEach(r=>{const [p,n,c,m]=r.split(",");Z.forEach((z,i)=>{if(+m&(1<<i))o[p+z]=[+n,+c]})});return o})();
+const GUIDE_COLORS={"000": "Blanco", "001": "Crema", "002": "Nude", "003": "Gris", "204": "Gris lavado", "405": "Light blue", "006": "Verde", "206": "Verde lavado", "606": "Light green", "008": "Turquesa", "009": "Azul", "210": "Azul lavado", "011": "Lila", "211": "Lila lavado", "611": "Lila Oscuro", "012": "Rúst. red", "013": "Negro", "214": "Negro lavado", "015": "Carbón", "016": "Verde militar", "017": "Gris oscuro", "018": "Sage", "019": "Azul astoria", "020": "Latte", "221": "Latte Lavado", "021": "Crudo trinity", "022": "Stone chelsea", "023": "Navy Hudson", "871": "Dorado", "953": "Cocoa", "024": "Blanco mix", "025": "Negro mix", "026": "Marfil", "027": "Uva", "227": "Uva Lavado", "028": "Arena", "029": "Morado", "030": "Verde Moss", "031": "Verde pino", "032": "Rosado", "033": "Chocolate", "034": "Cosmic Grey", "035": "Macadamia", "036": "Ocean", "037": "Lila Mix", "038": "Blush", "039": "Merlot", "040": "Iron Blue", "041": "Midnight Blue (Azul noche)", "042": "Almond", "043": "Jasper", "044": "Jasper mix", "045": "Limonchello", "046": "Limonchello mix", "047": "Acqua", "048": "Chilli", "050": "Golden Olive", "051": "Verde Jade", "052": "Beige", "053": "Classic Blue", "054": "Garden Green", "055": "Gris Ash", "056": "Salmon", "057": "Negro Smoke", "058": "Etherea", "059": "Azul Denim", "060": "Blosson", "061": "Midnight", "062": "Gray", "063": "Burgundy", "064": "Mermaid", "065": "Gris smoke", "066": "Lavander", "067": "Canyon", "068": "Gulf coast", "069": "Tourmaline", "070": "Pinecone", "071": "Mocha", "072": "Lepard", "073": "Silver", "074": "Sunset Glow", "075": "Silver Mist", "076": "Willow", "077": "Lulu", "078": "Plum purple", "079": "Scarlet", "080": "Crudo Mix", "081": "Ment", "082": "Toulose Rose", "083": "Deep Red", "084": "Wild Flame", "085": "Deep Wine", "086": "Mousse", "087": "Expresso", "088": "Midnight Green", "089": "Vanilla", "090": "Chantilly", "091": "cappuccino", "092": "Deep Rose", "093": "Cocoa Glow", "094": "macchiato", "095": "Lime mist", "096": "Neon Blom", "097": "evergreen", "098": "Butter"};
+const GUIDE_TYPES={"01": "Top", "02": "Crop Top", "03": "Camiseta", "04": "Camisilla", "05": "Buso", "06": "Short", "07": "Biker", "08": "Leggins", "09": "Pants", "10": "Set", "11": "Accesorios", "13": "Bodysuit", "14": "Top Vb", "15": "Bottom", "16": "Chaqueta", "17": "Falda", "18": "Vestidos", "19": "Enterizo", "20": "Gafas", "21": "Termos", "22": "Ele", "23": "Pantie"};
+
 /* ---------- Catalog (SKU guide: style + color(3) + size(2)) ---------- */
 const STYLES={"10110":"Sport Bra","10114":"Sport Bra U","10115":"Square Neck Bra","10123":"Low Cross Top","10126":"One Shoulder Sport Bra","10127":"Parfait Sport Bra","10128":"Contrast Halter Top","10129":"High Sport Bra","10130":"Racerback Seamless","10131":"Sculpt Seamless","10132":"Square Bra","10133":"Square Blis","10135":"Ballerina Sport Bra","1018":"Strappy Bra","1019":"Well Bra","1031":"Performance Tee (Women)","1036":"Strappy T-Shirt","1037":"Quarter Zip Crop","1043":"Performance Tank (Women)","1052":"Oversized Zip Neck","1053":"Crop Jacket","10613":"Parfait High Waist Biker","10618":"Side Cuts Biker","1067":"Mini Short Sens 3\"","1068":"Mini Short Sens 3\"","1071":"Biker Pocket Sens","1084":"High Waist Leggings Sens","1087":"Leggings Pocket Suplex","10913":"Parfait High Waist Leggings","10914":"Flare Power Leggings","1172":"Sleek Skirt","1192":"Strappy Romper Sens","1193":"Quarter Zip Jumpsuit Biker","1194":"Streep Contrast Jumpsuit","2037":"Performance Tee (Men)","2042":"Performance Tank (Men)","2043":"High Neck Tank (Men)","3113":"Bandage Gloves"};
 const COLORS={"000":"White","013":"Black","020":"Latte","021":"Ivory","022":"Stone","023":"Navy","027":"Wine","029":"Mushroom","033":"Chocolate","034":"Cosmic Grey","035":"Macadamia","039":"Merlot","041":"Night Blue","057":"Black Smoke","064":"Mermaid","067":"Canyon","068":"Gulf Coast","069":"Tourmaline","075":"Silver Mist","076":"Willow","078":"Plum Purple","611":"Dark Lilac"};
 const SIZES={"XS":"XS","SS":"S","MM":"M","LL":"L","XL":"XL","SM":"S/M","UU":"One size"};
 const SIZE_CODE={"XS":"XS","S":"SS","M":"MM","L":"LL","XL":"XL","S/M":"SM","One size":"UU"};
-const MAX_PILE=60;
 
 function decodeSku(sku){
-  const m=/^(\d{6,9})(XS|SS|MM|LL|XL|SM|UU)$/.exec(sku); if(!m) return null;
+  const m=/^(\d{4,9})(XS|SS|MM|LL|XL|SM|UU)$/.exec(sku); if(!m) return null;
   const digits=m[1], color=digits.slice(-3), style=digits.slice(0,-3);
-  return {sku, style, color, size:m[2], name:STYLES[style]||null, colorName:COLORS[color]||("Color "+color), sizeName:SIZES[m[2]]};
+  const g=GUIDE[sku];
+  if(g) return {sku, style, color, size:m[2], name:GUIDE_N[g[0]], colorName:GUIDE_C[g[1]], sizeName:SIZES[m[2]], inGuide:true};
+  const typeName=GUIDE_TYPES[digits.slice(1,3)];
+  const gender=({"1":["Women","Mujer"],"2":["Men","Hombre"],"3":["Unisex","Unisex"]}[digits[0]]||["",""])[S&&S.lang==="es"?1:0];
+  return {sku, style, color, size:m[2], name:STYLES[style]||null, hint:typeName?`${gender} ${typeName}`.trim():"", colorName:GUIDE_COLORS[color]||COLORS[color]||("Color "+color), sizeName:SIZES[m[2]], inGuide:false};
 }
 function parseCode(raw){
   const s=String(raw||"").trim().toUpperCase().replace(/\s+/g,"");
   if(!s) return null;
   const direct=decodeSku(s); if(direct) return direct;
-  const m=/(\d{6,9})(XS|SS|MM|LL|XL|SM|UU)(?![A-Z0-9])/.exec(s);
+  const m=/(\d{4,9})(XS|SS|MM|LL|XL|SM|UU)(?![A-Z0-9])/.exec(s);
   return m? decodeSku(m[1]+m[2]) : null;
 }
+const BYNAME=(()=>{const o={};for(const [k,[n,c]] of Object.entries(GUIDE)){const N=GUIDE_N[n],C=GUIDE_C[c];const sz=SIZES[k.slice(-2)];((o[N]=o[N]||{})[C]=o[N][C]||{})[sz]=k;}return o})();
+const SIZE_ORDER=["XS","S","M","L","XL","S/M","One size"];
+
+/* ---------- Language ---------- */
+const LANG0=(()=>{try{const v=localStorage.getItem("nyp_lang");if(v)return JSON.parse(v)}catch(e){}return (navigator.language||"en").toLowerCase().startsWith("es")?"es":"en"})();
+const L=(en,es)=>S.lang==="es"?es:en;
+const szL=s=>s==="One size"?L("One size","Talla única"):s;
+const ISSUE_TYPES=[["damaged","Damaged garment","Prenda dañada"],["stained","Stained or dirty","Manchada o sucia"],["notag","No tag / no QR","Sin etiqueta / sin QR"],["noscan","QR won't scan","El QR no se lee"],["notcat","Not in our catalog","No está en el catálogo"],["count","Count difference","Diferencia de conteo"],["missing","Missing items","Faltan prendas"],["other","Other","Otro"]];
+const issueLabel=t=>{const r=ISSUE_TYPES.find(x=>x[0]===t||x[1]===t);return r?L(r[1],r[2]):t};
+const WHY=[["notag","No tag","Sin etiqueta"],["noqr","Tag without QR","Etiqueta sin QR"],["noscan","QR won't scan","El QR no se lee"],["damaged","Tag is damaged","Etiqueta dañada"]];
 
 /* ---------- Helpers ---------- */
 const $=s=>document.querySelector(s);
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const now=()=>Date.now();
-const fmtT=t=>t?new Date(t).toLocaleString("en-US",{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}):"";
+const fmtT=t=>t?new Date(t).toLocaleString(S.lang==="es"?"es-CO":"en-US",{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}):"";
 const ls={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 const clientId=(()=>{let id=ls.get("nyp_client",null);if(!id){id="c"+Math.random().toString(36).slice(2,10);ls.set("nyp_client",id)}return id})();
 function scannedOf(b){return Object.values(b.items||{}).reduce((a,i)=>a+(i.qty||0),0)}
+function batch(b){ if(!b.batches) b.batches=[]; if(!b.batch) b.batch={no:b.batches.length+1,declared:null,items:{}}; return b.batch }
+function bScanned(b){ return b.batch?Object.values(b.batch.items).reduce((a,x)=>a+x,0):0 }
+function countedOf(b){ return (b.batches||[]).reduce((a,x)=>a+(x.declared||0),0) }
 let toastT;
 function toast(msg,kind="ok",ms=2200){const t=$("#toast");t.textContent=msg;t.className="toast "+kind;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,ms)}
 let actx;
 function beep(ok=true){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();const o=actx.createOscillator(),g=actx.createGain();o.frequency.value=ok?1320:300;g.gain.value=.08;o.connect(g);g.connect(actx.destination);o.start();o.stop(actx.currentTime+(ok?.08:.25))}catch(e){} try{navigator.vibrate&&navigator.vibrate(ok?40:[80,60,80])}catch(e){}}
 
 /* ---------- State ---------- */
-const S={name:ls.get("nyp_name",""),location:ls.get("nyp_loc",""),view:"welcome",boxes:new Map(),issues:new Map(),cur:null,mode:"local",sync:"local",undo:[],closeStep:null,unit:ls.get("nyp_unit","in"),viewBox:null,issueDraft:null,lastScan:{code:"",t:0},kbd:false};
+const S={lang:LANG0,name:ls.get("nyp_name",""),location:"",view:"welcome",prevView:"welcome",boxes:new Map(),issues:new Map(),cur:null,mode:"local",sync:"local",syncMsg:"",undo:[],unit:ls.get("nyp_unit","in"),viewBox:null,issueDraft:null,lastScan:{code:"",t:0},kbd:false};
 
-/* ---------- Store (shared db when available, else this device) ---------- */
+/* ---------- Store (Supabase when available, always cached on this phone) ---------- */
 let sb=null, db=null;
 const store={
   async saveBox(b){ cacheLocal(); if(!sb) return; const {error}=await sb.from("ny_boxes").upsert({id:b.id,data:b,updated_at:new Date().toISOString()}); if(error) throw {code:"unavailable",message:error.message}; },
   async deleteBox(id){ cacheLocal(); if(!sb) return; const {error}=await sb.from("ny_boxes").delete().eq("id",id); if(error) throw {code:"unavailable",message:error.message}; },
-  async saveIssue(i){ cacheLocal(); if(!sb) return; const {error}=await sb.from("ny_issues").upsert({id:i.id,data:i,created_at:new Date(i.createdAt).toISOString()}); if(error) throw {code:"unavailable",message:error.message}; }
+  async saveIssue(i){ cacheLocal(); if(!sb) return; const {error}=await sb.from("ny_issues").upsert({id:i.id,data:i,created_at:new Date(i.createdAt).toISOString()}); if(error) throw {code:"unavailable",message:error.message}; i._synced=true; cacheLocal(); }
 };
 function cacheLocal(){ ls.set("nyp_local",{boxes:[...S.boxes.values()],issues:[...S.issues.values()]}); }
-function persistLocal(){ cacheLocal(); }
 function loadLocal(){ const d=ls.get("nyp_local",{boxes:[],issues:[]}); (d.boxes||[]).forEach(b=>S.boxes.set(b.id,b)); (d.issues||[]).forEach(i=>S.issues.set(i.id,i)); }
 const wq={};
 function saveBox(b){ b.updatedAt=now(); S.boxes.set(b.id,b); const q=wq[b.id]||(wq[b.id]={busy:false,dirty:false}); q.dirty=true; if(!q.busy) flush(b.id); }
 async function flush(id){
   const q=wq[id]; q.busy=true; let tries=0;
   while(q.dirty){ q.dirty=false; const b=S.boxes.get(id); if(!b) break;
-    try{ await store.saveBox(b); setSync(db?"ok":"local"); tries=0; }
-    catch(e){ const c=e&&e.code; setSync("err",c==="quota_exceeded"?"Storage full — tell Colombia":"Not saved — check internet");
-      if(c==="invalid_argument"){ break; }
-      q.dirty=true; tries++; await sleep(Math.min(8000,1000*tries)+Math.random()*400); }
+    try{ await store.saveBox(b); if(sb) b._local=false; setSync(db?"ok":"local"); tries=0; }
+    catch(e){ setSync("err","nosave"); q.dirty=true; tries++; await sleep(Math.min(8000,1000*tries)+Math.random()*400); }
   }
   q.busy=false;
 }
 function pending(id){const q=wq[id];return q&&(q.busy||q.dirty)}
-function setSync(s,msg){S.sync=s;const el=$("#sync");if(!el)return;el.className="sync "+(s==="ok"?"ok":s==="err"?"err":"local");el.textContent=s==="ok"?"Synced with Colombia":s==="err"?(msg||"Not saved"):"This device only"}
+function syncText(){ const s=S.sync; if(s==="ok") return L("Synced with Colombia","Sincronizado con Colombia"); if(s==="err") return S.syncMsg==="noserver"?L("Can't reach the server — check internet","Sin conexión al servidor — revisa internet"):L("Not saved — check internet","No guardado — revisa internet"); return L("This device only","Solo en este celular"); }
+function setSync(s,msg){S.sync=s;S.syncMsg=msg||"";const el=$("#sync");if(!el)return;el.className="sync "+(s==="ok"?"ok":s==="err"?"err":"local");el.textContent=syncText()}
 
 async function pullAll(){
   if(!sb) return;
   const [bx,is]=await Promise.all([sb.from("ny_boxes").select("id,data"),sb.from("ny_issues").select("id,data")]);
-  if(bx.error||is.error){ setSync("err","Can't reach the server — check internet"); return; }
+  if(bx.error||is.error){ setSync("err","noserver"); return; }
   const seen=new Set();
   bx.data.forEach(r=>{ seen.add(r.id); if(pending(r.id)) return; const loc=S.boxes.get(r.id); if(loc&&(loc.updatedAt||0)>(r.data.updatedAt||0)){ saveBox(loc); return; } S.boxes.set(r.id,r.data); });
   [...S.boxes.keys()].forEach(id=>{ if(!seen.has(id)&&!pending(id)){ const b=S.boxes.get(id); if(b.packer===S.name&&b._local) saveBox(b); else S.boxes.delete(id); } });
-  is.data.forEach(r=>S.issues.set(r.id,r.data));
-  [...S.issues.values()].forEach(i=>{ if(!is.data.find(r=>r.id===i.id)&&i.reporter===S.name) store.saveIssue(i).catch(()=>{}); });
-  cacheLocal(); if(S.sync!=="err"||navigator.onLine) setSync("ok");
+  const iseen=new Set(is.data.map(r=>r.id));
+  is.data.forEach(r=>S.issues.set(r.id,{...r.data,_synced:true}));
+  [...S.issues.values()].forEach(i=>{ if(iseen.has(i.id)) return; if(!i._synced&&i.reporter===S.name) store.saveIssue(i).catch(()=>{}); else S.issues.delete(i.id); });
+  cacheLocal(); setSync("ok");
 }
 async function init(){
   loadLocal(); render();
@@ -214,16 +241,21 @@ async function nextBoxNumber(){
   const maxLocal=Math.max(0,...[...S.boxes.values()].map(b=>b.number||0));
   if(!sb) return maxLocal+1;
   try{ const {data,error}=await sb.rpc("ny_next_box"); if(!error&&data) return Math.max(+data,maxLocal+1); }catch(e){}
-  toast("Offline: box number may repeat. Check before writing it on the box","warn",4000);
+  toast(L("Offline: box number may repeat. Check before writing it on the box","Sin internet: el número de caja podría repetirse. Revísalo antes de escribirlo en la caja"),"warn",4000);
   return maxLocal+1;
 }
 
 /* ---------- Views ---------- */
-function stepper(on){const st=["Count","Scan & pack","Check","Measure & weigh"];return `<div class="steps">${st.map((s,i)=>`<span class="${i===on?"on":""}">${i+1}. ${s}</span>`).join("")}</div>`}
-function modeNote(){ return S.mode==="local"?`<div class="note warn"><b>Not connected to the server.</b><span>Work is saved on this phone only. When you finish, download the Excel from “My summary” and send it to Colombia. Don't clear this browser's data until then.</span></div>`:""; }
+function stepper(on){const st=[L("Count batch","Contar tanda"),L("Scan & pack","Escanear y empacar"),L("Verify batch","Verificar tanda"),L("Measure & weigh box","Medir y pesar caja")];return `<div class="steps">${st.map((s,i)=>`<span class="${i===on?"on":""}">${i+1}. ${s}</span>`).join("")}</div>`}
+function modeNote(){ return S.mode==="local"?`<div class="note warn"><b>${L("Not connected to the server.","Sin conexión al servidor.")}</b><span>${L("Work is saved on this phone only. When you finish, download the Excel from “My summary” and send it to Colombia. Don't clear this browser's data until then.","Lo que hagas se guarda solo en este celular. Al terminar, descarga el Excel desde “Mi resumen” y envíalo a Colombia. No borres los datos del navegador antes de eso.")}</span></div>`:""; }
+const BOX=n=>L("Box ","Caja ")+n;
 
 function render(){
-  $("#who").textContent=S.name?`${S.name}${S.location?" · "+S.location:""}`:"Packing list & box count";
+  document.documentElement.lang=S.lang;
+  $("#who").textContent=S.name?S.name:L("Packing list & box count","Lista de empaque y conteo por caja");
+  $("#langbtn").textContent=S.lang==="es"?"EN":"ES"; $("#langbtn").setAttribute("aria-label",L("Cambiar a español","Switch to English"));
+  $("#helpbtn").textContent=L("Help","Ayuda");
+  setSync(S.sync,S.syncMsg);
   const app=$("#app"); const v=S.view;
   if(v==="welcome") app.innerHTML=vWelcome();
   else if(v==="home") app.innerHTML=vHome();
@@ -236,20 +268,21 @@ function render(){
   else if(v==="issues") app.innerHTML=vIssues();
   else if(v==="summary") app.innerHTML=vSummary();
   else if(v==="boxview") app.innerHTML=vBoxView();
+  else if(v==="batchdone") app.innerHTML=vBatchDone();
+  else if(v==="help") app.innerHTML=vHelp();
   bind();
 }
-function go(v){ if(v!=="scan") stopCam(); S.view=v;render();window.scrollTo(0,0)}
+function go(v){ if(v!=="scan") stopCam(); if(v==="help"&&S.view!=="help") S.prevView=S.view; S.view=v;render();window.scrollTo(0,0)}
 function cur(){return S.cur?S.boxes.get(S.cur):null}
 
 function vWelcome(){return `
 <div class="panel">
-  <h1>Pack the NY inventory</h1>
-  <p class="muted">Each box: count the garments on the table, scan each one as it goes into the box, check the count, then measure and weigh the box.</p>
-  <label>Your full name<input id="f_name" autocomplete="name" value="${esc(S.name)}" placeholder="e.g. Laura Gómez"></label>
-  <label>Where are you packing?<select id="f_loc">${["","Dumbo","Tribeca","Nomad","Warehouse / other"].map(o=>`<option ${o===S.location?"selected":""} value="${esc(o)}">${o||"Choose a location"}</option>`).join("")}</select></label>
-  <button class="primary block" data-a="start">Start</button>
+  <h1>${L("Pack the NY inventory","Empacar el inventario de NY")}</h1>
+  <p class="muted">${L("Work in batches: count a batch on the table, scan each garment as it goes into the box, verify the batch. Add batches until the box is full, then measure and weigh it.","Trabaja por tandas: cuenta una tanda en la mesa, escanea cada prenda al meterla en la caja y verifica la tanda. Agrega tandas hasta llenar la caja y luego mídela y pésala.")}</p>
+  <label>${L("Your full name","Tu nombre completo")}<input id="f_name" autocomplete="name" value="${esc(S.name)}" placeholder="${L("e.g. Laura Gómez","ej. Laura Gómez")}"></label>
+  <button class="primary block" data-a="start">${L("Start","Empezar")}</button>
 </div>
-<div class="note info"><b>Before you start</b><span>Have ready: boxes, tape, a marker, a tape measure and a scale. A handheld QR scanner (USB or Bluetooth) is the fastest way; you can also take a photo of each QR with your phone.</span></div>`}
+<div class="note info"><b>${L("Before you start","Antes de empezar")}</b><span>${L("Have ready: boxes, tape, a marker, a tape measure and a scale. You will scan with your phone camera: allow camera access when the browser asks. A handheld QR scanner also works.","Ten listo: cajas, cinta, marcador, metro y báscula. Vas a escanear con la cámara del celular: acepta el permiso de cámara cuando el navegador lo pida. También sirve un lector de QR de mano.")}</span><button data-a="go" data-v="help">${L("Read the how-to guide","Leer el manual de uso")}</button></div>`}
 
 function vHome(){
   const boxes=[...S.boxes.values()].sort((a,b)=>a.number-b.number);
@@ -261,150 +294,229 @@ function vHome(){
   return `
 ${modeNote()}
 <div class="stats">
-  <div class="stat"><div class="n">${closed.length}</div><div class="l">Boxes closed</div></div>
-  <div class="stat"><div class="n">${units}</div><div class="l">Garments packed</div></div>
-  <div class="stat"><div class="n">${open.length}</div><div class="l">Boxes open</div></div>
-  <div class="stat"><div class="n">${issues.length}</div><div class="l">Issues</div></div>
+  <div class="stat"><div class="n">${closed.length}</div><div class="l">${L("Boxes closed","Cajas cerradas")}</div></div>
+  <div class="stat"><div class="n">${units}</div><div class="l">${L("Garments packed","Prendas empacadas")}</div></div>
+  <div class="stat"><div class="n">${open.length}</div><div class="l">${L("Boxes open","Cajas abiertas")}</div></div>
+  <div class="stat"><div class="n">${issues.length}</div><div class="l">${L("Issues","Novedades")}</div></div>
 </div>
-${myOpen.length?`<div class="note warn"><b>You have ${myOpen.length===1?"an open box":myOpen.length+" open boxes"}: ${myOpen.map(b=>"Box "+b.number).join(", ")}.</b><span>Finish it before starting another one, so garments don't get mixed.</span><button class="primary" data-a="resume" data-id="${myOpen[0].id}">Continue Box ${myOpen[0].number}</button></div>`:""}
-<button class="primary block" data-a="newbox" ${myOpen.length?"disabled":""}>Start a new box</button>
-<div class="row"><button class="grow" data-a="go" data-v="issues">Report an issue</button><button class="grow" data-a="go" data-v="summary">My summary</button></div>
-<div class="panel"><div class="row"><h2 class="grow">All boxes</h2><span class="small muted">${S.mode==="sync"?"Everyone's boxes, live":"This device"}</span></div>
-  ${boxes.length?`<div class="list">${boxes.map(b=>`<button class="boxrow" data-a="openbox" data-id="${b.id}"><span class="boxno">#${b.number}</span><span class="grow"><b>${scannedOf(b)} garments</b><br><span class="small muted">${esc(b.packer)}${b.location?" · "+esc(b.location):""} · ${fmtT(b.closedAt||b.createdAt)}</span></span><span class="chip ${b.status==="closed"?"closed":"open"}">${b.status==="closed"?"Closed":"Open"}</span></button>`).join("")}</div>`:`<p class="muted">No boxes yet. Tap “Start a new box” to begin with Box 1.</p>`}
+${myOpen.length?`<div class="note warn"><b>${L("You have an open box","Tienes una caja abierta")}: ${myOpen.map(b=>BOX(b.number)).join(", ")}.</b><span>${L("Finish it before starting another one, so garments don't get mixed.","Termínala antes de empezar otra, para que las prendas no se mezclen.")}</span><button class="primary" data-a="resume" data-id="${myOpen[0].id}">${L("Continue","Continuar")} ${BOX(myOpen[0].number)}</button></div>`:""}
+<button class="primary block" data-a="newbox" ${myOpen.length?"disabled":""}>${L("Start a new box","Empezar una caja nueva")}</button>
+<div class="row"><button class="grow" data-a="go" data-v="issues">${L("Report an issue","Reportar novedad")}</button><button class="grow" data-a="go" data-v="summary">${L("My summary","Mi resumen")}</button></div>
+<div class="panel"><div class="row"><h2 class="grow">${L("All boxes","Todas las cajas")}</h2><span class="small muted">${S.mode==="sync"?L("Everyone's boxes, live","Las de todos, en vivo"):L("This device","Este celular")}</span></div>
+  ${boxes.length?`<div class="list">${boxes.map(b=>`<button class="boxrow" data-a="openbox" data-id="${b.id}"><span class="boxno">#${b.number}</span><span class="grow"><b>${scannedOf(b)} ${L("garments","prendas")}</b><br><span class="small muted">${esc(b.packer)}${b.location?" · "+esc(b.location):""} · ${fmtT(b.closedAt||b.createdAt)}</span></span><span class="chip ${b.status==="closed"?"closed":"open"}">${b.status==="closed"?L("Closed","Cerrada"):L("Open","Abierta")}</span></button>`).join("")}</div>`:`<p class="muted">${L("No boxes yet. Tap “Start a new box” to begin with Box 1.","Aún no hay cajas. Toca “Empezar una caja nueva” para arrancar con la Caja 1.")}</p>`}
 </div>
-<div class="panel"><h2>Download for Colombia</h2><p class="small muted">Packing list per box, box sizes and weights, totals per SKU and all issues, in one Excel file.</p><button data-a="xlsx_all">Download full packing list (Excel)</button></div>
-<button class="ghost" data-a="changeuser">Not ${esc(S.name)}? Change name</button>`}
+<div class="panel"><h2>${L("Download for Colombia","Descargar para Colombia")}</h2><p class="small muted">${L("Packing list per box, box sizes and weights, totals per SKU and all issues, in one Excel file.","Lista de empaque por caja, medidas y pesos, totales por SKU y todas las novedades, en un solo Excel.")}</p><button data-a="xlsx_all">${L("Download full packing list (Excel)","Descargar lista de empaque completa (Excel)")}</button></div>
+<button class="ghost" data-a="changeuser">${L("Not","¿No eres")} ${esc(S.name)}${L("? Change name","? Cambiar nombre")}</button>`}
 
-function vCount(){const b=cur();return `
+function vCount(){const b=cur();const bt=batch(b);const prev=scannedOf(b);return `
 ${stepper(0)}
 <div class="panel">
-  <h1>Box ${b.number}: count first</h1>
-  <p>Put the garments for this box on the table and count them by hand. Only put on the table what fits in one box.</p>
-  <label>How many garments are on the table?<input id="f_decl" type="number" inputmode="numeric" min="1" step="1" value="${b.declared||""}" placeholder="e.g. 40"></label>
-  <div id="declwarn"></div>
-  <button class="primary block" data-a="setdecl">Start scanning</button>
+  <h1>${BOX(b.number)} · ${L("Batch","Tanda")} ${bt.no}: ${L("count first","primero cuenta")}</h1>
+  ${prev?`<p class="small muted">${L(`This box already has ${prev} verified garments from earlier batches.`,`Esta caja ya tiene ${prev} prendas verificadas de tandas anteriores.`)}</p>`:""}
+  <p>${L("Take a batch of garments you can count comfortably and put it on the table. Count it by hand and write the number. The app will check that you scan exactly that many.","Toma una tanda de prendas que puedas contar con facilidad y ponla en la mesa. Cuéntala a mano y escribe el número. La app verifica que escanees exactamente esa cantidad.")}</p>
+  <label>${L("How many garments are in this batch?","¿Cuántas prendas tiene esta tanda?")}<input id="f_decl" type="number" inputmode="numeric" min="1" step="1" value="${bt.declared||""}" placeholder="${L("e.g. 25","ej. 25")}"></label>
+  <button class="primary block" data-a="setdecl">${L("Start scanning","Empezar a escanear")}</button>
 </div>
-<div class="note info"><b>Tip</b><span>Group similar garments in the same box (bras with bras, leggings with leggings). Keep piles at ${MAX_PILE} or fewer so the count stays accurate.</span></div>
-<button class="ghost" data-a="cancelbox">Cancel this box</button>`}
+<div class="note info"><b>${L("Tip","Consejo")}</b><span>${L("Smaller batches are easier to count and verify. If the box still has room after a batch, you add another batch to the same box.","Las tandas pequeñas son más fáciles de contar y verificar. Si a la caja le cabe más después de una tanda, agregas otra tanda a la misma caja.")}</span></div>
+${!prev?`<button class="ghost" data-a="cancelbox">${L("Cancel this box","Cancelar esta caja")}</button>`:`<button class="ghost" data-a="tobatchdone">${L("Don't add this batch: go back","No agregar esta tanda: volver")}</button>`}`}
 
-function vScan(){const b=cur();return `
+function vScan(){const b=cur();const bt=batch(b);return `
 ${stepper(1)}
 <div class="panel">
-  <div class="row"><h1 class="grow">Box ${b.number}</h1><span class="small muted">Counted on table: <b>${b.declared}</b> <button class="ghost small" data-a="editdecl">change</button></span></div>
+  <div class="row"><h1 class="grow">${BOX(b.number)} · ${L("Batch","Tanda")} ${bt.no}</h1><span class="small muted">${L("Counted","Contadas")}: <b>${bt.declared}</b> <button class="ghost small" data-a="editdecl">${L("change","cambiar")}</button></span></div>
   <div id="counter"></div>
   <div id="scanmsg"></div>
-  <div id="camwrap" class="cam" hidden><video id="cam" playsinline muted></video><div class="frame"></div><div class="hint" id="camhint">Hold one QR inside the frame</div></div>
-  <button class="primary block" data-a="cam" id="cambtn">${CAM.on?"Stop camera":"Scan with camera"}</button>
-  <label>Or use a handheld scanner<input id="scan" class="scanin" autocomplete="off" autocapitalize="characters" spellcheck="false" ${S.kbd?"":'inputmode="none"'} placeholder="Point the scanner at the QR"></label>
+  <div id="camwrap" class="cam" hidden><video id="cam" playsinline muted></video><div class="frame"></div><div class="hint" id="camhint">${L("Hold one QR inside the frame","Pon un solo QR dentro del recuadro")}</div></div>
+  <button class="primary block" data-a="cam" id="cambtn">${CAM.on?L("Stop camera","Apagar cámara"):L("Scan with camera","Escanear con la cámara")}</button>
+  <label>${L("Or use a handheld scanner","O usa un lector de mano")}<input id="scan" class="scanin" autocomplete="off" autocapitalize="characters" spellcheck="false" ${S.kbd?"":'inputmode="none"'} placeholder="${L("Point the scanner at the QR","Apunta el lector al QR")}"></label>
   <div class="row">
-    <button class="grow" data-a="photo" type="button">Take a photo of the QR</button>
-    <button class="grow" data-a="go" data-v="manual">No tag? Add by hand</button>
+    <button class="grow" data-a="photo" type="button">${L("Take a photo of the QR","Tomar foto del QR")}</button>
+    <button class="grow" data-a="go" data-v="manual">${L("No tag? Add by hand","¿Sin etiqueta? Agregar a mano")}</button>
   </div>
   <input id="photoin" type="file" accept="image/*" capture="environment" hidden>
-  <div class="row small"><button class="ghost" data-a="kbd">${S.kbd?"Hide keyboard":"Type a code by hand"}</button><button class="ghost" data-a="undo" ${S.undo.length?"":"disabled"}>Undo last scan</button></div>
-  <p class="small muted">Rule: scan a garment, then put it in the box right away. Unscanned garments stay on the table. With the camera, move each garment out of the frame before showing the next one.</p>
+  <div class="row small"><button class="ghost" data-a="kbd">${S.kbd?L("Hide keyboard","Ocultar teclado"):L("Type a code by hand","Escribir un código")}</button><button class="ghost" data-a="undo" ${S.undo.length?"":"disabled"}>${L("Undo last scan","Deshacer último escaneo")}</button></div>
+  <p class="small muted">${L("Rule: scan a garment, then put it in the box right away. Unscanned garments stay on the table. With the camera, move each garment out of the frame before showing the next one.","Regla: escanea una prenda y métela en la caja de inmediato. Lo que no se ha escaneado se queda en la mesa. Con la cámara, saca cada prenda del recuadro antes de mostrar la siguiente.")}</p>
 </div>
-<div class="panel"><div class="row"><h2 class="grow">In this box</h2><span class="small muted">Tap − to remove one</span></div><div id="items" class="list"></div></div>
-<button class="primary block" data-a="toclose">Close box</button>
-<div id="restartzone"><button class="danger block" data-a="restartask">Restart this box</button></div>
-<button class="ghost" data-a="go" data-v="home">Back to all boxes (box stays open)</button>`}
+<div class="panel"><div class="row"><h2 class="grow">${L("In this batch","En esta tanda")}</h2><span class="small muted">${L("Tap − to remove one","Toca − para quitar una")}</span></div><div id="items" class="list"></div><p id="prevbatches" class="small muted"></p></div>
+<button class="primary block" data-a="toclose">${L("Verify this batch","Verificar esta tanda")}</button>
+<div id="restartzone"><button class="danger block" data-a="restartask">${L("Restart this batch","Reiniciar esta tanda")}</button></div>
+<button class="ghost" data-a="go" data-v="home">${L("Back to all boxes (box stays open)","Volver a las cajas (la caja queda abierta)")}</button>`}
 
 function renderScanParts(){
-  const b=cur(); if(!b||!$("#counter")) return;
-  const n=scannedOf(b), d=b.declared||0, left=d-n;
+  const b=cur(); if(!b||!$("#counter")) return; const bt=batch(b);
+  const n=bScanned(b), d=bt.declared||0, left=d-n;
   const pct=d?Math.min(100,n/d*100):0;
-  $("#counter").innerHTML=`<div class="counter"><div><div class="n">${d}</div><div class="l">Counted</div></div><div><div class="n">${n}</div><div class="l">Scanned</div></div><div><div class="n" style="color:${left<0?"var(--bad)":left===0?"var(--ok)":"inherit"}">${left<0?"+"+(-left):left}</div><div class="l">${left<0?"Over count":"On table"}</div></div></div><div class="bar ${left<0?"over":left===0?"full":""}"><i style="width:${pct}%"></i></div>`;
-  $("#scanmsg").innerHTML= left===0&&n>0?`<div class="note ok"><b>Count reached.</b><span>The table should now be empty. If it is, tap “Close box”.</span></div>`
-    : left<0?`<div class="note bad"><b>You scanned ${-left} more than you counted.</b><span>A garment may have been scanned twice. Check the list and tap − on the repeated one, or change the counted number if your count was wrong.</span></div>`:"";
-  const items=Object.entries(b.items||{}).sort((x,y)=>(y[1].t||0)-(x[1].t||0));
-  $("#items").innerHTML=items.length?items.map(([k,i])=>`<div class="item ${S.lastKey===k?"flash":""}"><div class="t"><b>${esc(i.name)}</b> · ${esc(i.color)} · ${esc(i.size)} ${i.manual?'<span class="chip man">By hand</span>':""} ${i.unknown?'<span class="chip unk">Not in guide</span>':""}<div class="sku">${esc(i.sku)}</div></div><span class="qty">${i.qty}</span><button data-a="minus" data-k="${esc(k)}" aria-label="Remove one">−</button></div>`).join(""):`<p class="muted">Nothing scanned yet.</p>`;
+  $("#counter").innerHTML=`<div class="counter"><div><div class="n">${d}</div><div class="l">${L("Counted","Contadas")}</div></div><div><div class="n">${n}</div><div class="l">${L("Scanned","Escaneadas")}</div></div><div><div class="n" style="color:${left<0?"var(--bad)":left===0?"var(--ok)":"inherit"}">${left<0?"+"+(-left):left}</div><div class="l">${left<0?L("Over count","De más"):L("On table","En la mesa")}</div></div></div><div class="bar ${left<0?"over":left===0?"full":""}"><i style="width:${pct}%"></i></div>`;
+  $("#scanmsg").innerHTML= left===0&&n>0?`<div class="note ok"><b>${L("Batch count reached.","Tanda completa.")}</b><span>${L("The table should now be empty. If it is, tap “Verify this batch”.","La mesa debería estar vacía. Si es así, toca “Verificar esta tanda”.")}</span></div>`
+    : left<0?`<div class="note bad"><b>${L(`You scanned ${-left} more than you counted.`,`Escaneaste ${-left} más de las que contaste.`)}</b><span>${L("A garment may have been scanned twice. Check the list and tap − on the repeated one, or change the counted number if your count was wrong.","Puede que una prenda se escaneara dos veces. Revisa la lista y toca − en la repetida, o cambia el número contado si el conteo estaba mal.")}</span></div>`:"";
+  const keys=Object.keys(bt.items).sort((x,y)=>((b.items[y]||{}).t||0)-((b.items[x]||{}).t||0));
+  $("#items").innerHTML=keys.length?keys.map(k=>{const i=b.items[k]||{name:"?",color:"",size:"",sku:k};return `<div class="item ${S.lastKey===k?"flash":""}"><div class="t"><b>${esc(i.name)}</b> · ${esc(i.color)} · ${esc(szL(i.size))} ${i.manual?`<span class="chip man">${L("By hand","A mano")}</span>`:""} ${i.unknown?`<span class="chip unk">${L("Not in guide","No está en la guía")}</span>`:""}<div class="sku">${esc(i.sku)}</div></div><span class="qty">${bt.items[k]}</span><button data-a="minus" data-k="${esc(k)}" aria-label="${L("Remove one","Quitar una")}">−</button></div>`}).join(""):`<p class="muted">${L("Nothing scanned in this batch yet.","Aún no hay nada escaneado en esta tanda.")}</p>`;
+  const prev=countedOf(b); $("#prevbatches").textContent=prev?L(`Already in the box from earlier batches: ${prev} garments (verified, locked).`,`Ya en la caja de tandas anteriores: ${prev} prendas (verificadas, bloqueadas).`):"";
   bindDyn();
 }
 
-function vClose(){const b=cur();const n=scannedOf(b),d=b.declared,left=d-n;
+function vClose(){const b=cur();const bt=batch(b);const n=bScanned(b),d=bt.declared,left=d-n;
   let body="";
-  if(n===0) body=`<div class="note bad"><b>This box is empty.</b><span>Scan at least one garment, or cancel the box.</span></div><button class="block" data-a="backscan">Back to scanning</button><button class="ghost" data-a="cancelbox">Cancel this box</button>`;
-  else if(left===0) body=`<div class="note ok"><b>Correct: you counted ${d} and scanned ${n}.</b><span>Make sure the table is empty, then seal the box.</span></div><button class="primary block" data-a="todims">Continue to size and weight</button><button class="ghost" data-a="backscan">Back to scanning</button>`;
-  else if(left>0) body=`<div class="note warn"><b>You scanned ${n}. You counted ${d}, so ${left} should still be on the table.</b><span>Count what is left on the table. Is it ${left}?</span></div>
-    <button class="primary block" data-a="closepartial">Yes, ${left} are on the table. Close box with ${n}</button>
-    <p class="small muted">The ${left} left on the table go into the next box. You will count them again there.</p>
-    <button class="block" data-a="backscan">No, keep scanning</button>
-    <button class="danger block" data-a="restartask2">No, the numbers don't match. Restart this box</button>`;
-  else body=`<div class="note bad"><b>You scanned ${n} but counted ${d}: ${-left} extra.</b><span>Something was scanned twice, or the first count was wrong. Remove the repeated scans, or recount everything inside the box.</span></div>
-    <button class="block" data-a="backscan">Review the list</button>
-    <label>I recounted the box and there are:<input id="f_recount" type="number" inputmode="numeric" min="1" placeholder="${n}"></label>
-    <button class="primary block" data-a="recount">Confirm recount</button>
-    <button class="danger block" data-a="restartask2">Restart this box</button>`;
-  return `${stepper(2)}<div class="panel"><h1>Close Box ${b.number}</h1>${body}</div><div id="restartzone"></div>`}
+  if(n===0) body=`<div class="note bad"><b>${L("This batch is empty.","Esta tanda está vacía.")}</b><span>${L("Scan at least one garment.","Escanea al menos una prenda.")}</span></div><button class="block" data-a="backscan">${L("Back to scanning","Volver a escanear")}</button>${countedOf(b)?`<button class="ghost" data-a="dropbatch">${L("No more batches: close the box","No hay más tandas: cerrar la caja")}</button>`:`<button class="ghost" data-a="cancelbox">${L("Cancel this box","Cancelar esta caja")}</button>`}`;
+  else if(left===0) body=`<div class="note ok"><b>${L(`Correct: you counted ${d} and scanned ${n}.`,`Correcto: contaste ${d} y escaneaste ${n}.`)}</b><span>${L("Make sure the table is empty.","Confirma que la mesa quedó vacía.")}</span></div><button class="primary block" data-a="finishbatch">${L("Confirm batch","Confirmar tanda")}</button><button class="ghost" data-a="backscan">${L("Back to scanning","Volver a escanear")}</button>`;
+  else if(left>0) body=`<div class="note warn"><b>${L(`You scanned ${n}. You counted ${d}, so ${left} should still be on the table.`,`Escaneaste ${n}. Contaste ${d}, así que deberían quedar ${left} en la mesa.`)}</b><span>${L(`Count what is left on the table. Is it ${left}?`,`Cuenta lo que queda en la mesa. ¿Son ${left}?`)}</span></div>
+    <button class="primary block" data-a="closepartial">${L(`Yes, ${left} are on the table. Confirm batch with ${n}`,`Sí, quedan ${left} en la mesa. Confirmar tanda con ${n}`)}</button>
+    <p class="small muted">${L(`The ${left} left on the table can go in a new batch, in this box or the next one.`,`Las ${left} que quedan pueden ir en una nueva tanda, en esta caja o en la siguiente.`)}</p>
+    <button class="block" data-a="backscan">${L("No, keep scanning","No, seguir escaneando")}</button>
+    <button class="danger block" data-a="restartask2">${L("No, the numbers don't match. Restart this batch","No, los números no cuadran. Reiniciar esta tanda")}</button>`;
+  else body=`<div class="note bad"><b>${L(`You scanned ${n} but counted ${d}: ${-left} extra.`,`Escaneaste ${n} pero contaste ${d}: ${-left} de más.`)}</b><span>${L("Something was scanned twice, or the first count was wrong. Remove the repeated scans, or recount the batch.","Algo se escaneó dos veces o el primer conteo estaba mal. Quita los escaneos repetidos o vuelve a contar la tanda.")}</span></div>
+    <button class="block" data-a="backscan">${L("Review the list","Revisar la lista")}</button>
+    <label>${L("I recounted this batch and there are:","Volví a contar esta tanda y hay:")}<input id="f_recount" type="number" inputmode="numeric" min="1" placeholder="${n}"></label>
+    <button class="primary block" data-a="recount">${L("Confirm recount","Confirmar reconteo")}</button>
+    <button class="danger block" data-a="restartask2">${L("Restart this batch","Reiniciar esta tanda")}</button>`;
+  return `${stepper(2)}<div class="panel"><h1>${L("Verify","Verificar")} ${BOX(b.number)} · ${L("Batch","Tanda")} ${bt.no}</h1>${body}</div><div id="restartzone"></div>`}
 
-function vDims(){const b=cur();const u=S.unit;const L=u==="in"?["in","lb"]:["cm","kg"];const dm=b.dims||{},w=b.weight||{};
-  return `${stepper(3)}<div class="panel"><h1>Box ${b.number}: size and weight</h1>
-  <p>Seal the box and write <b>BOX ${b.number}</b> on two sides with the marker. Then measure the outside of the box and weigh it.</p>
-  <div class="row"><span class="small muted grow">Units</span><div class="seg"><button class="${u==="in"?"on":""}" data-a="unit" data-u="in">in / lb</button><button class="${u==="cm"?"on":""}" data-a="unit" data-u="cm">cm / kg</button></div></div>
-  <div class="dims"><label>Length (${L[0]})<input id="f_l" type="number" inputmode="decimal" step="0.1" value="${dm.unit===u?dm.l??"":""}"></label><label>Width (${L[0]})<input id="f_w" type="number" inputmode="decimal" step="0.1" value="${dm.unit===u?dm.w??"":""}"></label><label>Height (${L[0]})<input id="f_h" type="number" inputmode="decimal" step="0.1" value="${dm.unit===u?dm.h??"":""}"></label></div>
-  <label>Weight (${L[1]})<input id="f_kg" type="number" inputmode="decimal" step="0.1" value="${w.unit===(u==="in"?"lb":"kg")?w.v??"":""}"></label>
+function vBatchDone(){const b=cur();const last=(b.batches||[])[b.batches.length-1]||{};const lo=S.leftover||0;return `
+<div class="panel">
+  <div class="note ok"><b>${L(`Batch ${last.no} verified: ${last.declared} garments.`,`Tanda ${last.no} verificada: ${last.declared} prendas.`)}</b><span>${L(`${BOX(b.number)} now has ${scannedOf(b)} garments in ${b.batches.length} batch(es).`,`La ${BOX(b.number)} lleva ${scannedOf(b)} prendas en ${b.batches.length} tanda(s).`)}</span></div>
+  <h2>${L("Does the box still have room?","¿A la caja le cabe más?")}</h2>
+  ${lo?`<button class="primary block" data-a="addbatch" data-decl="${lo}">${L(`Yes: add the ${lo} left on the table as a new batch`,`Sí: agregar las ${lo} que quedaron en la mesa como nueva tanda`)}</button>`:""}
+  <button class="${lo?"":"primary "}block" data-a="addbatch">${L("Yes: add another batch to this box","Sí: agregar otra tanda a esta caja")}</button>
+  <button class="block" data-a="todims">${L("No, it's full: close, measure and weigh the box","No, está llena: cerrar, medir y pesar la caja")}</button>
+</div>`}
+
+function vDims(){const b=cur();const u=S.unit;const U=u==="in"?["in","lb"]:["cm","kg"];const dm=b.dims||{},w=b.weight||{};
+  return `${stepper(3)}<div class="panel"><h1>${BOX(b.number)}: ${L("size and weight","medidas y peso")}</h1>
+  <p>${L(`Seal the box and write <b>BOX ${b.number}</b> on two sides with the marker. Then measure the outside of the box and weigh it.`,`Sella la caja y escribe <b>CAJA ${b.number}</b> en dos lados con el marcador. Luego mide la caja por fuera y pésala.`)}</p>
+  <div class="row"><span class="small muted grow">${L("Units","Unidades")}</span><div class="seg"><button class="${u==="in"?"on":""}" data-a="unit" data-u="in">in / lb</button><button class="${u==="cm"?"on":""}" data-a="unit" data-u="cm">cm / kg</button></div></div>
+  <div class="dims"><label>${L("Length","Largo")} (${U[0]})<input id="f_l" type="number" inputmode="decimal" step="0.1" value="${dm.unit===u?dm.l??"":""}"></label><label>${L("Width","Ancho")} (${U[0]})<input id="f_w" type="number" inputmode="decimal" step="0.1" value="${dm.unit===u?dm.w??"":""}"></label><label>${L("Height","Alto")} (${U[0]})<input id="f_h" type="number" inputmode="decimal" step="0.1" value="${dm.unit===u?dm.h??"":""}"></label></div>
+  <label>${L("Weight","Peso")} (${U[1]})<input id="f_kg" type="number" inputmode="decimal" step="0.1" value="${w.unit===(u==="in"?"lb":"kg")?w.v??"":""}"></label>
   <div id="dimwarn"></div>
-  <button class="primary block" data-a="savedims">Close box</button>
-  <button class="ghost" data-a="backscan">Back to scanning</button></div>`}
+  <button class="primary block" data-a="savedims">${L("Close box","Cerrar caja")}</button>
+  <button class="ghost" data-a="tobatchdone">${L("Back","Volver")}</button></div>`}
 
-function vBoxDone(){const b=cur();return `<div class="panel" style="text-align:center"><p class="muted">Closed</p><div class="bigbox">BOX ${b.number}</div><p><b>${scannedOf(b)} garments</b> · ${dimTxt(b)} · ${wTxt(b)}</p><p class="small muted">Write “BOX ${b.number}” on the box if you haven't yet.</p></div>
-${b.leftover?`<div class="note warn"><b>${b.leftover} garments are still on the table.</b><span>Start the next box with them.</span><button class="primary" data-a="newbox" data-decl="${b.leftover}">Start next box with these ${b.leftover}</button></div>`:""}
-<button class="${b.leftover?"":"primary "}block" data-a="newbox">Start a new box</button>
-<button class="block" data-a="go" data-v="summary">I'm done: show my summary</button>
-<button class="ghost" data-a="go" data-v="home">All boxes</button>`}
+function vBoxDone(){const b=cur();return `<div class="panel" style="text-align:center"><p class="muted">${L("Closed","Cerrada")}</p><div class="bigbox">${L("BOX","CAJA")} ${b.number}</div><p><b>${scannedOf(b)} ${L("garments","prendas")}</b> · ${(b.batches||[]).length} ${L("batch(es)","tanda(s)")} · ${dimTxt(b)} · ${wTxt(b)}</p><p class="small muted">${L(`Write “BOX ${b.number}” on the box if you haven't yet.`,`Escribe “CAJA ${b.number}” en la caja si aún no lo has hecho.`)}</p></div>
+${S.leftover?`<div class="note warn"><b>${L(`${S.leftover} garments are still on the table.`,`Quedan ${S.leftover} prendas en la mesa.`)}</b><span>${L("Start the next box with them.","Empieza la siguiente caja con ellas.")}</span><button class="primary" data-a="newbox" data-decl="${S.leftover}">${L(`Start next box with these ${S.leftover}`,`Empezar la siguiente caja con estas ${S.leftover}`)}</button></div>`:""}
+<button class="${S.leftover?"":"primary "}block" data-a="newbox">${L("Start a new box","Empezar una caja nueva")}</button>
+<button class="block" data-a="go" data-v="summary">${L("I'm done: show my summary","Terminé: ver mi resumen")}</button>
+<button class="ghost" data-a="go" data-v="home">${L("All boxes","Todas las cajas")}</button>`}
 
-function vManual(){const st=Object.entries(STYLES).filter((e,i,a)=>a.findIndex(x=>x[1]===e[1])===i).sort((a,b)=>a[1].localeCompare(b[1]));
-  return `<div class="panel"><h1>Add a garment by hand</h1><p class="muted">Use this only when the garment has no tag or the QR can't be read. It will also be reported as an issue to Colombia.</p>
-  <label>Type of garment<select id="m_style"><option value="">Choose…</option>${st.map(([k,v])=>`<option value="${k}">${esc(v)}</option>`).join("")}<option value="OTHER">Not in the list</option></select></label>
-  <label id="m_otherw" hidden>Describe the garment<input id="m_other" placeholder="e.g. green zip hoodie"></label>
-  <label>Color<select id="m_color"><option value="">Choose…</option>${Object.entries(COLORS).sort((a,b)=>a[1].localeCompare(b[1])).map(([k,v])=>`<option value="${k}">${esc(v)}</option>`).join("")}<option value="OTHER">Other</option></select></label>
-  <label id="m_ocw" hidden>Color name<input id="m_ocolor" placeholder="e.g. Sage"></label>
-  <label>Size<select id="m_size"><option value="">Choose…</option>${Object.keys(SIZE_CODE).map(s=>`<option>${s}</option>`).join("")}</select></label>
-  <label>Why by hand?<select id="m_why"><option>No tag</option><option>Tag without QR</option><option>QR won't scan</option><option>Tag is damaged</option></select></label>
-  <div id="mwarn"></div>
-  <button class="primary block" data-a="addmanual">Add 1 to Box ${cur()?.number}</button>
-  <button class="ghost" data-a="backscan">Cancel</button></div>`}
+function vManual(){
+  const names=Object.keys(BYNAME).sort((a,b)=>a.localeCompare(b));
+  return `<div class="panel"><h1>${L("Add a garment by hand","Agregar una prenda a mano")}</h1><p class="muted">${L("Use this only when the garment has no tag or the QR can't be read. It will also be reported as an issue to Colombia.","Úsalo solo si la prenda no tiene etiqueta o el QR no se lee. También queda reportado como novedad a Colombia.")}</p>
+  <label>${L("Garment name (start typing)","Nombre de la prenda (empieza a escribir)")}<input id="m_name" list="m_names" autocomplete="off" placeholder="${L("e.g. Strappy bra","ej. Strappy bra")}"></label>
+  <datalist id="m_names">${names.map(n=>`<option value="${esc(n)}">`).join("")}</datalist>
+  <label>${L("Color","Color")}<select id="m_color" disabled><option value="">${L("Choose the garment first","Primero elige la prenda")}</option></select></label>
+  <label>${L("Size","Talla")}<select id="m_size" disabled><option value="">${L("Choose the color first","Primero elige el color")}</option></select></label>
+  <p id="m_sku" class="sku"></p>
+  <details><summary class="small">${L("Not in the list?","¿No está en la lista?")}</summary>
+    <div class="panel" style="margin-top:8px">
+      <label>${L("Describe the garment","Describe la prenda")}<input id="m_other" placeholder="${L("e.g. green zip hoodie","ej. buso verde con cremallera")}"></label>
+      <label>${L("Color","Color")}<input id="m_ocolor" placeholder="${L("e.g. Sage","ej. Sage")}"></label>
+      <label>${L("Size","Talla")}<select id="m_osize"><option value="">${L("Choose…","Elige…")}</option>${SIZE_ORDER.map(s=>`<option value="${s}">${szL(s)}</option>`).join("")}</select></label>
+    </div></details>
+  <label>${L("Why by hand?","¿Por qué a mano?")}<select id="m_why">${WHY.map(w=>`<option value="${w[0]}">${L(w[1],w[2])}</option>`).join("")}</select></label>
+  <button class="primary block" data-a="addmanual">${L("Add 1 to","Agregar 1 a la")} ${BOX(cur()?.number)}</button>
+  <button class="ghost" data-a="backscan">${L("Cancel","Cancelar")}</button></div>`}
 
-const ISSUE_TYPES=["Damaged garment","Stained or dirty","No tag / no QR","QR won't scan","Not in our catalog","Count difference","Missing items","Other"];
 function vIssues(){const d=S.issueDraft||{};const list=[...S.issues.values()].sort((a,b)=>b.createdAt-a.createdAt);
   const myBoxes=[...S.boxes.values()].sort((a,b)=>a.number-b.number);
-  return `<div class="panel"><h1>Report an issue</h1>
-  <p class="muted">${S.mode==="sync"?"Issues go straight to the Colombia team. If you are offline, they are sent when the connection comes back.":"Issues are saved on this device. Send the Excel to Colombia when you finish."}</p>
-  <label>What happened?<select id="i_type">${ISSUE_TYPES.map(t=>`<option ${t===d.type?"selected":""}>${t}</option>`).join("")}</select></label>
-  <label>Garment (scan, or describe)<input id="i_item" value="${esc(d.item||"")}" placeholder="Scan the QR or write e.g. Strappy Bra Merlot M"></label>
-  <div class="row"><label class="grow">Quantity<input id="i_qty" type="number" inputmode="numeric" min="1" value="${d.qty||1}"></label>
-  <label class="grow">Box<select id="i_box"><option value="">Not packed / none</option>${myBoxes.map(b=>`<option value="${b.number}" ${String(b.number)===String(d.box)?"selected":""}>Box ${b.number}</option>`).join("")}</select></label></div>
-  <label>Details<textarea id="i_notes" placeholder="What do you see? e.g. seam open on left strap">${esc(d.notes||"")}</textarea></label>
+  return `<div class="panel"><h1>${L("Report an issue","Reportar una novedad")}</h1>
+  <p class="muted">${S.mode==="sync"?L("Issues go straight to the Colombia team. If you are offline, they are sent when the connection comes back.","Las novedades llegan directo al equipo en Colombia. Si no hay internet, se envían cuando vuelva la conexión."):L("Issues are saved on this device. Send the Excel to Colombia when you finish.","Las novedades quedan en este celular. Envía el Excel a Colombia al terminar.")}</p>
+  <label>${L("What happened?","¿Qué pasó?")}<select id="i_type">${ISSUE_TYPES.map(t=>`<option value="${t[0]}" ${t[0]===d.type?"selected":""}>${L(t[1],t[2])}</option>`).join("")}</select></label>
+  <label>${L("Garment (scan, or describe)","Prenda (escanea o describe)")}<input id="i_item" value="${esc(d.item||"")}" placeholder="${L("Scan the QR or write e.g. Strappy Bra Merlot M","Escanea el QR o escribe ej. Strappy Bra Merlot M")}"></label>
+  <div class="row"><label class="grow">${L("Quantity","Cantidad")}<input id="i_qty" type="number" inputmode="numeric" min="1" value="${d.qty||1}"></label>
+  <label class="grow">${L("Box","Caja")}<select id="i_box"><option value="">${L("Not packed / none","Sin empacar / ninguna")}</option>${myBoxes.map(b=>`<option value="${b.number}" ${String(b.number)===String(d.box)?"selected":""}>${BOX(b.number)}</option>`).join("")}</select></label></div>
+  <label>${L("Details","Detalle")}<textarea id="i_notes" placeholder="${L("What do you see? e.g. seam open on left strap","¿Qué ves? ej. costura abierta en la tira izquierda")}">${esc(d.notes||"")}</textarea></label>
   <div id="iwarn"></div>
-  <button class="primary block" data-a="saveissue">Send issue</button>
-  <button class="ghost" data-a="go" data-v="${S.cur&&cur()&&cur().status!=="closed"?"scan":"home"}">Back</button></div>
-  <div class="panel"><h2>Reported issues (${list.length})</h2>${list.length?`<div class="list">${list.map(i=>`<div class="item"><div class="t"><b>${esc(i.type)}</b> · ${i.qty}× ${esc(i.item||"—")}${i.box?` · Box ${i.box}`:""}<div class="small muted">${esc(i.notes)}</div><div class="sku">${esc(i.reporter)} · ${fmtT(i.createdAt)}${i.auto?" · added automatically":""}</div></div></div>`).join("")}</div>`:`<p class="muted">No issues reported.</p>`}</div>`}
+  <button class="primary block" data-a="saveissue">${L("Send issue","Enviar novedad")}</button>
+  <button class="ghost" data-a="go" data-v="${S.cur&&cur()&&cur().status!=="closed"?"scan":"home"}">${L("Back","Volver")}</button></div>
+  <div class="panel"><h2>${L("Reported issues","Novedades reportadas")} (${list.length})</h2>${list.length?`<div class="list">${list.map(i=>`<div class="item"><div class="t"><b>${esc(issueLabel(i.type))}</b> · ${i.qty}× ${esc(i.item||"—")}${i.box?` · ${BOX(i.box)}`:""}<div class="small muted">${esc(i.notes)}</div><div class="sku">${esc(i.reporter)} · ${fmtT(i.createdAt)}${i.auto?" · "+L("added automatically","agregada automáticamente"):""}</div></div></div>`).join("")}</div>`:`<p class="muted">${L("No issues reported.","No hay novedades reportadas.")}</p>`}</div>`}
 
 function vSummary(){const mine=[...S.boxes.values()].filter(b=>b.packer===S.name).sort((a,b)=>a.number-b.number);
   const closed=mine.filter(b=>b.status==="closed"), open=mine.filter(b=>b.status!=="closed");
   const tot=closed.reduce((a,b)=>a+scannedOf(b),0); const iss=[...S.issues.values()].filter(i=>i.reporter===S.name);
   const man=closed.reduce((a,b)=>a+Object.values(b.items).filter(i=>i.manual).reduce((x,i)=>x+i.qty,0),0);
-  return `<div class="panel"><h1>Summary for ${esc(S.name)}</h1><p class="muted">${fmtT(now())}</p>
-  <div class="stats"><div class="stat"><div class="n">${closed.length}</div><div class="l">Boxes closed</div></div><div class="stat"><div class="n">${tot}</div><div class="l">Garments</div></div><div class="stat"><div class="n">${man}</div><div class="l">Added by hand</div></div><div class="stat"><div class="n">${iss.length}</div><div class="l">Issues</div></div></div>
-  ${open.length?`<div class="note warn"><b>You still have ${open.length} open box${open.length>1?"es":""}: ${open.map(b=>"Box "+b.number).join(", ")}.</b><span>Close or cancel ${open.length>1?"them":"it"} before you leave.</span><button data-a="resume" data-id="${open[0].id}">Go to Box ${open[0].number}</button></div>`:""}
+  return `<div class="panel"><h1>${L("Summary for","Resumen de")} ${esc(S.name)}</h1><p class="muted">${fmtT(now())}</p>
+  <div class="stats"><div class="stat"><div class="n">${closed.length}</div><div class="l">${L("Boxes closed","Cajas cerradas")}</div></div><div class="stat"><div class="n">${tot}</div><div class="l">${L("Garments","Prendas")}</div></div><div class="stat"><div class="n">${man}</div><div class="l">${L("Added by hand","Agregadas a mano")}</div></div><div class="stat"><div class="n">${iss.length}</div><div class="l">${L("Issues","Novedades")}</div></div></div>
+  ${open.length?`<div class="note warn"><b>${L("You still have open boxes","Todavía tienes cajas abiertas")}: ${open.map(b=>BOX(b.number)).join(", ")}.</b><span>${L("Close or cancel them before you leave.","Ciérralas o cancélalas antes de irte.")}</span><button data-a="resume" data-id="${open[0].id}">${L("Go to","Ir a la")} ${BOX(open[0].number)}</button></div>`:""}
   </div>
-  <div class="panel"><h2>Boxes you packed</h2>${closed.length?`<div class="tablewrap"><table><thead><tr><th>Box</th><th class="num">Garments</th><th>Size</th><th>Weight</th></tr></thead><tbody>${closed.map(b=>`<tr><td><button class="ghost" data-a="openbox" data-id="${b.id}">Box ${b.number}</button></td><td class="num">${scannedOf(b)}</td><td>${dimTxt(b)}</td><td>${wTxt(b)}</td></tr>`).join("")}<tr><td><b>Total</b></td><td class="num"><b>${tot}</b></td><td></td><td>${totW(closed)}</td></tr></tbody></table></div>`:`<p class="muted">No closed boxes yet.</p>`}</div>
+  <div class="panel"><h2>${L("Boxes you packed","Cajas que empacaste")}</h2>${closed.length?`<div class="tablewrap"><table><thead><tr><th>${L("Box","Caja")}</th><th class="num">${L("Garments","Prendas")}</th><th>${L("Size","Medidas")}</th><th>${L("Weight","Peso")}</th></tr></thead><tbody>${closed.map(b=>`<tr><td><button class="ghost" data-a="openbox" data-id="${b.id}">${BOX(b.number)}</button></td><td class="num">${scannedOf(b)}</td><td>${dimTxt(b)}</td><td>${wTxt(b)}</td></tr>`).join("")}<tr><td><b>Total</b></td><td class="num"><b>${tot}</b></td><td></td><td>${totW(closed)}</td></tr></tbody></table></div>`:`<p class="muted">${L("No closed boxes yet.","Aún no hay cajas cerradas.")}</p>`}</div>
   ${modeNote()}
-  <button class="primary block" data-a="xlsx_me">Download my summary (Excel)</button>
-  <button class="ghost" data-a="go" data-v="home">All boxes</button>`}
+  <button class="primary block" data-a="xlsx_me">${L("Download my summary (Excel)","Descargar mi resumen (Excel)")}</button>
+  <button class="ghost" data-a="go" data-v="home">${L("All boxes","Todas las cajas")}</button>`}
 
-function vBoxView(){const b=S.boxes.get(S.viewBox);if(!b)return `<p>Box not found.</p>`;const items=Object.values(b.items||{}).sort((x,y)=>x.name.localeCompare(y.name)||x.color.localeCompare(y.color));
-  return `<div class="panel"><div class="row"><h1 class="grow">Box ${b.number}</h1><span class="chip ${b.status==="closed"?"closed":"open"}">${b.status==="closed"?"Closed":"Open"}</span></div>
+function vBoxView(){const b=S.boxes.get(S.viewBox);if(!b)return `<p>${L("Box not found.","No se encontró la caja.")}</p>`;const items=Object.values(b.items||{}).sort((x,y)=>x.name.localeCompare(y.name)||x.color.localeCompare(y.color));
+  return `<div class="panel"><div class="row"><h1 class="grow">${BOX(b.number)}</h1><span class="chip ${b.status==="closed"?"closed":"open"}">${b.status==="closed"?L("Closed","Cerrada"):L("Open","Abierta")}</span></div>
   <p class="muted">${esc(b.packer)}${b.location?" · "+esc(b.location):""} · ${fmtT(b.closedAt||b.createdAt)}</p>
-  <p><b>${scannedOf(b)} garments</b>${b.status==="closed"?` · ${dimTxt(b)} · ${wTxt(b)}`:""}${b.restarts?` · restarted ${b.restarts}×`:""}</p>
-  <div class="tablewrap"><table><thead><tr><th>Garment</th><th>Color</th><th>Size</th><th class="num">Qty</th></tr></thead><tbody>${items.map(i=>`<tr><td>${esc(i.name)}${i.manual?' <span class="chip man">By hand</span>':""}<div class="sku">${esc(i.sku)}</div></td><td>${esc(i.color)}</td><td>${esc(i.size)}</td><td class="num">${i.qty}</td></tr>`).join("")}</tbody></table></div>
-  ${b.status!=="closed"&&b.packer===S.name?`<button class="primary" data-a="resume" data-id="${b.id}">Continue this box</button>`:""}
-  ${b.status!=="closed"&&b.packer!==S.name?`<div class="note info"><span>${esc(b.packer)} is packing this box. You can take it over only if they stopped.</span><button data-a="takeover" data-id="${b.id}">Take over this box</button></div>`:""}
-  ${b.status==="closed"?`<div id="reopenzone"><button class="danger" data-a="reopenask">Reopen this box</button></div>`:""}
-  </div><button class="ghost" data-a="back">Back</button>`}
+  <p><b>${scannedOf(b)} ${L("garments","prendas")}</b>${b.status==="closed"?` · ${dimTxt(b)} · ${wTxt(b)}`:""}${(b.batches||[]).length?` · ${b.batches.length} ${L("batch(es)","tanda(s)")}`:""}${b.restarts?` · ${L("restarted","reiniciada")} ${b.restarts}×`:""}</p>
+  <div class="tablewrap"><table><thead><tr><th>${L("Garment","Prenda")}</th><th>${L("Color","Color")}</th><th>${L("Size","Talla")}</th><th class="num">${L("Qty","Cant.")}</th></tr></thead><tbody>${items.map(i=>`<tr><td>${esc(i.name)}${i.manual?` <span class="chip man">${L("By hand","A mano")}</span>`:""}<div class="sku">${esc(i.sku)}</div></td><td>${esc(i.color)}</td><td>${esc(szL(i.size))}</td><td class="num">${i.qty}</td></tr>`).join("")}</tbody></table></div>
+  ${b.status!=="closed"&&b.packer===S.name?`<button class="primary" data-a="resume" data-id="${b.id}">${L("Continue this box","Continuar esta caja")}</button>`:""}
+  ${b.status!=="closed"&&b.packer!==S.name?`<div class="note info"><span>${L(`${esc(b.packer)} is packing this box. You can take it over only if they stopped.`,`${esc(b.packer)} está empacando esta caja. Tómala solo si esa persona ya paró.`)}</span><button data-a="takeover" data-id="${b.id}">${L("Take over this box","Tomar esta caja")}</button></div>`:""}
+  ${b.status==="closed"?`<div id="reopenzone"><button class="danger" data-a="reopenask">${L("Reopen this box","Reabrir esta caja")}</button></div>`:""}
+  </div><button class="ghost" data-a="back">${L("Back","Volver")}</button>`}
 
-function dimTxt(b){const d=b.dims;return d&&d.l?`${d.l}×${d.w}×${d.h} ${d.unit}`:"no size"}
-function wTxt(b){const w=b.weight;return w&&w.v?`${w.v} ${w.unit}`:"no weight"}
+function vHelp(){
+  const sec=(t,body)=>`<section class="panel"><h2>${t}</h2>${body}</section>`;
+  const ol=a=>`<ol class="howto">${a.map(x=>`<li>${x}</li>`).join("")}</ol>`;
+  const ul=a=>`<ul class="howto">${a.map(x=>`<li>${x}</li>`).join("")}</ul>`;
+  return `<div class="panel"><h1>${L("How to use NY Pack-Out","Cómo usar NY Pack-Out")}</h1>
+  <p class="muted">${L("This app is used once, to pack the New York inventory into boxes and send Colombia an exact list of what is in each box. Every garment has a QR with its SKU.","Esta app se usa una sola vez, para empacar en cajas el inventario de Nueva York y enviar a Colombia la lista exacta de lo que va en cada caja. Cada prenda tiene un QR con su SKU.")}</p>
+  <p class="small muted">${L("The whole process:","El proceso completo:")} <b>${L("Open box → (Count batch → Scan & pack → Verify batch) as many times as fit → Measure & weigh box","Abrir caja → (Contar tanda → Escanear y empacar → Verificar tanda) las veces que quepan → Medir y pesar caja")}</b></p></div>
+  ${sec(L("Before you start","Antes de empezar"),ul([
+    L("Materials: empty boxes, packing tape, a marker, a tape measure and a scale.","Materiales: cajas vacías, cinta de empaque, marcador, metro y báscula."),
+    L("Open the link on your phone in Safari or Chrome and write your full name.","Abre el link en el celular con Safari o Chrome y escribe tu nombre completo."),
+    L("The first time you tap “Scan with camera”, the phone asks for camera permission. Tap Allow.","La primera vez que toques “Escanear con la cámara”, el celular pide permiso de cámara. Toca Permitir."),
+    L("The badge at the top must say “Synced with Colombia”. If it says something else, check the internet connection.","El aviso de arriba debe decir “Sincronizado con Colombia”. Si dice otra cosa, revisa la conexión a internet.")]))}
+  ${sec(L("Boxes and batches","Cajas y tandas"),`<p>${L("A <b>box</b> is what you ship: you measure and weigh it at the end. A <b>batch</b> is a group of garments you count and scan together. One box can hold several batches until it is full. Working in batches keeps every count small and accurate, whatever the box size.","Una <b>caja</b> es lo que se envía: al final se mide y se pesa. Una <b>tanda</b> es un grupo de prendas que cuentas y escaneas junto. Una caja puede llevar varias tandas hasta llenarse. Trabajar por tandas mantiene cada conteo pequeño y exacto, sin importar el tamaño de la caja.")}</p>`)}
+  ${sec(L("Step 1 · Count the batch","Paso 1 · Contar la tanda"),ol([
+    L("Tap “Start a new box”. The app gives the box its number and opens Batch 1.","Toca “Empezar una caja nueva”. La app le asigna el número a la caja y abre la Tanda 1."),
+    L("Take a batch of garments you can count comfortably and put it on the table, away from any other garments. Grouping similar garments (bras with bras, leggings with leggings) makes counting easier.","Toma una tanda de prendas que puedas contar con facilidad y ponla en la mesa, separada de cualquier otra prenda. Agrupar prendas similares (bras con bras, leggings con leggings) facilita el conteo."),
+    L("Count the garments one by one, by hand, before scanning anything, and write that number in the app. If you are not sure, count again: this number is the reference the app uses to check that nothing is skipped or scanned twice.","Cuenta las prendas una por una, a mano, antes de escanear nada, y escribe ese número en la app. Si tienes dudas, vuelve a contar: ese número es la referencia que usa la app para comprobar que no se salte ninguna prenda ni se escanee dos veces."),
+    L("Only the garments of this batch should be on the table while you scan it.","Mientras escaneas, en la mesa solo deben estar las prendas de esta tanda.")]))}
+  ${sec(L("Step 2 · Scan & pack","Paso 2 · Escanear y empacar"),ol([
+    L("Tap “Scan with camera” and hold one QR inside the frame. You hear a beep and see the garment name.","Toca “Escanear con la cámara” y pon un solo QR dentro del recuadro. Suena un pitido y aparece el nombre de la prenda."),
+    L("Put that garment in the box right away. <b>Golden rule: scanned = in the box; not scanned = still on the table.</b>","Mete esa prenda en la caja de inmediato. <b>Regla de oro: escaneada = en la caja; sin escanear = sigue en la mesa.</b>"),
+    L("Move the garment out of the frame before showing the next one. The app does not count the same QR twice until it leaves the frame.","Saca la prenda del recuadro antes de mostrar la siguiente. La app no cuenta el mismo QR dos veces hasta que sale del recuadro."),
+    L("Watch the counter: Counted / Scanned / On table. When “On table” reaches 0, the table must be empty.","Mira el contador: Contadas / Escaneadas / En la mesa. Cuando “En la mesa” llega a 0, la mesa debe estar vacía.")])+
+    `<p class="small"><b>${L("Other ways to scan","Otras formas de escanear")}</b></p>`+ul([
+    L("Handheld scanner (USB or Bluetooth): scan into the “Or use a handheld scanner” box.","Lector de mano (USB o Bluetooth): escanea en el campo “O usa un lector de mano”."),
+    L("“Take a photo of the QR”: one photo per garment, useful if the live camera has trouble.","“Tomar foto del QR”: una foto por prenda, útil si la cámara en vivo falla."),
+    L("No tag or the QR won't read: tap “No tag? Add by hand”, type the garment name, choose color and size. It is reported to Colombia automatically.","Sin etiqueta o el QR no se lee: toca “¿Sin etiqueta? Agregar a mano”, escribe el nombre de la prenda y elige color y talla. Se reporta a Colombia automáticamente.")]))}
+  ${sec(L("Step 3 · Verify the batch","Paso 3 · Verificar la tanda"),`<p>${L("Tap “Verify this batch”. The app compares your count with the scans:","Toca “Verificar esta tanda”. La app compara tu conteo con los escaneos:")}</p>`+ul([
+    L("<b>They match:</b> confirm the batch.","<b>Coinciden:</b> confirmas la tanda."),
+    L("<b>You scanned fewer</b> (e.g. 20 of 25): the app asks if 5 are still on the table. If yes, the batch is confirmed with 20 and the 5 can go in a new batch. If no, keep scanning or restart the batch.","<b>Escaneaste menos</b> (ej. 20 de 25): la app pregunta si quedan 5 en la mesa. Si sí, la tanda se confirma con 20 y las 5 pueden ir en una nueva tanda. Si no, sigue escaneando o reinicia la tanda."),
+    L("<b>You scanned more:</b> something was scanned twice. Tap − on the repeated garment, or recount the batch.","<b>Escaneaste más:</b> algo se escaneó dos veces. Toca − en la prenda repetida o vuelve a contar la tanda.")])+
+    `<p>${L("Then the app asks: <b>does the box still have room?</b> If yes, add another batch to the same box (back to Step 1). If it is full, go to Step 4.","Luego la app pregunta: <b>¿a la caja le cabe más?</b> Si sí, agrega otra tanda a la misma caja (vuelves al Paso 1). Si está llena, pasa al Paso 4.")}</p>`)}
+  ${sec(L("Step 4 · Measure, weigh and label","Paso 4 · Medir, pesar y marcar"),ol([
+    L("When the box is full, seal it and write “BOX” and its number on two sides.","Cuando la caja esté llena, séllala y escribe “CAJA” y su número en dos lados."),
+    L("Measure length, width and height on the outside, and weigh it. Choose in/lb or cm/kg.","Mide largo, ancho y alto por fuera y pésala. Elige in/lb o cm/kg."),
+    L("If a number looks unusual, the app warns you. Check it and tap “Close box” again.","Si un número se ve raro, la app avisa. Revísalo y toca “Cerrar caja” otra vez.")]))}
+  ${sec(L("Fixing mistakes","Corregir errores"),ul([
+    L("“Undo last scan” removes the last garment you scanned.","“Deshacer último escaneo” quita la última prenda escaneada."),
+    L("The − next to a garment removes one unit from the current batch. Take that garment out of the box and put it back on the table. Verified batches are locked.","El − junto a una prenda quita una unidad de la tanda actual. Saca esa prenda de la caja y devuélvela a la mesa. Las tandas ya verificadas quedan bloqueadas."),
+    L("“Restart this batch” empties only the current batch. Earlier batches and other boxes are not touched. Take that batch out of the box, count again and rescan.","“Reiniciar esta tanda” vacía solo la tanda actual. Las tandas anteriores y las demás cajas no se tocan. Saca esa tanda de la caja, vuelve a contar y escanea de nuevo."),
+    L("A closed box can be reopened from “All boxes” to add a new batch.","Una caja cerrada se puede reabrir desde “Todas las cajas” para agregarle una nueva tanda.")]))}
+  ${sec(L("Issues (novedades)","Novedades"),ul([
+    L("Report anything Colombia must know: damaged or stained garments, missing tags, garments not in the catalog, count differences.","Reporta todo lo que Colombia deba saber: prendas dañadas o manchadas, sin etiqueta, que no están en el catálogo o diferencias de conteo."),
+    L("Tap “Report an issue”, choose what happened, the garment, the quantity and the box, and write the detail.","Toca “Reportar novedad”, elige qué pasó, la prenda, la cantidad y la caja, y escribe el detalle."),
+    L("Issues arrive in Colombia automatically. Garments added by hand create an issue on their own.","Las novedades llegan a Colombia automáticamente. Las prendas agregadas a mano crean su novedad solas.")]))}
+  ${sec(L("Several people at once","Varias personas a la vez"),ul([
+    L("Each person opens the link on their own phone and writes their name. Each box belongs to the person who started it.","Cada persona abre el link en su celular y escribe su nombre. Cada caja queda a nombre de quien la empezó."),
+    L("Box numbers never repeat, even with several people working. Everyone sees all boxes live.","Los números de caja no se repiten aunque trabajen varios. Todos ven todas las cajas en vivo."),
+    L("Finish your open box before starting another one.","Termina tu caja abierta antes de empezar otra.")]))}
+  ${sec(L("When you finish","Al terminar"),ol([
+    L("Tap “I'm done: show my summary”. Check that you have no open boxes.","Toca “Terminé: ver mi resumen”. Revisa que no te queden cajas abiertas."),
+    L("Download your summary in Excel if you want a copy. Colombia already has everything.","Descarga tu resumen en Excel si quieres una copia. Colombia ya tiene todo."),
+    L("Colombia downloads the full packing list (all boxes, sizes, weights, SKUs and issues) from the home screen.","Colombia descarga la lista de empaque completa (todas las cajas, medidas, pesos, SKU y novedades) desde la pantalla de inicio.")]))}
+  ${sec(L("If the internet drops","Si se cae el internet"),`<p>${L("Keep working. The phone saves everything and sends it when the connection returns. Don't close the page or clear the browser until the badge says “Synced with Colombia” again.","Sigue trabajando. El celular guarda todo y lo envía cuando vuelve la conexión. No cierres la página ni borres el navegador hasta que el aviso vuelva a decir “Sincronizado con Colombia”.")}</p>`)}
+  <button class="primary block" data-a="helpback">${L("Back","Volver")}</button>
+  <details class="panel"><summary>${L("Reset (for tests only)","Reiniciar (solo para pruebas)")}</summary>
+    <p class="small">${L("<b>Reset everything</b> deletes ALL boxes and issues from every phone and Colombia, and box numbering starts again at 1. It needs the admin PIN. Do not use it once the real packing has started.","<b>Reiniciar todo</b> borra TODAS las cajas y novedades de todos los celulares y de Colombia, y la numeración vuelve a empezar en 1. Necesita el PIN de administrador. No lo uses cuando ya empezó el empaque real.")}</p>
+    <label>${L("Admin PIN","PIN de administrador")}<input id="r_pin" type="password" inputmode="numeric" autocomplete="off"></label>
+    <label>${L("Type RESET to confirm","Escribe REINICIAR para confirmar")}<input id="r_word" autocomplete="off" autocapitalize="characters"></label>
+    <button class="danger block" data-a="resetall">${L("Reset everything","Reiniciar todo")}</button>
+    <p class="small muted">${L("Only this phone: forget your name and the copy saved on this phone (does not delete anything in Colombia).","Solo este celular: olvidar tu nombre y la copia guardada en este celular (no borra nada en Colombia).")}</p>
+    <button class="block" data-a="resetphone">${L("Clear this phone","Limpiar este celular")}</button>
+  </details>`}
+
+function dimTxt(b){const d=b.dims;return d&&d.l?`${d.l}×${d.w}×${d.h} ${d.unit}`:L("no size","sin medidas")}
+function wTxt(b){const w=b.weight;return w&&w.v?`${w.v} ${w.unit}`:L("no weight","sin peso")}
 function toKg(w){return w&&w.v?(w.unit==="lb"?w.v*0.453592:w.v):0}
 function totW(bs){const kg=bs.reduce((a,b)=>a+toKg(b.weight),0);return kg?`${(kg/0.453592).toFixed(1)} lb · ${kg.toFixed(1)} kg`:""}
 
@@ -414,9 +526,15 @@ function bind(){
   document.querySelectorAll("#app [data-a]").forEach(el=>{ if(el.dataset.bound) return; el.dataset.bound=1; el.addEventListener("click",e=>{e.preventDefault();act(el.dataset.a,el)}); });
   const sc=$("#scan"); if(sc&&!sc.dataset.bound){ sc.dataset.bound=1; sc.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key==="Tab"){ e.preventDefault(); const v=sc.value; sc.value=""; if(v.trim()) onScan(v); } }); }
   const ph=$("#photoin"); if(ph&&!ph.dataset.bound){ ph.dataset.bound=1; ph.addEventListener("change",onPhoto); }
-  const dc=$("#f_decl"); if(dc) dc.addEventListener("input",()=>{const n=+dc.value;$("#declwarn").innerHTML=n>MAX_PILE?`<div class="note warn"><b>${n} is a big pile.</b><span>Counts over ${MAX_PILE} are easy to get wrong and may not fit one box. Consider splitting into two boxes.</span></div>`:""});
-  const ms=$("#m_style"); if(ms){ ms.addEventListener("change",()=>$("#m_otherw").hidden=ms.value!=="OTHER"); $("#m_color").addEventListener("change",()=>$("#m_ocw").hidden=$("#m_color").value!=="OTHER"); }
-  const ii=$("#i_item"); if(ii) ii.addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); const p=parseCode(ii.value); if(p) ii.value=`${p.name||"Unknown item"} ${p.colorName} ${p.sizeName} (${p.sku})`; } });
+  const mn=$("#m_name"); if(mn){
+    const mc=$("#m_color"), mz=$("#m_size");
+    const upd=()=>{ const nv=mn.value.trim(); if(nv===mn.dataset.prev) return; mn.dataset.prev=nv; const o=BYNAME[nv]; if(!o){ mc.disabled=true; mc.innerHTML=`<option value="">${L("Choose the garment first","Primero elige la prenda")}</option>`; mz.disabled=true; mz.innerHTML=`<option value="">${L("Choose the color first","Primero elige el color")}</option>`; $("#m_sku").textContent=""; return; }
+      mc.disabled=false; mc.innerHTML=`<option value="">${L("Choose…","Elige…")}</option>`+Object.keys(o).sort().map(c=>`<option>${esc(c)}</option>`).join(""); mz.disabled=true; mz.innerHTML=`<option value="">${L("Choose the color first","Primero elige el color")}</option>`; $("#m_sku").textContent=""; };
+    mn.addEventListener("input",upd); mn.addEventListener("change",upd);
+    mc.addEventListener("change",()=>{ const o=(BYNAME[mn.value.trim()]||{})[mc.value]; if(!o){mz.disabled=true;return} mz.disabled=false; mz.innerHTML=`<option value="">${L("Choose…","Elige…")}</option>`+SIZE_ORDER.filter(z=>o[z]).map(z=>`<option value="${z}">${szL(z)}</option>`).join(""); });
+    mz.addEventListener("change",()=>{ const k=((BYNAME[mn.value.trim()]||{})[mc.value]||{})[mz.value]; $("#m_sku").textContent=k?"SKU "+k:""; });
+  }
+  const ii=$("#i_item"); if(ii) ii.addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); const p=parseCode(ii.value); if(p) ii.value=`${p.name||L("Unknown item","Prenda desconocida")} ${p.colorName} ${szL(p.sizeName)} (${p.sku})`; } });
 }
 function bindDyn(){ document.querySelectorAll("#items [data-a]").forEach(el=>{ if(el.dataset.bound) return; el.dataset.bound=1; el.addEventListener("click",e=>{e.preventDefault();act(el.dataset.a,el)}); }); }
 function focusScan(){ if(CAM.on) return; const sc=$("#scan"); if(sc) setTimeout(()=>sc.focus({preventScroll:true}),30); }
@@ -424,69 +542,88 @@ function focusScan(){ if(CAM.on) return; const sc=$("#scan"); if(sc) setTimeout(
 async function act(a,el){
   const b=cur();
   switch(a){
-  case "start":{ const n=$("#f_name").value.trim(), l=$("#f_loc").value; if(n.length<3){toast("Write your full name","bad");return} if(!l){toast("Choose where you are packing","bad");return} S.name=n;S.location=l;ls.set("nyp_name",n);ls.set("nyp_loc",l);go("home");break}
+  case "start":{ const n=$("#f_name").value.trim(); if(n.length<3){toast(L("Write your full name","Escribe tu nombre completo"),"bad");return} S.name=n;S.location="";ls.set("nyp_name",n);go("home");break}
   case "changeuser": go("welcome");break;
   case "go": go(el.dataset.v);break;
+  case "helpback": go(S.prevView&&S.prevView!=="help"?S.prevView:"home"); break;
   case "back": go(backTo);break;
   case "openbox": backTo=S.view; S.viewBox=el.dataset.id; go("boxview");break;
-  case "resume": S.cur=el.dataset.id; S.undo=[]; const rb=cur(); go(rb.declared?"scan":"count"); break;
-  case "takeover":{ const tb=S.boxes.get(el.dataset.id); tb.notes=(tb.notes||[]).concat(`Taken over by ${S.name} from ${tb.packer} ${fmtT(now())}`); tb.packer=S.name; saveBox(tb); S.cur=tb.id; S.undo=[]; go(tb.declared?"scan":"count"); break}
+  case "resume":{ S.cur=el.dataset.id; S.undo=[]; go(resumeView(cur())); break}
+  case "takeover":{ const tb=S.boxes.get(el.dataset.id); tb.notes=(tb.notes||[]).concat(`${L("Taken over by","Tomada por")} ${S.name} ${L("from","de")} ${tb.packer} ${fmtT(now())}`); tb.packer=S.name; saveBox(tb); S.cur=tb.id; S.undo=[]; go(resumeView(tb)); break}
   case "newbox":{
-    const mine=[...S.boxes.values()].find(x=>x.status!=="closed"&&x.packer===S.name); if(mine){toast(`Finish Box ${mine.number} first`,"warn");return}
+    const mine=[...S.boxes.values()].find(x=>x.status!=="closed"&&x.packer===S.name); if(mine){toast(L(`Finish Box ${mine.number} first`,`Primero termina la Caja ${mine.number}`),"warn");return}
     el.disabled=true; const num=await nextBoxNumber();
-    const nb={_local:true,id:"box-"+num+"-"+Math.random().toString(36).slice(2,7),number:num,packer:S.name,location:S.location,status:"open",declared:el.dataset.decl?+el.dataset.decl:null,items:{},restarts:0,createdAt:now(),notes:[]};
-    if(el.dataset.decl) nb.notes.push(`Started with ${el.dataset.decl} left over from previous box`);
-    saveBox(nb); S.cur=nb.id; S.undo=[]; go("count"); break}
-  case "cancelbox":{ if(scannedOf(b)>0){toast("Remove the scanned garments first, or restart the box","warn");return} S.boxes.delete(b.id); try{await store.deleteBox(b.id)}catch(e){} S.cur=null; toast(`Box ${b.number} cancelled`,"warn"); go("home"); break}
-  case "setdecl":{ const n=Math.floor(+$("#f_decl").value); if(!n||n<1){toast("Write how many garments you counted","bad");return} b.declared=n; b.status="open"; saveBox(b); go("scan"); break}
+    const nb={_local:true,id:"box-"+num+"-"+Math.random().toString(36).slice(2,7),number:num,packer:S.name,location:S.location,status:"open",batches:[],batch:{no:1,declared:el.dataset.decl?+el.dataset.decl:null,items:{}},items:{},restarts:0,createdAt:now(),notes:[]};
+    if(el.dataset.decl) nb.notes.push(L(`Started with ${el.dataset.decl} left over from previous box`,`Empezó con ${el.dataset.decl} que sobraron de la caja anterior`));
+    saveBox(nb); S.cur=nb.id; S.undo=[]; S.leftover=0; go("count"); break}
+  case "cancelbox":{ if(scannedOf(b)>0||countedOf(b)>0){toast(L("Remove the scanned garments first, or restart the box","Primero quita las prendas escaneadas o reinicia la caja"),"warn");return} S.boxes.delete(b.id); try{await store.deleteBox(b.id)}catch(e){} S.cur=null; toast(L(`Box ${b.number} cancelled`,`Caja ${b.number} cancelada`),"warn"); go("home"); break}
+  case "setdecl":{ const n=Math.floor(+$("#f_decl").value); if(!n||n<1){toast(L("Write how many garments you counted","Escribe cuántas prendas contaste"),"bad");return} batch(b).declared=n; b.status="open"; saveBox(b); go("scan"); break}
   case "editdecl":{ S.view="count"; render(); break}
   case "kbd": S.kbd=!S.kbd; render(); break;
   case "photo": $("#photoin").click(); break;
   case "cam": if(CAM.on) stopCam(); else startCam(); break;
-  case "undo":{ const k=S.undo.pop(); if(k&&b.items[k]){ b.items[k].qty--; if(b.items[k].qty<=0) delete b.items[k]; saveBox(b); toast("Last scan removed","warn"); } renderScanParts(); $("[data-a=undo]").disabled=!S.undo.length; focusScan(); break}
-  case "minus":{ const k=el.dataset.k; if(b.items[k]){ b.items[k].qty--; if(b.items[k].qty<=0) delete b.items[k]; b.notes=(b.notes||[]); saveBox(b); toast("Removed one. Take that garment out of the box and put it back on the table","warn",3200);} renderScanParts(); focusScan(); break}
-  case "restartask": case "restartask2":{ const z=$("#restartzone"); z.innerHTML=`<div class="note bad"><b>Restart Box ${b.number}?</b><span>This deletes the ${scannedOf(b)} garments scanned in this box only. Other boxes are not affected. Take everything out of the box, put it back on the table and count again.</span><div class="row"><button class="danger grow" data-a="restartyes">Yes, restart Box ${b.number}</button><button class="grow" data-a="restartno">Cancel</button></div></div>`; bind(); z.scrollIntoView({block:"center"}); break}
+  case "undo":{ const k=S.undo.pop(); if(k&&b.items[k]&&batch(b).items[k]){ removeOne(b,k); saveBox(b); toast(L("Last scan removed","Último escaneo eliminado"),"warn"); } renderScanParts(); $("[data-a=undo]").disabled=!S.undo.length; focusScan(); break}
+  case "minus":{ const k=el.dataset.k; if(batch(b).items[k]){ removeOne(b,k); saveBox(b); toast(L("Removed one. Take that garment out of the box and put it back on the table","Se quitó una. Saca esa prenda de la caja y devuélvela a la mesa"),"warn",3200);} renderScanParts(); focusScan(); break}
+  case "restartask": case "restartask2":{ const z=$("#restartzone"); z.innerHTML=`<div class="note bad"><b>${L("Restart batch","¿Reiniciar la tanda")} ${batch(b).no}?</b><span>${L(`This deletes the ${bScanned(b)} garments scanned in this batch only. Earlier batches and other boxes are not affected. Take the garments of this batch out of the box, put them back on the table and count again.`,`Esto borra solo las ${bScanned(b)} prendas escaneadas en esta tanda. Las tandas anteriores y las demás cajas no se tocan. Saca de la caja las prendas de esta tanda, devuélvelas a la mesa y vuelve a contar.`)}</span><div class="row"><button class="danger grow" data-a="restartyes">${L("Yes, restart the batch","Sí, reiniciar la tanda")}</button><button class="grow" data-a="restartno">${L("Cancel","Cancelar")}</button></div></div>`; bind(); z.scrollIntoView({block:"center"}); break}
   case "restartno": render(); break;
-  case "restartyes":{ b.items={}; b.declared=null; b.restarts=(b.restarts||0)+1; b.leftover=null; b.status="open"; b.notes=(b.notes||[]).concat(`Restarted by ${S.name} ${fmtT(now())}`); saveBox(b); S.undo=[]; toast(`Box ${b.number} restarted. Count the table again`,"warn",3000); go("count"); break}
+  case "restartyes":{ const bt=batch(b); Object.entries(bt.items).forEach(([k,q])=>{ for(let i=0;i<q;i++) removeOne(b,k); }); bt.items={}; bt.declared=null; b.restarts=(b.restarts||0)+1; b.status="open"; b.notes=(b.notes||[]).concat(`${L("Batch","Tanda")} ${bt.no} ${L("restarted by","reiniciada por")} ${S.name} ${fmtT(now())}`); saveBox(b); S.undo=[]; toast(L("Batch restarted. Count the table again","Tanda reiniciada. Vuelve a contar la mesa"),"warn",3000); go("count"); break}
   case "toclose": go("close"); break;
   case "backscan": go("scan"); break;
   case "todims": go("dims"); break;
-  case "closepartial":{ const n=scannedOf(b), left=b.declared-n; b.notes=(b.notes||[]).concat(`Counted ${b.declared}, scanned ${n}; ${left} left on table for next box`); b.leftover=left; b.declared=n; saveBox(b); go("dims"); break}
-  case "recount":{ const r=Math.floor(+$("#f_recount").value), n=scannedOf(b); if(!r){toast("Write the recount","bad");return} if(r!==n){ toast(`Recount is ${r} but ${n} are scanned. Fix the list or restart the box`,"bad",4000); return } b.notes=(b.notes||[]).concat(`Count changed from ${b.declared} to ${r} after recount`); b.declared=r; saveBox(b); go("dims"); break}
+  case "tobatchdone": if(b.batch&&bScanned(b)===0){ b.batch=null; saveBox(b); } go(countedOf(b)?"batchdone":"count"); break;
+  case "finishbatch": finishBatch(b,0); break;
+  case "dropbatch": b.batch=null; saveBox(b); go("dims"); break;
+  case "addbatch":{ b.batch={no:(b.batches||[]).length+1,declared:el.dataset.decl?+el.dataset.decl:null,items:{}}; S.leftover=0; S.undo=[]; saveBox(b); go("count"); break}
+  case "closepartial":{ const bt=batch(b), n=bScanned(b), left=bt.declared-n; b.notes=(b.notes||[]).concat(L(`Batch ${bt.no}: counted ${bt.declared}, scanned ${n}; ${left} left on the table`,`Tanda ${bt.no}: contadas ${bt.declared}, escaneadas ${n}; ${left} quedaron en la mesa`)); bt.declared=n; finishBatch(b,left); break}
+  case "recount":{ const bt=batch(b); const r=Math.floor(+$("#f_recount").value), n=bScanned(b); if(!r){toast(L("Write the recount","Escribe el reconteo"),"bad");return} if(r!==n){ toast(L(`Recount is ${r} but ${n} are scanned. Fix the list or restart the box`,`El reconteo es ${r} pero hay ${n} escaneadas. Corrige la lista o reinicia la caja`),"bad",4000); return } b.notes=(b.notes||[]).concat(L(`Batch ${bt.no}: count changed from ${bt.declared} to ${r} after recount`,`Tanda ${bt.no}: conteo cambiado de ${bt.declared} a ${r} tras reconteo`)); bt.declared=r; finishBatch(b,0); break}
   case "unit": S.unit=el.dataset.u; ls.set("nyp_unit",S.unit); render(); break;
   case "savedims":{ const l=+$("#f_l").value,w=+$("#f_w").value,h=+$("#f_h").value,kg=+$("#f_kg").value; const u=S.unit;
-    if(!(l>0&&w>0&&h>0)){toast("Write length, width and height","bad");return} if(!(kg>0)){toast("Write the weight","bad");return}
+    if(!(l>0&&w>0&&h>0)){toast(L("Write length, width and height","Escribe largo, ancho y alto"),"bad");return} if(!(kg>0)){toast(L("Write the weight","Escribe el peso"),"bad");return}
     const lim=u==="in"?{min:4,max:48,wmax:70,wu:"lb",du:"in"}:{min:10,max:122,wmax:32,wu:"kg",du:"cm"};
-    const warns=[]; [l,w,h].forEach(x=>{ if(x<lim.min||x>lim.max) warns.push(`A side of ${x} ${lim.du} looks unusual for a box. Check the unit.`) });
-    if(kg>lim.wmax) warns.push(`${kg} ${lim.wu} is heavy. Most carriers charge extra or refuse boxes over ${lim.wmax} ${lim.wu}. Consider splitting.`);
-    const per=(u==="in"?kg*0.453592:kg)/Math.max(1,scannedOf(b)); if(per>1.2) warns.push(`That is over ${(per).toFixed(1)} kg per garment. Check the weight and unit.`);
-    if(warns.length&&!el.dataset.ok){ $("#dimwarn").innerHTML=`<div class="note warn">${warns.map(x=>`<span>${x}</span>`).join("")}<span>Tap “Close box” again if the numbers are right.</span></div>`; el.dataset.ok=1; return }
-    b.dims={l,w,h,unit:u==="in"?"in":"cm"}; b.weight={v:kg,unit:u==="in"?"lb":"kg"}; b.status="closed"; b.closedAt=now(); b.closedBy=S.name; saveBox(b); beep(true); go("boxdone"); break}
-  case "addmanual":{ const st=$("#m_style").value,co=$("#m_color").value,sz=$("#m_size").value,why=$("#m_why").value;
-    if(!st||!co||!sz){toast("Choose type, color and size","bad");return}
-    let name=st==="OTHER"?$("#m_other").value.trim():STYLES[st]; let cname=co==="OTHER"?$("#m_ocolor").value.trim():COLORS[co];
-    if(!name||!cname){toast("Describe the garment and its color","bad");return}
-    const sku=(st!=="OTHER"&&co!=="OTHER")?st+co+SIZE_CODE[sz]:"MANUAL";
+    const warns=[]; [l,w,h].forEach(x=>{ if(x<lim.min||x>lim.max) warns.push(L(`A side of ${x} ${lim.du} looks unusual for a box. Check the unit.`,`Un lado de ${x} ${lim.du} es raro para una caja. Revisa la unidad.`)) });
+    if(kg>lim.wmax) warns.push(L(`${kg} ${lim.wu} is heavy. Most carriers charge extra or refuse boxes over ${lim.wmax} ${lim.wu}. Consider splitting.`,`${kg} ${lim.wu} es pesado. Muchas transportadoras cobran extra o no reciben cajas de más de ${lim.wmax} ${lim.wu}. Considera dividirla.`));
+    const per=(u==="in"?kg*0.453592:kg)/Math.max(1,scannedOf(b)); if(per>1.2) warns.push(L(`That is over ${per.toFixed(1)} kg per garment. Check the weight and unit.`,`Eso da más de ${per.toFixed(1)} kg por prenda. Revisa el peso y la unidad.`));
+    if(warns.length&&!el.dataset.ok){ $("#dimwarn").innerHTML=`<div class="note warn">${warns.map(x=>`<span>${x}</span>`).join("")}<span>${L("Tap “Close box” again if the numbers are right.","Toca “Cerrar caja” otra vez si los números están bien.")}</span></div>`; el.dataset.ok=1; return }
+    b.dims={l,w,h,unit:u==="in"?"in":"cm"}; b.weight={v:kg,unit:u==="in"?"lb":"kg"}; b.batch=null; b.status="closed"; b.closedAt=now(); b.closedBy=S.name; saveBox(b); beep(true); go("boxdone"); break}
+  case "addmanual":{ const why=$("#m_why").value; let sku,name,cname,sz;
+    const nm=$("#m_name").value.trim(), co=$("#m_color").value, z=$("#m_size").value;
+    const k=((BYNAME[nm]||{})[co]||{})[z];
+    if(k){ sku=k; name=nm; cname=co; sz=z; }
+    else { name=$("#m_other").value.trim(); cname=$("#m_ocolor").value.trim(); sz=$("#m_osize").value; sku="MANUAL";
+      if(!name||!cname||!sz){ toast(nm?L("Choose color and size","Elige color y talla"):L("Choose the garment, color and size, or fill “Not in the list?”","Elige prenda, color y talla, o llena “¿No está en la lista?”"),"bad",3500); return; } }
     const key="M:"+(sku==="MANUAL"?[name,cname,sz].join("|").toUpperCase():sku);
     addItem(b,key,{sku,name,color:cname,size:sz,manual:true});
-    const iss={id:"iss-"+now()+"-"+Math.random().toString(36).slice(2,6),type:why==="QR won't scan"?"QR won't scan":"No tag / no QR",item:`${name} ${cname} ${sz}${sku!=="MANUAL"?" ("+sku+")":""}`,qty:1,box:b.number,notes:`Added by hand: ${why}`,reporter:S.name,location:S.location,createdAt:now(),auto:true};
-    S.issues.set(iss.id,iss); store.saveIssue(iss).catch(()=>setSync("err","Issue not sent — check internet"));
-    toast(`Added: ${name} ${cname} ${sz}`); go("scan"); break}
+    const w=WHY.find(x=>x[0]===why)||WHY[0];
+    const iss={id:"iss-"+now()+"-"+Math.random().toString(36).slice(2,6),type:why==="noscan"?"noscan":"notag",item:`${name} ${cname} ${sz}${sku!=="MANUAL"?" ("+sku+")":""}`,qty:1,box:b.number,notes:`${L("Added by hand","Agregada a mano")}: ${L(w[1],w[2])}`,reporter:S.name,location:S.location,createdAt:now(),auto:true};
+    S.issues.set(iss.id,iss); store.saveIssue(iss).catch(()=>setSync("err","nosave"));
+    toast(`${L("Added","Agregada")}: ${name} ${cname} ${szL(sz)}`); go("scan"); break}
   case "saveissue":{ const d={type:$("#i_type").value,item:$("#i_item").value.trim(),qty:Math.max(1,Math.floor(+$("#i_qty").value||1)),box:$("#i_box").value,notes:$("#i_notes").value.trim()};
-    if(d.notes.length<5){ S.issueDraft=d; $("#iwarn").innerHTML=`<div class="note bad"><span>Write a few words in “Details” so Colombia understands the issue.</span></div>`; return }
+    if(d.notes.length<5){ S.issueDraft=d; $("#iwarn").innerHTML=`<div class="note bad"><span>${L("Write a few words in “Details” so Colombia understands the issue.","Escribe algo en “Detalle” para que Colombia entienda la novedad.")}</span></div>`; return }
     const iss={id:"iss-"+now()+"-"+Math.random().toString(36).slice(2,6),...d,box:d.box?+d.box:null,reporter:S.name,location:S.location,createdAt:now()};
     S.issues.set(iss.id,iss); S.issueDraft=null;
-    try{ await store.saveIssue(iss); toast(S.mode==="sync"?"Issue sent to Colombia":"Issue saved on this device"); }catch(e){ setSync("err","Issue not sent — check internet"); toast("Not sent. Check internet and try again","bad"); }
+    try{ await store.saveIssue(iss); toast(S.mode==="sync"?L("Issue sent to Colombia","Novedad enviada a Colombia"):L("Issue saved on this device","Novedad guardada en este celular")); }catch(e){ setSync("err","nosave"); toast(L("Saved on this phone. It will be sent when the internet returns","Guardada en este celular. Se enviará cuando vuelva el internet"),"warn"); }
     render(); break}
-  case "reopenask":{ $("#reopenzone").innerHTML=`<div class="note bad"><b>Reopen Box ${S.boxes.get(S.viewBox).number}?</b><span>Only do this if you need to add or remove garments. You will have to count, check and weigh it again.</span><div class="row"><button class="danger grow" data-a="reopenyes">Yes, reopen</button><button class="grow" data-a="back">Cancel</button></div></div>`; bind(); break}
-  case "reopenyes":{ const ob=S.boxes.get(S.viewBox); const mine=[...S.boxes.values()].find(x=>x.status!=="closed"&&x.packer===S.name); if(mine){toast(`Finish Box ${mine.number} first`,"warn");return} ob.status="open"; ob.notes=(ob.notes||[]).concat(`Reopened by ${S.name} ${fmtT(now())}`); ob.packer=S.name; ob.closedAt=null; saveBox(ob); S.cur=ob.id; S.undo=[]; go("scan"); break}
+  case "reopenask":{ $("#reopenzone").innerHTML=`<div class="note bad"><b>${L("Reopen","¿Reabrir la")} ${BOX(S.boxes.get(S.viewBox).number)}?</b><span>${L("Only do this if you need to add garments. A new batch is opened, and you will measure and weigh the box again.","Hazlo solo si necesitas agregar prendas. Se abre una nueva tanda y tendrás que medir y pesar la caja otra vez.")}</span><div class="row"><button class="danger grow" data-a="reopenyes">${L("Yes, reopen","Sí, reabrir")}</button><button class="grow" data-a="back">${L("Cancel","Cancelar")}</button></div></div>`; bind(); break}
+  case "reopenyes":{ const ob=S.boxes.get(S.viewBox); const mine=[...S.boxes.values()].find(x=>x.status!=="closed"&&x.packer===S.name); if(mine){toast(L(`Finish Box ${mine.number} first`,`Primero termina la Caja ${mine.number}`),"warn");return} ob.status="open"; ob.notes=(ob.notes||[]).concat(`${L("Reopened by","Reabierta por")} ${S.name} ${fmtT(now())}`); ob.packer=S.name; ob.closedAt=null; ob.batch={no:(ob.batches||[]).length+1,declared:null,items:{}}; saveBox(ob); S.cur=ob.id; S.undo=[]; go("count"); break}
+  case "resetall":{ const pin=$("#r_pin").value.trim(), w=$("#r_word").value.trim().toUpperCase();
+    if(w!=="RESET"&&w!=="REINICIAR"){ toast(L("Type RESET to confirm","Escribe REINICIAR para confirmar"),"bad"); return }
+    if(!sb){ toast(L("Not connected to the server","Sin conexión al servidor"),"bad"); return }
+    el.disabled=true; const {data,error}=await sb.rpc("ny_reset_all",{pin}); el.disabled=false;
+    if(error){ toast(L("Reset failed. Check internet","No se pudo reiniciar. Revisa internet"),"bad"); return }
+    if(data!=="ok"){ toast(L("Wrong PIN","PIN incorrecto"),"bad"); return }
+    stopCam(); S.boxes.clear(); S.issues.clear(); Object.keys(wq).forEach(k=>delete wq[k]); S.cur=null; S.undo=[]; S.leftover=0; cacheLocal();
+    toast(L("Everything was reset. Box numbering starts at 1","Todo quedó reiniciado. La numeración empieza en 1"),"ok",3500); go("home"); break}
+  case "resetphone":{ stopCam(); try{ ["nyp_local","nyp_name","nyp_loc"].forEach(k=>localStorage.removeItem(k)); }catch(e){} S.boxes.clear(); S.issues.clear(); S.name=""; S.cur=null; S.undo=[]; if(sb) await pullAll(); toast(L("This phone was cleared","Este celular quedó limpio"),"ok"); go("welcome"); break}
   case "xlsx_all": exportXlsx(null); break;
   case "xlsx_me": exportXlsx(S.name); break;
   }
 }
 
+function resumeView(b){ if(b.batch) return b.batch.declared?"scan":"count"; return countedOf(b)?"batchdone":"count"; }
+function removeOne(b,k){ const bt=batch(b); if(bt.items[k]){ bt.items[k]--; if(bt.items[k]<=0) delete bt.items[k]; } if(b.items[k]){ b.items[k].qty--; if(b.items[k].qty<=0) delete b.items[k]; } }
+function finishBatch(b,leftover){ const bt=batch(b); b.batches.push({no:bt.no,declared:bt.declared,scanned:bScanned(b),at:now()}); b.batch=null; S.leftover=leftover||0; S.undo=[]; saveBox(b); go("batchdone"); }
 function addItem(b,key,info){
-  b.items=b.items||{}; const it=b.items[key]||(b.items[key]={...info,qty:0}); it.qty++; it.t=now();
+  b.items=b.items||{}; const it=b.items[key]||(b.items[key]={...info,qty:0}); it.qty++; it.t=now(); const bt=batch(b); bt.items[key]=(bt.items[key]||0)+1;
   S.undo.push(key); S.lastKey=key; saveBox(b);
 }
 function onScan(raw){
@@ -495,19 +632,19 @@ function onScan(raw){
   if(code===S.lastScan.code && t-S.lastScan.t<700){ return; }
   S.lastScan={code,t};
   const p=parseCode(code);
-  if(!p){ beep(false); toast("This is not a garment code. Scan the garment's QR, or add it by hand","bad",3500); return; }
-  const unknown=!p.name;
-  addItem(b,p.sku,{sku:p.sku,name:p.name||"Unknown item",color:p.colorName,size:p.sizeName,manual:false,unknown});
-  const left=b.declared-scannedOf(b);
-  if(left<0){ beep(false); toast(`Over your count by ${-left}. Check for a repeated scan`,"bad",3000); }
-  else if(unknown){ beep(false); toast(`Added, but ${p.sku} is not in the guide. Report it if it looks wrong`,"warn",3500); }
-  else { beep(true); toast(`${p.name} · ${p.colorName} · ${p.sizeName}${left===0?"  —  count reached":""}`,"ok",1600); }
+  if(!p){ beep(false); toast(L("This is not a garment code. Scan the garment's QR, or add it by hand","Este no es un código de prenda. Escanea el QR de la prenda o agrégala a mano"),"bad",3500); return; }
+  const unknown=!p.inGuide;
+  addItem(b,p.sku,{sku:p.sku,name:p.name||(p.hint?p.hint+" (not in guide)":"Unknown item"),color:p.colorName,size:p.sizeName,manual:false,unknown});
+  const left=batch(b).declared-bScanned(b);
+  if(left<0){ beep(false); toast(L(`Over your count by ${-left}. Check for a repeated scan`,`Vas ${-left} por encima de tu conteo. Revisa si hay un escaneo repetido`),"bad",3000); }
+  else if(unknown){ beep(false); toast(L(`Added, but ${p.sku} is not in the SKU guide. Report it as an issue`,`Agregada, pero ${p.sku} no está en la guía de SKU. Repórtala como novedad`),"warn",3500); }
+  else { beep(true); toast(`${p.name} · ${p.colorName} · ${szL(p.sizeName)}${left===0?"  —  "+L("count reached","conteo completo"):""}`,"ok",1600); }
   renderScanParts(); const u=$("[data-a=undo]"); if(u) u.disabled=false; focusScan();
 }
 async function onPhoto(e){
   const f=e.target.files&&e.target.files[0]; e.target.value=""; if(!f) return;
-  if(typeof jsQR!=="function"){ toast("The QR reader didn't load. Use a scanner or add by hand","bad",3500); return; }
-  toast("Reading QR…","warn",1200);
+  if(typeof jsQR!=="function"){ toast(L("The QR reader didn't load. Reload the page","El lector de QR no cargó. Recarga la página"),"bad",3500); return; }
+  toast(L("Reading QR…","Leyendo QR…"),"warn",1200);
   try{
     const img=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=URL.createObjectURL(f)});
     let found=null;
@@ -517,26 +654,25 @@ async function onPhoto(e){
       const r=jsQR(d.data,c.width,c.height,{inversionAttempts:"attemptBoth"}); if(r&&r.data){found=r.data;break}
     }
     URL.revokeObjectURL(img.src);
-    if(!found){ beep(false); toast("Couldn't read the QR. Take the photo closer, in good light, or add it by hand","bad",4000); return; }
+    if(!found){ beep(false); toast(L("Couldn't read the QR. Take the photo closer, in good light, or add it by hand","No se pudo leer el QR. Toma la foto más cerca y con buena luz, o agrégala a mano"),"bad",4000); return; }
     S.lastScan={code:"",t:0}; onScan(found);
-  }catch(err){ toast("Couldn't open the photo. Try again","bad"); }
+  }catch(err){ toast(L("Couldn't open the photo. Try again","No se pudo abrir la foto. Intenta de nuevo"),"bad"); }
 }
-
 
 /* ---------- Live camera scanning ---------- */
 const CAM={on:false,stream:null,raf:0,lastCode:"",lastSeen:0,armed:true,lastAccept:0,canvas:null,wake:null};
 async function startCam(){
-  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){ toast("This browser can't open the camera. Use Safari or Chrome, or take a photo","bad",4000); return; }
-  if(typeof jsQR!=="function"){ toast("The QR reader didn't load. Reload the page","bad"); return; }
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){ toast(L("This browser can't open the camera. Use Safari or Chrome, or take a photo","Este navegador no puede abrir la cámara. Usa Safari o Chrome, o toma una foto"),"bad",4000); return; }
+  if(typeof jsQR!=="function"){ toast(L("The QR reader didn't load. Reload the page","El lector de QR no cargó. Recarga la página"),"bad"); return; }
   try{
     CAM.stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"},width:{ideal:1280},height:{ideal:720}},audio:false});
   }catch(e){
-    const m=e&&e.name==="NotAllowedError"?"Camera blocked. Allow camera access for this site in the browser settings, then try again":"Couldn't open the camera. Close other apps using it and try again";
+    const m=e&&e.name==="NotAllowedError"?L("Camera blocked. Allow camera access for this site in the browser settings, then try again","Cámara bloqueada. Permite el acceso a la cámara para este sitio en los ajustes del navegador e intenta de nuevo"):L("Couldn't open the camera. Close other apps using it and try again","No se pudo abrir la cámara. Cierra otras apps que la estén usando e intenta de nuevo");
     toast(m,"bad",5000); return;
   }
-  CAM.on=true; CAM.armed=true; CAM.lastCode=""; 
+  CAM.on=true; CAM.armed=true; CAM.lastCode="";
   try{ CAM.wake=await navigator.wakeLock.request("screen"); }catch(e){}
-  attachCam(); const b=$("#cambtn"); if(b) b.textContent="Stop camera";
+  attachCam(); const b=$("#cambtn"); if(b) b.textContent=L("Stop camera","Apagar cámara");
 }
 function attachCam(){
   const v=$("#cam"), w=$("#camwrap"); if(!v||!CAM.stream) return;
@@ -548,7 +684,7 @@ function attachCam(){
 function stopCam(){
   cancelAnimationFrame(CAM.raf); if(CAM.stream){ CAM.stream.getTracks().forEach(t=>t.stop()); } CAM.stream=null; CAM.on=false;
   try{ CAM.wake&&CAM.wake.release(); }catch(e){} CAM.wake=null;
-  const w=$("#camwrap"); if(w) w.hidden=true; const b=$("#cambtn"); if(b) b.textContent="Scan with camera";
+  const w=$("#camwrap"); if(w) w.hidden=true; const b=$("#cambtn"); if(b) b.textContent=L("Scan with camera","Escanear con la cámara");
 }
 function tick(v){
   if(!v.videoWidth) return;
@@ -564,45 +700,45 @@ function tick(v){
       CAM.armed=false; CAM.lastCode=r.data; CAM.lastAccept=t;
       const w=$("#camwrap"); if(w){ w.classList.add("hit"); setTimeout(()=>w.classList.remove("hit"),350); }
       S.lastScan={code:"",t:0}; onScan(r.data);
-      if(hint) hint.textContent="Got it. Move it away, then show the next one";
+      if(hint) hint.textContent=L("Got it. Move it away, then show the next one","Listo. Retírala y muestra la siguiente");
     } else if(!same && t-CAM.lastAccept>800){ CAM.armed=true; }
   } else if(!CAM.armed && t-CAM.lastSeen>600){
-    CAM.armed=true; if(hint) hint.textContent="Hold one QR inside the frame";
+    CAM.armed=true; if(hint) hint.textContent=L("Hold one QR inside the frame","Pon un solo QR dentro del recuadro");
   }
 }
 document.addEventListener("visibilitychange",()=>{ if(document.hidden&&CAM.on){ stopCam(); } });
 
-/* ---------- Excel export ---------- */
+/* ---------- Excel export (in the language of whoever downloads) ---------- */
 async function exportXlsx(person){
-  if(typeof XLSX==="undefined"){ toast("Excel tool didn't load. Reload the page","bad"); return; }
+  if(typeof XLSX==="undefined"){ toast(L("Excel tool didn't load. Reload the page","La herramienta de Excel no cargó. Recarga la página"),"bad"); return; }
   const boxes=[...S.boxes.values()].filter(b=>!person||b.packer===person).sort((a,b)=>a.number-b.number);
   const issues=[...S.issues.values()].filter(i=>!person||i.reporter===person).sort((a,b)=>a.createdAt-b.createdAt);
   const cm=(v,u)=>v?(u==="in"?+(v*2.54).toFixed(1):+v):""; const inch=(v,u)=>v?(u==="cm"?+(v/2.54).toFixed(1):+v):"";
   const kg=w=>w&&w.v?+toKg(w).toFixed(2):""; const lb=w=>w&&w.v?+(toKg(w)/0.453592).toFixed(2):"";
-  const pl=[["Box","Status","Packed by","Location","SKU","Garment","Color","Size","Qty","Added by hand","Not in guide"]];
-  boxes.forEach(b=>Object.values(b.items||{}).sort((x,y)=>x.name.localeCompare(y.name)||x.color.localeCompare(y.color)||x.size.localeCompare(y.size)).forEach(i=>pl.push([b.number,b.status,b.packer,b.location||"",i.sku,i.name,i.color,i.size,i.qty,i.manual?"Yes":"",i.unknown?"Yes":""])));
-  const bx=[["Box","Status","Packed by","Location","Counted","Scanned","Difference","Length (cm)","Width (cm)","Height (cm)","Weight (kg)","Length (in)","Width (in)","Height (in)","Weight (lb)","Restarts","Started","Closed","Notes"]];
-  boxes.forEach(b=>{const d=b.dims||{};const n=scannedOf(b);bx.push([b.number,b.status,b.packer,b.location||"",b.declared||"",n,(b.declared||0)-n,cm(d.l,d.unit),cm(d.w,d.unit),cm(d.h,d.unit),kg(b.weight),inch(d.l,d.unit),inch(d.w,d.unit),inch(d.h,d.unit),lb(b.weight),b.restarts||0,fmtT(b.createdAt),fmtT(b.closedAt),(b.notes||[]).join(" | ")])});
+  const Y=L("Yes","Sí"), st=s=>s==="closed"?L("Closed","Cerrada"):L("Open","Abierta");
+  const pl=[[L("Box","Caja"),L("Status","Estado"),L("Packed by","Empacó"),"SKU",L("Garment","Prenda"),L("Color","Color"),L("Size","Talla"),L("Qty","Cantidad"),L("Added by hand","Agregada a mano"),L("Not in guide","No está en la guía")]];
+  boxes.forEach(b=>Object.values(b.items||{}).sort((x,y)=>x.name.localeCompare(y.name)||x.color.localeCompare(y.color)||x.size.localeCompare(y.size)).forEach(i=>pl.push([b.number,st(b.status),b.packer,i.sku,i.name,i.color,szL(i.size),i.qty,i.manual?Y:"",i.unknown?Y:""])));
+  const bx=[[L("Box","Caja"),L("Status","Estado"),L("Packed by","Empacó"),L("Batches","Tandas"),L("Counted","Contadas"),L("Scanned","Escaneadas"),L("Difference","Diferencia"),L("Length (cm)","Largo (cm)"),L("Width (cm)","Ancho (cm)"),L("Height (cm)","Alto (cm)"),L("Weight (kg)","Peso (kg)"),L("Length (in)","Largo (in)"),L("Width (in)","Ancho (in)"),L("Height (in)","Alto (in)"),L("Weight (lb)","Peso (lb)"),L("Restarts","Reinicios"),L("Started","Inicio"),L("Closed","Cierre"),L("Notes","Notas")]];
+  boxes.forEach(b=>{const d=b.dims||{};const n=scannedOf(b);bx.push([b.number,st(b.status),b.packer,(b.batches||[]).length,countedOf(b),n,countedOf(b)-n,cm(d.l,d.unit),cm(d.w,d.unit),cm(d.h,d.unit),kg(b.weight),inch(d.l,d.unit),inch(d.w,d.unit),inch(d.h,d.unit),lb(b.weight),b.restarts||0,fmtT(b.createdAt),fmtT(b.closedAt),(b.notes||[]).join(" | ")])});
   const agg={}; boxes.forEach(b=>Object.values(b.items||{}).forEach(i=>{const k=i.sku+"|"+i.name+"|"+i.color+"|"+i.size;const a=agg[k]||(agg[k]={sku:i.sku,name:i.name,color:i.color,size:i.size,qty:0,boxes:new Set()});a.qty+=i.qty;a.boxes.add(b.number)}));
-  const bs=[["SKU","Garment","Color","Size","Total qty","In boxes"]]; Object.values(agg).sort((x,y)=>x.name.localeCompare(y.name)||x.color.localeCompare(y.color)).forEach(a=>bs.push([a.sku,a.name,a.color,a.size,a.qty,[...a.boxes].sort((x,y)=>x-y).join(", ")]));
-  const is=[["Date","Reported by","Location","Type","Garment","Qty","Box","Details","Automatic"]]; issues.forEach(i=>is.push([fmtT(i.createdAt),i.reporter,i.location||"",i.type,i.item||"",i.qty,i.box||"",i.notes,i.auto?"Yes":""]));
+  const bs=[["SKU",L("Garment","Prenda"),L("Color","Color"),L("Size","Talla"),L("Total qty","Cantidad total"),L("In boxes","En cajas")]]; Object.values(agg).sort((x,y)=>x.name.localeCompare(y.name)||x.color.localeCompare(y.color)).forEach(a=>bs.push([a.sku,a.name,a.color,szL(a.size),a.qty,[...a.boxes].sort((x,y)=>x-y).join(", ")]));
+  const is=[[L("Date","Fecha"),L("Reported by","Reportó"),L("Type","Tipo"),L("Garment","Prenda"),L("Qty","Cantidad"),L("Box","Caja"),L("Details","Detalle"),L("Automatic","Automática")]]; issues.forEach(i=>is.push([fmtT(i.createdAt),i.reporter,issueLabel(i.type),i.item||"",i.qty,i.box||"",i.notes,i.auto?Y:""]));
   const closed=boxes.filter(b=>b.status==="closed");
-  const sm=[["NY Pack-Out — "+(person?"summary for "+person:"all boxes")],["Generated",fmtT(now())],["Boxes closed",closed.length],["Boxes still open",boxes.length-closed.length],["Garments in closed boxes",closed.reduce((a,b)=>a+scannedOf(b),0)],["Garments in open boxes",boxes.filter(b=>b.status!=="closed").reduce((a,b)=>a+scannedOf(b),0)],["Total weight (kg)",+closed.reduce((a,b)=>a+toKg(b.weight),0).toFixed(2)],["Issues reported",issues.length]];
+  const sm=[["NY Pack-Out — "+(person?L("summary for ","resumen de ")+person:L("all boxes","todas las cajas"))],[L("Generated","Generado"),fmtT(now())],[L("Boxes closed","Cajas cerradas"),closed.length],[L("Boxes still open","Cajas abiertas"),boxes.length-closed.length],[L("Garments in closed boxes","Prendas en cajas cerradas"),closed.reduce((a,b)=>a+scannedOf(b),0)],[L("Garments in open boxes","Prendas en cajas abiertas"),boxes.filter(b=>b.status!=="closed").reduce((a,b)=>a+scannedOf(b),0)],[L("Total weight (kg)","Peso total (kg)"),+closed.reduce((a,b)=>a+toKg(b.weight),0).toFixed(2)],[L("Issues reported","Novedades reportadas"),issues.length]];
   const wb=XLSX.utils.book_new();
   const add=(rows,name,w)=>{const ws=XLSX.utils.aoa_to_sheet(rows);ws["!cols"]=w.map(x=>({wch:x}));XLSX.utils.book_append_sheet(wb,ws,name)};
-  add(sm,"Summary",[28,24]); add(pl,"Packing list",[6,8,18,12,13,30,14,8,6,10,10]); add(bx,"Boxes",[6,8,18,12,8,8,10,11,11,11,11,11,11,11,11,8,16,16,50]); add(bs,"By SKU",[13,30,14,8,9,20]); add(is,"Issues",[16,18,12,18,30,6,6,50,10]);
+  add(sm,L("Summary","Resumen"),[28,24]); add(pl,L("Packing list","Lista de empaque"),[6,8,18,13,30,14,8,8,12,12]); add(bx,L("Boxes","Cajas"),[6,8,18,8,8,10,10,11,11,11,11,11,11,11,11,8,16,16,50]); add(bs,L("By SKU","Por SKU"),[13,30,14,8,12,20]); add(is,L("Issues","Novedades"),[16,18,22,30,8,6,50,10]);
   const out=XLSX.write(wb,{type:"array",bookType:"xlsx"});
   const fname=`NY_PackOut_${person?person.replace(/[^A-Za-z0-9]+/g,"_")+"_":""}${new Date().toISOString().slice(0,10)}.xlsx`;
   const blob=new Blob([out],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
   const file=new File([blob],fname,{type:blob.type});
-  if(person&&navigator.canShare&&navigator.canShare({files:[file]})){ try{ await navigator.share({files:[file],title:fname,text:"NY Pack-Out summary"}); return; }catch(e){ if(e&&e.name==="AbortError") return; } }
-  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=fname; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000); toast("Excel downloaded");
+  if(person&&navigator.canShare&&navigator.canShare({files:[file]})){ try{ await navigator.share({files:[file],title:fname,text:"NY Pack-Out"}); return; }catch(e){ if(e&&e.name==="AbortError") return; } }
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=fname; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000); toast(L("Excel downloaded","Excel descargado"));
 }
-async function copyFallback(rows){
-  const txt=rows.map(r=>r.join("\t")).join("\n");
-  try{ await navigator.clipboard.writeText(txt); toast("Downloads aren't available here. The packing list was copied — paste it into Excel or WhatsApp","warn",5000); }
-  catch(e){ toast("Downloads aren't available on this view. Open the page in a browser to download","bad",5000); }
-}
+
+document.addEventListener("click",e=>{ const t=e.target.closest("#langbtn,#helpbtn"); if(!t) return; e.preventDefault();
+  if(t.id==="langbtn"){ S.lang=S.lang==="es"?"en":"es"; ls.set("nyp_lang",S.lang); render(); }
+  else go("help"); });
 
 window.addEventListener("beforeunload",e=>{ if(Object.values(wq).some(q=>q.busy||q.dirty)){ e.preventDefault(); e.returnValue=""; } });
 init();
